@@ -17,25 +17,37 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("layout.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # Placeholder for sidebar HTMX
+from app.services import PlaybookService
+
 @app.get("/partials/sidebar")
 async def get_sidebar(request: Request):
-    # Mock data for now
-    playbooks = [
-        {"name": "deploy_web.yaml", "status": "idle"},
-        {"name": "update_db.yaml", "status": "running"},
-    ]
-    # In reality we would render a partial template loop
-    # For now, let's return a simple HTML string to verify wiring
-    html = ""
-    for pb in playbooks:
-        status_class = "running" if pb['status'] == 'running' else ""
-        html += f"""
-        <div class="playbook-item">
-            <div class="status-dot {status_class}"></div>
-            {pb['name']}
-        </div>
-        """
-    return html
+    playbooks = PlaybookService.list_playbooks()
+    return templates.TemplateResponse("partials/sidebar.html", {"request": request, "playbooks": playbooks})
+
+@app.get("/playbook/{name}")
+async def get_playbook_view(name: str, request: Request):
+    content = PlaybookService.get_playbook_content(name)
+    if content is None:
+        return "<p>File not found</p>"
+    
+    return templates.TemplateResponse("partials/editor.html", {
+        "request": request, 
+        "name": name, 
+        "content": content
+    })
+
+@app.post("/playbook/{name}")
+async def save_playbook(name: str, request: Request):
+    form = await request.form()
+    content = form.get("content")
+    if content is None:
+        return "Missing content", 400
+    
+    success = PlaybookService.save_playbook_content(name, content)
+    if not success:
+        return "Failed to save", 500
+    
+    return "Saved successfully"

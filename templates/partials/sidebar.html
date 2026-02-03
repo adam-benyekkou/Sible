@@ -1,0 +1,10 @@
+{% if not playbooks %}
+<div style='padding:1rem; color:#aaa'>No playbooks found.</div>
+{% else %}
+{% for name in playbooks %}
+<div class="playbook-item" hx-get="/playbook/{{ name }}" hx-target="#main-content" hx-swap="innerHTML">
+    <div class="status-dot"></div>
+    {{ name }}
+</div>
+{% endfor %}
+{% endif %}

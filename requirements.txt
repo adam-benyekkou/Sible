@@ -6,3 +6,5 @@ htmx
 apscheduler
 ansible-runner
 websockets
+pytest
+httpx

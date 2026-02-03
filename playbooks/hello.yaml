@@ -1,0 +1,12 @@
+---
+- name: Hello World Playbook
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Say Hello
+      debug:
+        msg: "Hello from Sible!"
+
+    - name: Wait a bit (simulate work)
+      pause:
+        seconds: 2

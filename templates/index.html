@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div id="main-content" class="container"
+    style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #868e96;">
+    <hgroup style="text-align: center;">
+        <h2>Welcome to Sible</h2>
+        <p>Select a playbook from the sidebar to edit or run.</p>
+    </hgroup>
+    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+        <button class="secondary outline" onclick="alert('Create functionality coming soon!')">
+            + New Playbook
+        </button>
+    </div>
+</div>
+{% endblock %}

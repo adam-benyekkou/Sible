@@ -1,0 +1,47 @@
+<header class="main-header" x-data>
+    <hgroup>
+        <h3 style="margin:0">{{ name }}</h3>
+    </hgroup>
+    <div class="actions">
+        <button class="outline" @click="saveFile()">Save</button>
+        <button class="primary" hx-post="/run/{{ name }}">Run</button>
+        <button class="secondary outline">Schedule</button>
+    </div>
+</header>
+
+<div class="tabs" x-data>
+    <button class="tab-btn" :class="currentTab === 'editor' ? 'active' : ''"
+        @click="currentTab = 'editor'">Editor</button>
+    <button class="tab-btn" :class="currentTab === 'logs' ? 'active' : ''" @click="currentTab = 'logs'">Logs</button>
+</div>
+
+<div class="content-area">
+    <!-- Editor Tab -->
+    <div id="editor" x-show="currentTab === 'editor'">{{ content }}</div>
+
+    <!-- Logs Tab -->
+    <div id="terminal-container" x-show="currentTab === 'logs'">
+        <div class="terminal-output">Waiting for execution...</div>
+    </div>
+</div>
+
+<script>
+    // Initialize Ace Editor
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/twilight");
+    editor.session.setMode("ace/mode/yaml");
+    editor.setShowPrintMargin(false);
+
+    // Save function exposed to Alpine
+    function saveFile() {
+        var content = editor.getValue();
+        // HTMX ajax call to save
+        htmx.ajax('POST', '/playbook/{{ name }}', {
+            values: { content: content },
+            swap: 'none'
+        }).then(() => {
+            // Simple toast or feedback could go here
+            console.log("Saved!");
+        });
+    }
+</script>

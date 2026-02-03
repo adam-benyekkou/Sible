@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sible</title>
-    
+
     <!-- Pico.css -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-    
+
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/sse.js"></script>
-    
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -20,165 +21,10 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/style.css">
-    
-    <style>
-        /* Base Layout Overrides to match Dockge */
-        :root {
-            --pico-background-color: #1a1b1e; /* Darker grey */
-            --pico-card-background-color: #25262b; /* Slightly lighter */
-            --pico-border-radius: 1rem;
-            --pico-primary: #5c7cfa;
-            --pico-primary-hover: #4263eb;
-            --sidebar-width: 300px;
-        }
 
-        body {
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-            margin: 0;
-            padding: 1rem;
-            gap: 1rem;
-        }
 
-        /* Sidebar */
-        aside {
-            width: var(--sidebar-width);
-            background: var(--pico-card-background-color);
-            border-radius: var(--pico-border-radius);
-            display: flex;
-            flex-direction: column;
-            padding: 1rem;
-            overflow-y: auto;
-            flex-shrink: 0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-
-        /* Main Content */
-        main {
-            flex-grow: 1;
-            background: var(--pico-card-background-color);
-            border-radius: var(--pico-border-radius);
-            display: flex;
-            flex-direction: column;
-            padding: 0; /* Important for full-size editor */
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Sidebar Items */
-        .playbook-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: background 0.2s;
-            text-decoration: none;
-            color: var(--pico-color);
-            margin-bottom: 0.5rem;
-        }
-        
-        .playbook-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            text-decoration: none;
-            color: var(--pico-primary-hover);
-        }
-
-        .playbook-item.active {
-            background: rgba(92, 124, 250, 0.15);
-            color: var(--pico-primary);
-            border-left: 3px solid var(--pico-primary);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #495057; /* Grey inactive */
-            margin-right: 10px;
-        }
-        
-        .status-dot.running {
-            background-color: #fcc419;
-            box-shadow: 0 0 8px #fcc419;
-            animation: pulse-yellow 2s infinite;
-        }
-
-        @keyframes pulse-yellow {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(252, 196, 25, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(252, 196, 25, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(252, 196, 25, 0); }
-        }
-
-        /* Header in Main */
-        header.main-header {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* Action Buttons */
-        .actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        /* Tabs */
-        .tabs {
-            padding: 0 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 1rem;
-            color: #adb5bd;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            font-weight: 600;
-        }
-
-        .tab-btn.active {
-            color: var(--pico-primary);
-            border-bottom-color: var(--pico-primary);
-        }
-
-        /* Content Area (Editor/Terminal) */
-        .content-area {
-            flex-grow: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #editor { 
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-        }
-
-        #terminal-container {
-            background-color: #000;
-            color: #0f0;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 1rem;
-            height: 100%;
-            overflow-y: auto;
-            display: none; /* Hidden by default */
-        }
-        
-        #terminal-container.active {
-            display: block;
-        }
-
-    </style>
 </head>
+
 <body x-data="{ currentTab: 'editor' }">
 
     <!-- Sidebar -->
@@ -197,7 +43,8 @@
     <!-- Main Content -->
     <main>
         {% block content %}
-        <div class="container" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #868e96;">
+        <div id="main-content" class="container"
+            style="display: flex; align-items: center; justify-content: center; height: 100%; color: #868e96;">
             <p>Select a playbook to get started</p>
         </div>
         {% endblock %}
@@ -207,4 +54,5 @@
         // Global Alpine store or helper text if needed
     </script>
 </body>
+
 </html>
