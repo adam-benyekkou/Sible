@@ -1,28 +1,54 @@
-/* Base Layout Overrides to match Dockge */
+/* SIBLE DESIGN SYSTEM (Vercel / Geist Aesthetic) */
+
 :root {
-    --pico-background-color: #0f1113;
-    /* Deep dark background */
-    --pico-card-background-color: #1a1c1f;
-    /* Slightly lighter panel */
-    --pico-border-radius: 12px;
-    --pico-primary: #5c7cfa;
-    --pico-primary-hover: #4263eb;
-    --pico-muted-color: #909296;
+    /* --- GLOBAL VARIABLES (Light Theme - Default) --- */
+    /* 1. The Geist Greyscale */
+    --ds-background-100: #ffffff;
+    --ds-background-200: #fafafa;
+    --ds-gray-100: #f5f5f5;
+    --ds-gray-200: #eaeaea;
+    --ds-gray-alpha-400: rgba(0, 0, 0, 0.08);
+
+    /* 2. Text Colors */
+    --ds-gray-1000: #000000;
+    --ds-gray-900: #171717;
+    --ds-gray-600: #666666;
+
+    /* 3. Sible Identity */
+    --sible-red: #E03E3E;
+    --sible-red-bg: #FFEEEE;
+
+    /* 4. Pico Overrides */
     --pico-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --pico-background-color: var(--ds-background-100);
+    --pico-color: var(--ds-gray-900);
+    --pico-border-radius: 6px;
+    --pico-form-element-border-color: var(--ds-gray-200);
+    --pico-primary-background: var(--ds-gray-1000);
+    --pico-primary-border: var(--ds-gray-1000);
+    --pico-primary-hover-background: #333;
+    --pico-muted-color: var(--ds-gray-600);
 
-    /* Dockge-inspired Palette */
-    --color-success: #2ea043;
-    --color-danger: #f85149;
-    --color-warning: #dbae0d;
-    --color-active-bg: rgba(92, 124, 250, 0.2);
-    --color-active-text: #748ffc;
+    /* Layout Tokens */
+    --sidebar-width: 250px;
+    --header-height: 50px;
+    --spacing-md: 1.5rem;
+}
 
-    --sidebar-width: 280px;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
+/* Dark Mode Support (Geist Dark) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --ds-background-100: #000000;
+        --ds-background-200: #111111;
+        --ds-gray-100: #1a1a1a;
+        /* darker hover */
+        --ds-gray-200: #333333;
+        --ds-gray-1000: #ffffff;
+        --ds-gray-900: #ededed;
+        --ds-gray-600: #888888;
 
-    --transition-speed: 0.15s;
+        --pico-primary-hover-background: #ccc;
+    }
 }
 
 body {
@@ -30,210 +56,248 @@ body {
     display: flex;
     overflow: hidden;
     margin: 0;
-    padding: var(--spacing-sm);
-    gap: var(--spacing-sm);
-    background-color: #000;
-    /* Outer void */
+    padding: 0;
+    /* Full bleed layout */
     font-family: var(--pico-font-family);
+    background-color: var(--ds-background-100);
+    color: var(--pico-color);
+    letter-spacing: -0.01em;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    color: var(--ds-gray-1000);
 }
 
 /* Sidebar */
 aside {
     width: var(--sidebar-width);
-    background: var(--pico-background-color);
-    border-radius: var(--pico-border-radius);
+    background: var(--ds-background-200);
+    border-right: 1px solid var(--ds-gray-200);
     display: flex;
     flex-direction: column;
     padding: var(--spacing-md);
-    overflow-y: auto;
     flex-shrink: 0;
-    border: 1px solid #303236;
 }
 
 aside hgroup {
-    margin-bottom: var(--spacing-md);
-    padding: 0 var(--spacing-sm);
+    margin-bottom: 2rem;
 }
 
 aside hgroup h3 {
-    margin-bottom: 0;
-    font-weight: 700;
-    font-size: 1.25rem;
-    letter-spacing: -0.02em;
-    color: #fff;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+aside hgroup p {
+    color: var(--ds-gray-600);
+    font-size: 0.85rem;
+    margin: 0;
 }
 
 aside hr {
-    margin: var(--spacing-md) 0;
-    border-color: #303236;
+    display: none;
+}
+
+/* Playbook Items */
+.playbook-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--pico-border-radius);
+    color: var(--ds-gray-600);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.playbook-item:hover {
+    background: var(--ds-gray-100);
+    color: var(--ds-gray-1000);
+}
+
+.playbook-item.active {
+    background: var(--ds-gray-200);
+    color: var(--ds-gray-1000);
+    font-weight: 600;
+}
+
+/* Pill / Badge */
+.status-pill {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid var(--ds-gray-200);
+    color: var(--ds-gray-600);
+    margin-right: 8px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.status-pill.active {
+    background: var(--ds-gray-1000);
+    color: var(--ds-background-100);
+    border-color: var(--ds-gray-1000);
 }
 
 /* Main Content */
 main {
     flex-grow: 1;
-    background: var(--pico-background-color);
-    border-radius: var(--pico-border-radius);
     display: flex;
     flex-direction: column;
-    padding: 0;
     overflow: hidden;
-    position: relative;
-    border: 1px solid #303236;
+    background: var(--ds-background-100);
 }
 
-/* Sidebar Items (Pills) */
-.playbook-item {
-    display: flex;
-    align-items: center;
-    padding: 0.6rem 1rem;
-    border-radius: 50px;
-    /* Pill shape */
-    cursor: pointer;
-    transition: all var(--transition-speed) ease;
-    text-decoration: none;
-    color: #c1c2c5;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-    font-size: 0.95rem;
-    border: 1px solid transparent;
-}
-
-.playbook-item:hover {
-    background: #25262b;
-    color: #fff;
-    text-decoration: none;
-}
-
-.playbook-item.active {
-    background: var(--color-active-bg);
-    color: var(--color-active-text);
-    border: 1px solid rgba(92, 124, 250, 0.3);
-}
-
-/* Status Indicator */
-.status-pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-right: 10px;
-    background: #2c2e33;
-    color: #888;
-}
-
-.status-pill.active {
-    background: #1f6feb;
-    /* GitHub blueish/Dockge blue */
-    color: white;
-}
-
-.status-text-lg {
-    font-size: 1rem;
-    padding: 4px 12px;
-}
-
-/* Header in Main */
+/* Header */
 header.main-header {
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-bottom: 1px solid #303236;
+    height: var(--header-height);
+    border-bottom: 1px solid var(--ds-gray-200);
+    padding: 0 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--pico-background-color);
+    background: rgba(255, 255, 255, 0.8);
+    /* Translucent */
+    backdrop-filter: blur(8px);
+}
+
+@media (prefers-color-scheme: dark) {
+    header.main-header {
+        background: rgba(0, 0, 0, 0.8);
+    }
 }
 
 header.main-header h4 {
     margin: 0;
-    font-weight: 700;
-    color: #fff;
-    font-size: 1.2rem;
+    font-size: 0.95rem;
 }
 
-/* Flex Utilities for Header */
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+/* Buttons */
+button.btn-new {
+    width: 100%;
+    background: var(--ds-gray-1000);
+    color: var(--ds-background-100);
+    border: 1px solid var(--ds-gray-1000);
+    border-radius: var(--pico-border-radius);
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s ease;
 }
 
-/* Action Buttons */
-.actions {
-    display: flex;
-    gap: 0.5rem;
+button.btn-new:hover {
+    background: var(--ds-gray-900);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
 }
 
 .actions button {
-    /* Dockge style buttons */
-    border-radius: 6px;
-    padding: 0.4rem 0.8rem;
+    padding: 0.35rem 0.8rem;
     font-size: 0.85rem;
-    font-weight: 600;
-    border: none;
-    margin-bottom: 0;
+    border-radius: var(--pico-border-radius);
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+    background: transparent;
+    border: 1px solid var(--ds-gray-200);
+    color: var(--ds-gray-1000);
+    transition: all 0.15s ease;
+}
+
+.actions button:hover {
+    background: var(--ds-gray-100);
 }
 
 .actions button.primary {
-    background-color: var(--pico-primary);
-    color: white;
+    background: var(--ds-gray-1000);
+    color: var(--ds-background-100);
+    border-color: var(--ds-gray-1000);
 }
 
-.actions button.contrast {
-    background-color: #25262b;
-    /* Grey buttons */
-    color: #fff;
-    border: 1px solid #303236;
-}
-
-.actions button.contrast:hover {
-    background-color: #373a40;
+.actions button.primary:hover {
+    background: var(--ds-gray-900);
+    /* Slightly lighter/diff in dark mode */
 }
 
 .actions button.danger {
-    background-color: var(--color-danger);
-    color: white;
+    color: var(--sible-red);
+    border-color: var(--ds-gray-200);
+}
+
+.actions button.danger:hover {
+    background: var(--sible-red-bg);
+    border-color: var(--sible-red);
 }
 
 /* Tabs */
 .tabs {
-    padding: 0 var(--spacing-lg);
-    border-bottom: 1px solid #303236;
     display: flex;
-    gap: 2px;
-    background: #141517;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--ds-gray-200);
+    background: var(--ds-background-200);
+    gap: 1.5rem;
 }
 
 .tab-btn {
     background: none;
     border: none;
-    padding: 0.75rem 1rem;
-    color: var(--pico-muted-color);
-    cursor: pointer;
-    font-weight: 500;
+    padding: 0.75rem 0;
     font-size: 0.9rem;
-    transition: color var(--transition-speed);
-    position: relative;
-    top: 1px;
+    color: var(--ds-gray-600);
+    cursor: pointer;
     border-bottom: 2px solid transparent;
+    transition: all 0.2s;
 }
 
 .tab-btn:hover {
-    color: #e9ecef;
+    color: var(--ds-gray-1000);
 }
 
 .tab-btn.active {
-    color: #fff;
-    border-bottom-color: var(--pico-primary);
+    color: var(--ds-gray-1000);
+    border-bottom: 2px solid var(--ds-gray-1000);
 }
 
-/* Content Area */
+/* Editor & Terminal */
+/* Split View Layout */
 .content-area {
     flex-grow: 1;
     position: relative;
+    display: flex;
+    /* Side by side */
     overflow: hidden;
-    background: #0d1117;
-    /* Very dark for editor */
+    background: var(--ds-background-100);
+}
+
+.editor-pane {
+    flex: 6;
+    /* 60% width */
+    position: relative;
+    border-right: 1px solid var(--ds-gray-200);
+}
+
+.terminal-pane {
+    flex: 4;
+    /* 40% width */
+    display: flex;
+    flex-direction: column;
+    min-width: 300px;
+    background: #000;
+    overflow: hidden;
+    /* Container overflow */
 }
 
 #editor {
@@ -244,34 +308,23 @@ header.main-header h4 {
     left: 0;
 }
 
-/* Terminal */
 #terminal-container {
-    background-color: #0d1117;
-    color: #3fb950;
-    /* Green terminal text */
-    font-family: 'JetBrains Mono', 'SF Mono', 'Courier New', monospace;
-    padding: var(--spacing-md);
+    padding: 1.5rem;
+    color: #eee;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
     height: 100%;
     overflow-y: auto;
-    display: none;
-    font-size: 0.9rem;
-    line-height: 1.6;
 }
 
-#terminal-container.active {
-    display: block;
+/* Utils */
+.h-100 {
+    height: 100%;
 }
 
-/* Empty State / Waiting Text */
-.waiting-text {
-    opacity: 0.5;
-}
-
-.empty-state-message {
-    padding: 1rem;
-    color: #868e96;
-    text-align: center;
-    font-size: 0.9em;
+.flex-col {
+    display: flex;
+    flex-direction: column;
 }
 
 .flex-col-center {
@@ -281,57 +334,42 @@ header.main-header h4 {
     justify-content: center;
 }
 
-.color-muted {
-    color: #868e96;
-}
-
-.flex-col {
-    display: flex;
-    flex-direction: column;
-}
-
-/* Sidebar Button Container */
-.sidebar-btn-container {
-    margin-bottom: 1rem;
-    padding: 0 0.5rem;
-}
-
-/* New Playbook Button */
-.btn-new {
-    width: 100%;
-    border-radius: 8px;
-    padding: 0.5rem;
-    background: #1f6feb;
-    border: none;
-    color: white;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    cursor: pointer;
-}
-
-.btn-new:hover {
-    background: #1158c7;
-}
-
-/* Utilities */
 .text-center {
     text-align: center;
 }
 
-.flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.color-muted {
+    color: var(--ds-gray-600);
 }
 
-.h-100 {
-    height: 100%;
+.spacer {
+    flex-grow: 1;
 }
 
 .mt-2 {
-    margin-top: var(--spacing-lg);
+    margin-top: 1.5rem;
 }
 
 .d-none {
     display: none;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sidebar-btn-container {
+    margin-bottom: 0;
+}
+
+.empty-state-message {
+    color: var(--ds-gray-600);
+    text-align: center;
+    font-size: 0.9rem;
+    padding: 2rem;
+    background: var(--ds-background-200);
+    border-radius: var(--pico-border-radius);
+    border: 1px dashed var(--ds-gray-200);
 }
