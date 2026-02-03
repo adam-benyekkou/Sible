@@ -1,0 +1,23 @@
+<div class="log-meta">🚀 Connecting to stream for {{ name }}...</div>
+
+<!-- Stream Controller: Manages SSE connection and self-destructs on 'end' -->
+<div id="stream-controller" hx-ext="sse" sse-connect="/stream/{{ name }}">
+    <!-- 1. Log Lines: Append to the main container -->
+    <div sse-swap="message" hx-target="#terminal-container" hx-swap="beforeend"></div>
+
+    <!-- 2. End Signal: Remove this controller (stops reconnection) -->
+    <div sse-swap="end" hx-target="#stream-controller" hx-swap="delete"></div>
+</div>
+
+<!-- Auto-scroll script -->
+<script>
+    (function () {
+        var container = document.getElementById("terminal-container");
+        if (container) {
+            var observer = new MutationObserver(function () {
+                container.scrollTop = container.scrollHeight;
+            });
+            observer.observe(container, { childList: true, subtree: true });
+        }
+    })();
+</script>

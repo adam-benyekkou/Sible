@@ -1,22 +1,25 @@
-<div class="h-100 flex-col">
+<div class="h-100 flex-col" x-data="{ isEditing: false }">
     <header class="main-header">
         <div class="header-left">
-            <span class="status-pill status-text-lg">IDLE</span>
+            <span class="status-pill status-text-lg" x-text="isEditing ? 'EDITING' : 'IDLE'">IDLE</span>
             <h4>{{ name }}</h4>
         </div>
         <div class="actions">
-            <!-- Edit (Visual only for now, maps to Editor tab) -->
-            <button class="contrast" @click="currentTab = 'editor'">
+            <!-- Edit (Toggle) -->
+            <button class="contrast" x-show="!isEditing" @click="isEditing = true; window.startEditing()">
                 Edit
+            </button>
+            <button class="contrast" x-show="isEditing" @click="isEditing = false; window.discardEditing()">
+                Discard
             </button>
 
             <!-- Run -->
-            <button class="primary" hx-post="/run/{{ name }}">
+            <button class="primary" hx-post="/run/{{ name }}" hx-target="#terminal-container" hx-swap="innerHTML">
                 Run Playbook
             </button>
 
             <!-- Save -->
-            <button class="contrast" @click="saveFile()">
+            <button class="contrast" @click="saveFile(); isEditing = false; window.setEditorReadOnly(true)">
                 Save
             </button>
 
@@ -67,6 +70,29 @@
                 editor.setTheme("ace/theme/tomorrow_night_eighties");
                 editor.session.setMode("ace/mode/yaml");
 
+                // Default to Read Only
+                editor.setReadOnly(true);
+
+                // Internal state for undo
+                var originalContent = "";
+
+                // Global Helpers
+                window.setEditorReadOnly = function (readonly) {
+                    editor.setReadOnly(readonly);
+                    if (!readonly) editor.focus();
+                };
+
+                window.startEditing = function () {
+                    originalContent = editor.getValue();
+                    editor.setReadOnly(false);
+                    editor.focus();
+                };
+
+                window.discardEditing = function () {
+                    editor.setValue(originalContent, -1);
+                    editor.setReadOnly(true);
+                };
+
                 // Ensure text is visible
                 editor.setShowPrintMargin(false);
 
@@ -85,7 +111,8 @@
                         values: { content: content },
                         swap: 'none'
                     }).then(() => {
-                        // Optional toast
+                        // Update original content to the new saved state
+                        originalContent = content;
                     });
                 };
             }, 100);

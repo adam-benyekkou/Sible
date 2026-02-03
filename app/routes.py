@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Request, Response, Form
+from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from app.services import PlaybookService
+from app.services import PlaybookService, RunnerService
+import asyncio
 
 router = APIRouter()
 
@@ -79,3 +81,29 @@ async def delete_playbook(name: str):
     response = Response(content=content, media_type="text/html")
     response.headers["HX-Trigger"] = "sidebar-refresh"
     return response
+@router.post("/run/{name}")
+async def run_playbook_endpoint(name: str, request: Request):
+    """
+    Triggers the playbook execution on the frontend.
+    Instead of running it here, we return HTML that connects to the SSE stream.
+    """
+    # We return the "Running..." state UI which includes the hx-ext="sse" connection
+    return templates.TemplateResponse("partials/terminal_connect.html", {
+        "request": request,
+        "name": name
+    })
+
+@router.get("/stream/{name}")
+async def stream_playbook_endpoint(name: str):
+    """
+    SSE Endpoint.
+    """
+    async def event_generator():
+        yield "event: start\ndata: Connected to stream\n\n"
+        async for line in RunnerService.run_playbook(name):
+            # Server-Sent Events format: "data: <payload>\n\n"
+            # We must handle newlines in the data carefully or just send line by line
+            yield f"data: {line}\n\n"
+        yield "event: end\ndata: Execution finished\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")

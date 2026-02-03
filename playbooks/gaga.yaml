@@ -1,6 +1,0 @@
----
-- name: New Playbook
-  hosts: localhost
-  tasks:
-    - debug:
-        msg: 'Test Save 2'

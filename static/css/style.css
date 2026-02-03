@@ -310,11 +310,50 @@ button.btn-new:hover {
 
 #terminal-container {
     padding: 1.5rem;
-    color: #eee;
+    background-color: #000000;
+    /* Noir Absolu */
+    color: #a1a1aa;
+    /* Gris clair par défaut (Zinc-400) */
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
+    line-height: 1.5;
     height: 100%;
     overflow-y: auto;
+}
+
+/* --- LOG LEVELS (Geist/Ansible) --- */
+
+/* 🟢 SUCCESS / OK */
+.log-success {
+    color: #4ade80;
+    /* Green-400 */
+    font-weight: 600;
+}
+
+/* 🟡 CHANGED / WARNING */
+.log-changed,
+.log-warn {
+    color: #fbbf24;
+    /* Amber-400 */
+}
+
+/* 🔴 ERROR / FAILED */
+.log-error,
+.log-fatal {
+    color: #f87171;
+    /* Red-400 */
+}
+
+/* 🔵 META / HEADER */
+.log-meta {
+    color: #60a5fa;
+    /* Blue-400 */
+}
+
+/* 🟣 SKIPPED / DEBUG */
+.log-debug {
+    color: #c084fc;
+    /* Purple-400 */
 }
 
 /* Utils */

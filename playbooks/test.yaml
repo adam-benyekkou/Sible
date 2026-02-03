@@ -1,0 +1,13 @@
+---
+- name: Hello World Playbook
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Say Hello
+      debug:
+        msg: "Hello from Sible!"
+
+    - name: Show some details
+      debug:
+        msg: "This is running on {{ ansible_hostname }}"
