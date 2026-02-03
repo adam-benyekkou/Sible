@@ -17,10 +17,11 @@
 
 ## Phase 2: Core Functionality (Editor & Execution)
 
-- [ ] **Playbook Management**
-  - [ ] Implement File Reader Service (`app/services.py`)
-  - [ ] API Endpoint to list `.yaml` files
-  - [ ] API Endpoint to read/write file content
+- [x] **Playbook Management**
+  - [x] Implement File Reader Service (`app/services.py`)
+  - [x] API Endpoint to list `.yaml` files
+  - [x] API Endpoint to read/write file content
+  - [x] API Endpoint to create/delete files (Bonus)
 - [ ] **Editor Integration**
   - [ ] Integrate Ace Editor (via CDN or static asset)
   - [ ] Bind Editor to File Content (HTMX/Alpine)

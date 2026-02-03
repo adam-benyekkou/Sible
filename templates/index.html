@@ -1,14 +1,14 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div id="main-content" class="container"
-    style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #868e96;">
-    <hgroup style="text-align: center;">
+<div id="main-content" class="container text-center flex-center h-100" style="color: #868e96; flex-direction: column;">
+    <hgroup>
         <h2>Welcome to Sible</h2>
         <p>Select a playbook from the sidebar to edit or run.</p>
     </hgroup>
-    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
-        <button class="secondary outline" onclick="alert('Create functionality coming soon!')">
+    <div class="mt-2">
+        <button class="secondary outline" hx-post="/playbook" hx-prompt="Enter new playbook name (e.g., mysite.yaml):"
+            hx-swap="none">
             + New Playbook
         </button>
     </div>

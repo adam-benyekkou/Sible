@@ -1,47 +1,61 @@
-<header class="main-header" x-data>
-    <hgroup>
-        <h3 style="margin:0">{{ name }}</h3>
-    </hgroup>
+<header class="main-header">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <h4 style="margin:0;">{{ name }}</h4>
+        <small style="color: var(--pico-muted-color);">Editing</small>
+    </div>
     <div class="actions">
-        <button class="outline" @click="saveFile()">Save</button>
-        <button class="primary" hx-post="/run/{{ name }}">Run</button>
-        <button class="secondary outline">Schedule</button>
+        <!-- Save Button -->
+        <button hx-post="/playbook/{{ name }}" hx-include="#editor-form" hx-target="#save-status" class="primary">
+            Save
+        </button>
+
+        <!-- Delete Button -->
+        <button hx-delete="/playbook/{{ name }}"
+            hx-confirm="Are you sure you want to delete {{ name }}? This cannot be undone." hx-target="#main-content"
+            class="outline contrast">
+            Delete
+        </button>
     </div>
 </header>
 
-<div class="tabs" x-data>
-    <button class="tab-btn" :class="currentTab === 'editor' ? 'active' : ''"
-        @click="currentTab = 'editor'">Editor</button>
-    <button class="tab-btn" :class="currentTab === 'logs' ? 'active' : ''" @click="currentTab = 'logs'">Logs</button>
+<div class="tabs">
+    <button class="tab-btn active" @click="currentTab = 'editor'"
+        :class="{ 'active': currentTab === 'editor' }">Editor</button>
+    <button class="tab-btn" @click="currentTab = 'terminal'"
+        :class="{ 'active': currentTab === 'terminal' }">Terminal</button>
 </div>
 
 <div class="content-area">
     <!-- Editor Tab -->
-    <div id="editor" x-show="currentTab === 'editor'">{{ content }}</div>
+    <div id="editor" x-show="currentTab === 'editor'"></div>
 
-    <!-- Logs Tab -->
-    <div id="terminal-container" x-show="currentTab === 'logs'">
-        <div class="terminal-output">Waiting for execution...</div>
+    <!-- Terminal Tab -->
+    <div id="terminal-container" :class="{ 'active': currentTab === 'terminal' }" x-show="currentTab === 'terminal'">
+        <div style="opacity: 0.5;">Terminal output will appear here...</div>
     </div>
 </div>
 
-<script>
-    // Initialize Ace Editor
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/twilight");
-    editor.session.setMode("ace/mode/yaml");
-    editor.setShowPrintMargin(false);
+<!-- Hidden Form for HTMX to grab content -->
+<form id="editor-form" style="display:none;">
+    <textarea name="content" id="hidden-content">{{ content }}</textarea>
+</form>
 
-    // Save function exposed to Alpine
-    function saveFile() {
-        var content = editor.getValue();
-        // HTMX ajax call to save
-        htmx.ajax('POST', '/playbook/{{ name }}', {
-            values: { content: content },
-            swap: 'none'
-        }).then(() => {
-            // Simple toast or feedback could go here
-            console.log("Saved!");
+<div id="save-status" style="position: fixed; bottom: 20px; right: 20px; z-index: 100;"></div>
+
+<script>
+    // Initialize Ace Editor if not already done for this element
+    // Note: In a real app we need to be careful about multiple initializations.
+    // Since we swap innerHTML, the old instance is gone, but we should init the new one.
+
+    (function () {
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/tomorrow_night_eighties");
+        editor.session.setMode("ace/mode/yaml");
+        editor.setValue(document.getElementById("hidden-content").value, -1);
+
+        // Sync content to hidden textarea on change
+        editor.session.on('change', function () {
+            document.getElementById("hidden-content").value = editor.getValue();
         });
-    }
+    })();
 </script>

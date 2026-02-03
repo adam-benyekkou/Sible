@@ -42,3 +42,31 @@ def test_save_and_get_playbook(mock_playbooks_dir):
 def test_save_invalid_extension(mock_playbooks_dir):
     assert PlaybookService.save_playbook_content("bad.txt", "content") is False
     assert not (mock_playbooks_dir / "bad.txt").exists()
+
+def test_validate_path_security():
+    # Helper to check validation via internal method or public effect
+    assert PlaybookService._validate_path("../outside.yaml") is None
+    assert PlaybookService._validate_path("/etc/passwd") is None
+    assert PlaybookService._validate_path("valid.yaml") is not None
+    assert PlaybookService._validate_path("sub/folder.yaml") is None # We currently only allow flat structure or validate_path regex denies slash
+
+def test_create_playbook(mock_playbooks_dir):
+    name = "created.yaml"
+    assert PlaybookService.create_playbook(name) is True
+    assert (mock_playbooks_dir / name).exists()
+    assert "New Playbook" in (mock_playbooks_dir / name).read_text()
+    
+    # Try creating again (should fail)
+    assert PlaybookService.create_playbook(name) is False
+
+def test_delete_playbook(mock_playbooks_dir):
+    name = "todelete.yaml"
+    (mock_playbooks_dir / name).touch()
+    assert (mock_playbooks_dir / name).exists()
+    
+    assert PlaybookService.delete_playbook(name) is True
+    assert not (mock_playbooks_dir / name).exists()
+    
+    # Try deleting non-existent
+    assert PlaybookService.delete_playbook(name) is False
+

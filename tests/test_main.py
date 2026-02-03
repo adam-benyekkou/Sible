@@ -44,3 +44,16 @@ def test_save_playbook_api(mock_playbooks):
     response = client.post("/playbook/test.yaml", data={"content": "new content"})
     assert response.status_code == 200
     assert "Saved successfully" in response.text
+
+def test_create_playbook_api(mock_playbooks, monkeypatch):
+    monkeypatch.setattr(PlaybookService, "create_playbook", lambda name: True)
+    response = client.post("/playbook", headers={"HX-Prompt": "new.yaml"})
+    assert response.status_code == 200
+    assert response.headers["HX-Trigger"] == "sidebar-refresh"
+
+def test_delete_playbook_api(mock_playbooks, monkeypatch):
+    monkeypatch.setattr(PlaybookService, "delete_playbook", lambda name: True)
+    response = client.delete("/playbook/test.yaml")
+    assert response.status_code == 200
+    assert response.headers["HX-Trigger"] == "sidebar-refresh"
+

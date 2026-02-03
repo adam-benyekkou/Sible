@@ -1,0 +1,6 @@
+---
+- name: New Playbook
+  hosts: localhost
+  tasks:
+    - debug:
+        msg: 'Hello World'

@@ -34,7 +34,7 @@
             <p><small>Playbook Manager</small></p>
         </hgroup>
         <hr>
-        <nav class="playbook-list" hx-get="/partials/sidebar" hx-trigger="load">
+        <nav class="playbook-list" hx-get="/partials/sidebar" hx-trigger="load, sidebar-refresh from:body">
             <!-- Items via HTMX -->
             <div aria-busy="true">Loading playbooks...</div>
         </nav>
