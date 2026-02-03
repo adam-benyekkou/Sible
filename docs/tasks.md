@@ -22,10 +22,10 @@
   - [x] API Endpoint to list `.yaml` files
   - [x] API Endpoint to read/write file content
   - [x] API Endpoint to create/delete files (Bonus)
-- [ ] **Editor Integration**
-  - [ ] Integrate Ace Editor (via CDN or static asset)
-  - [ ] Bind Editor to File Content (HTMX/Alpine)
-  - [ ] "Save" button functionality
+- [x] **Editor Integration**
+  - [x] Integrate Ace Editor (via CDN or static asset)
+  - [x] Bind Editor to File Content (HTMX/Alpine)
+  - [x] "Save" button functionality
 - [ ] **Playbook Execution (The "Runner")**
   - [ ] Create `ansible-runner` wrapper or `asyncio.subprocess` logic
   - [ ] Implement Server-Sent Events (SSE) endpoint for logs

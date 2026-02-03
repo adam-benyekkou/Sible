@@ -1,61 +1,101 @@
-<header class="main-header">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-        <h4 style="margin:0;">{{ name }}</h4>
-        <small style="color: var(--pico-muted-color);">Editing</small>
-    </div>
-    <div class="actions">
-        <!-- Save Button -->
-        <button hx-post="/playbook/{{ name }}" hx-include="#editor-form" hx-target="#save-status" class="primary">
-            Save
-        </button>
+<div class="h-100 flex-col">
+    <header class="main-header">
+        <div class="header-left">
+            <span class="status-pill status-text-lg">IDLE</span>
+            <h4>{{ name }}</h4>
+        </div>
+        <div class="actions">
+            <!-- Edit (Visual only for now, maps to Editor tab) -->
+            <button class="contrast" @click="currentTab = 'editor'">
+                Edit
+            </button>
 
-        <!-- Delete Button -->
-        <button hx-delete="/playbook/{{ name }}"
-            hx-confirm="Are you sure you want to delete {{ name }}? This cannot be undone." hx-target="#main-content"
-            class="outline contrast">
-            Delete
-        </button>
-    </div>
-</header>
+            <!-- Run -->
+            <button class="primary" hx-post="/run/{{ name }}">
+                Run Playbook
+            </button>
 
-<div class="tabs">
-    <button class="tab-btn active" @click="currentTab = 'editor'"
-        :class="{ 'active': currentTab === 'editor' }">Editor</button>
-    <button class="tab-btn" @click="currentTab = 'terminal'"
-        :class="{ 'active': currentTab === 'terminal' }">Terminal</button>
+            <!-- Save -->
+            <button class="contrast" @click="saveFile()">
+                Save
+            </button>
+
+            <!-- Schedule -->
+            <button class="contrast">
+                Schedule
+            </button>
+
+            <!-- Delete Button -->
+            <button class="danger" hx-delete="/playbook/{{ name }}"
+                hx-confirm="Are you sure you want to delete {{ name }}? This cannot be undone."
+                hx-target="#main-content">
+                Delete
+            </button>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn" :class="currentTab === 'editor' ? 'active' : ''" @click="currentTab = 'editor'">Playbook
+            Editor</button>
+        <button class="tab-btn" :class="currentTab === 'terminal' ? 'active' : ''"
+            @click="currentTab = 'terminal'">Output</button>
+    </div>
+
+    <div class="content-area">
+        <!-- Editor Tab -->
+        <div id="editor" x-show="currentTab === 'editor'"></div>
+
+        <!-- Terminal Tab -->
+        <div id="terminal-container" :class="{ 'active': currentTab === 'terminal' }"
+            x-show="currentTab === 'terminal'">
+            <div class="waiting-text">Waiting for execution...</div>
+        </div>
+    </div>
 </div>
 
-<div class="content-area">
-    <!-- Editor Tab -->
-    <div id="editor" x-show="currentTab === 'editor'"></div>
-
-    <!-- Terminal Tab -->
-    <div id="terminal-container" :class="{ 'active': currentTab === 'terminal' }" x-show="currentTab === 'terminal'">
-        <div style="opacity: 0.5;">Terminal output will appear here...</div>
-    </div>
-</div>
-
-<!-- Hidden Form for HTMX to grab content -->
-<form id="editor-form" style="display:none;">
-    <textarea name="content" id="hidden-content">{{ content }}</textarea>
-</form>
-
-<div id="save-status" style="position: fixed; bottom: 20px; right: 20px; z-index: 100;"></div>
+<!-- Hidden Form for HTMX/JS to store state -->
+<textarea id="hidden-content" class="d-none">{{ content }}</textarea>
 
 <script>
-    // Initialize Ace Editor if not already done for this element
-    // Note: In a real app we need to be careful about multiple initializations.
-    // Since we swap innerHTML, the old instance is gone, but we should init the new one.
-
     (function () {
-        var editor = ace.edit("editor");
-        editor.setTheme("ace/theme/tomorrow_night_eighties");
-        editor.session.setMode("ace/mode/yaml");
-        editor.setValue(document.getElementById("hidden-content").value, -1);
+        function initAce() {
+            var editorDiv = document.getElementById("editor");
+            if (!editorDiv) return;
 
-        // Sync content to hidden textarea on change
-        editor.session.on('change', function () {
-            document.getElementById("hidden-content").value = editor.getValue();
-        });
+            // Prevent double init
+            if (editorDiv.classList.contains("ace_editor")) return;
+
+            // Wait for x-show / DOM paint
+            setTimeout(function () {
+                var editor = ace.edit("editor");
+                editor.setTheme("ace/theme/tomorrow_night_eighties");
+                editor.session.setMode("ace/mode/yaml");
+
+                // Ensure text is visible
+                editor.setShowPrintMargin(false);
+
+                var contentArea = document.getElementById("hidden-content");
+                if (contentArea) {
+                    editor.setValue(contentArea.value, -1);
+                }
+
+                // Force resize
+                editor.resize();
+
+                // Save handler
+                window.saveFile = function () {
+                    var content = editor.getValue();
+                    htmx.ajax('POST', '/playbook/{{ name }}', {
+                        values: { content: content },
+                        swap: 'none'
+                    }).then(() => {
+                        // Optional toast
+                    });
+                };
+            }, 100);
+        }
+
+        // Run Init
+        initAce();
     })();
 </script>
