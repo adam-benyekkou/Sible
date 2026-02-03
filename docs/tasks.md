@@ -26,10 +26,10 @@
   - [x] Integrate Ace Editor (via CDN or static asset)
   - [x] Bind Editor to File Content (HTMX/Alpine)
   - [x] "Save" button functionality
-- [ ] **Playbook Execution (The "Runner")**
-  - [ ] Create `ansible-runner` wrapper or `asyncio.subprocess` logic
-  - [ ] Implement Server-Sent Events (SSE) endpoint for logs
-  - [ ] Terminal UI to display streamed logs
+- [x] **Playbook Execution (The "Runner")**
+  - [x] Create `ansible-runner` wrapper or `asyncio.subprocess` logic
+  - [x] Implement Server-Sent Events (SSE) endpoint for logs
+  - [x] Terminal UI to display streamed logs
 
 ## Phase 3: Scheduling & Advanced Features
 

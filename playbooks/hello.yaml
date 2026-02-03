@@ -2,7 +2,7 @@
 - name: Hello World Playbook
   hosts: localhost
   connection: local
-  gather_facts: false
+  gather_facts: true
   tasks:
     - name: Say Hello
       debug:
