@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+htmx
+apscheduler
+ansible-runner
+websockets
