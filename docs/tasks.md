@@ -31,15 +31,11 @@
   - [x] Implement Server-Sent Events (SSE) endpoint for logs
   - [x] Terminal UI to display streamed logs
 
-## Phase 3: Scheduling & Advanced Features
+## Phase 3: Advanced Features
 
-- [ ] **Scheduler System**
-  - [ ] Integrate `APScheduler`
-  - [ ] UI for managing schedules (Cron expression input)
-  - [ ] Backend logic to trigger jobs
-- [ ] **Reliability & Error Handling**
-  - [ ] Toast notifications for success/error
-  - [ ] Graceful handling of missing files or bad permissions
+- [x] **Reliability & Error Handling**
+  - [x] Toast notifications for success/error
+  - [x] Graceful handling of missing files or bad permissions
 
 ## Phase 4: Polish & Production
 

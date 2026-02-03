@@ -53,7 +53,55 @@
 
     <script>
         // Global Alpine store or helper text if needed
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('toastManager', () => ({
+                toasts: [],
+                add(detail) {
+                    // detail: { message: "Saved", level: "success" }
+                    const id = Date.now();
+                    this.toasts.push({
+                        id: id,
+                        message: detail.message,
+                        level: detail.level || 'success'
+                    });
+
+                    // Auto-remove after 3 seconds
+                    setTimeout(() => {
+                        this.remove(id);
+                    }, 3000);
+                },
+                remove(id) {
+                    this.toasts = this.toasts.filter(t => t.id !== id);
+                }
+            }));
+        });
     </script>
+
+    <!-- Toast Container -->
+    <div id="toast-container" x-data="toastManager" @show-toast.window="add($event.detail)">
+
+        <template x-for="toast in toasts" :key="toast.id">
+            <div class="toast" :class="'toast-' + toast.level">
+                <span class="toast-icon">
+                    <template x-if="toast.level === 'success'">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </template>
+                    <template x-if="toast.level === 'error'">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </template>
+                </span>
+                <span class="toast-message" x-text="toast.message"></span>
+            </div>
+        </template>
+    </div>
 </body>
 
 </html>
