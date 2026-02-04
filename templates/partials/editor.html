@@ -100,6 +100,13 @@
                 History
             </button>
 
+            {% if has_requirements %}
+            <button class="contrast" hx-post="/playbook/{{ name }}/install-requirements" hx-target="#terminal-container"
+                hx-swap="innerHTML">
+                Install Roles
+            </button>
+            {% endif %}
+
             <!-- Delete Button -->
             <button class="danger" hx-delete="/playbook/{{ name }}"
                 hx-confirm="Are you sure you want to delete {{ name }}? This cannot be undone."

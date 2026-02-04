@@ -1,0 +1,30 @@
+<div class="settings-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3>Inventory Management</h3>
+        <button class="secondary" hx-post="/settings/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
+            hx-indicator="#ping-loading">
+            Ping All Hosts
+        </button>
+    </div>
+    <p class="color-muted font-sm">Manage your Ansible inventory file (<code>inventory.ini</code>). These hosts will be
+        available to all playbooks.</p>
+    <hr>
+
+    <div id="ping-loading" class="htmx-indicator" style="margin-bottom: 1rem;">
+        <span aria-busy="true">Pinging hosts...</span>
+    </div>
+    <div id="ping-result" style="margin-bottom: 1.5rem;"></div>
+
+    <form hx-post="/settings/inventory" hx-swap="none">
+        <label>
+            <strong>inventory.ini</strong>
+            <textarea name="content"
+                style="font-family: 'Fira Code', 'Cascadia Code', monospace; height: 400px; background: #0d1117; color: #e6edf3; padding: 1.5rem; border: 1px solid #30363d; border-radius: 8px; line-height: 1.6; resize: vertical;"
+                spellcheck="false">{{ content }}</textarea>
+        </label>
+
+        <div style="margin-top: 2rem; text-align: right;">
+            <button type="submit" class="primary" style="width: auto;">Save Inventory</button>
+        </div>
+    </form>
+</div>

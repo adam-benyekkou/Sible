@@ -26,6 +26,11 @@
                 Notifications
             </a>
 
+            <a href="#" class="settings-nav-item" hx-get="/settings/inventory" hx-target="#settings-content"
+                onclick="document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.remove('active')); this.classList.add('active');">
+                Inventory
+            </a>
+
             <a href="/" class="settings-nav-item" style="margin-top: auto; border-top: 1px solid var(--ds-gray-200);">
                 ← Back to Dashboard
             </a>

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, Form
 from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from app.services import PlaybookService, RunnerService, LinterService, SettingsService
+from app.services import PlaybookService, RunnerService, LinterService, SettingsService, InventoryService
 from app.auth import check_auth, verify_password, get_password_hash
 from app.tasks import add_playbook_job, list_jobs, remove_job, update_job, get_job_info
 from app.database import engine
@@ -70,10 +70,16 @@ async def get_playbook_view(name: str, request: Request):
     if content is None:
         return Response(content="<p>File not found</p>", media_type="text/html")
     
-    return templates.TemplateResponse("partials/editor.html", {
-        "request": request, 
-        "name": name, 
-        "content": content
+        "content": content,
+        "has_requirements": PlaybookService.has_requirements(name)
+    })
+
+@router.post("/playbook/{name:path}/install-requirements")
+async def install_playbook_requirements(name: str, request: Request):
+    return templates.TemplateResponse("partials/terminal_connect.html", {
+        "request": request,
+        "name": name,
+        "mode": "galaxy"
     })
 
 import json
@@ -205,10 +211,14 @@ async def stream_playbook_endpoint(name: str, mode: str = "run"):
     
     async def event_generator():
         yield "event: start\ndata: Connected to stream\n\n"
-        # Pass check_mode to the runner
-        async for line in RunnerService.run_playbook(name, check_mode=check_mode):
-            # Server-Sent Events format: "data: <payload>\n\n"
-            yield f"data: {line}\n\n"
+        if mode == "galaxy":
+             async for line in RunnerService.install_requirements(name):
+                yield f"data: {line}\n\n"
+        else:
+            # Pass check_mode to the runner
+            async for line in RunnerService.run_playbook(name, check_mode=check_mode):
+                # Server-Sent Events format: "data: <payload>\n\n"
+                yield f"data: {line}\n\n"
         yield "event: end\ndata: Execution finished\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
@@ -420,6 +430,87 @@ async def get_settings_general(request: Request):
 @router.get("/settings/retention_tab")
 async def get_settings_retention_tab(request: Request):
     return await get_retention_settings(request, template="partials/settings_retention.html")
+
+@router.get("/settings/inventory")
+async def get_settings_inventory(request: Request):
+    content = InventoryService.get_inventory_content()
+    return templates.TemplateResponse("partials/settings_inventory.html", {
+        "request": request,
+        "content": content
+    })
+
+@router.post("/settings/inventory")
+async def save_settings_inventory(request: Request):
+    form = await request.form()
+    content = form.get("content")
+    if content is None:
+        response = Response(status_code=200)
+        trigger_toast(response, "Missing content", "error")
+        return response
+    
+    success = InventoryService.save_inventory_content(content)
+    if not success:
+        response = Response(status_code=200)
+        trigger_toast(response, "Failed to save inventory", "error")
+        return response
+    
+    response = Response(status_code=200)
+    trigger_toast(response, "Inventory saved", "success")
+    return response
+
+@router.post("/settings/inventory/ping")
+async def ping_inventory(request: Request):
+    output = await InventoryService.ping_all()
+    # We'll return the output in a pre-styled div for the modal/partial
+    return f'<pre class="log-output" style="max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 4px;">{output}</pre>'
+
+@router.get("/settings/secrets")
+async def get_settings_secrets(request: Request):
+    from app.models import EnvVar
+    with Session(engine) as session:
+        env_vars = session.exec(select(EnvVar)).all()
+    return templates.TemplateResponse("partials/settings_secrets.html", {
+        "request": request,
+        "env_vars": env_vars
+    })
+
+@router.post("/settings/secrets")
+async def create_env_var(request: Request, key: str = Form(...), value: str = Form(...), is_secret: str = Form(None)):
+    from app.models import EnvVar
+    with Session(engine) as session:
+        env_var = EnvVar(key=key, value=value, is_secret=(is_secret == "on"))
+        session.add(env_var)
+        session.commit()
+    
+    response = Response(status_code=200)
+    trigger_toast(response, f"Variable '{key}' added", "success")
+    # Refresh the secrets list
+    response.headers["HX-Trigger"] = "secrets-refresh"
+    return response
+
+@router.delete("/settings/secrets/{env_id}")
+async def delete_env_var(env_id: int):
+    from app.models import EnvVar
+    with Session(engine) as session:
+        env_var = session.get(EnvVar, env_id)
+        if env_var:
+            key = env_var.key
+            session.delete(env_var)
+            session.commit()
+            response = Response(status_code=200)
+            trigger_toast(response, f"Variable '{key}' deleted", "success")
+            return response
+    return Response(status_code=404)
+
+@router.get("/partials/settings/secrets/list")
+async def get_secrets_list(request: Request):
+    from app.models import EnvVar
+    with Session(engine) as session:
+        env_vars = session.exec(select(EnvVar)).all()
+    return templates.TemplateResponse("partials/secrets_list.html", {
+        "request": request,
+        "env_vars": env_vars
+    })
 
 from fastapi import File, UploadFile
 import shutil

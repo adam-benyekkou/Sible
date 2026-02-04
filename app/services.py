@@ -177,6 +177,19 @@ class PlaybookService:
         except OSError:
             return False
 
+    @staticmethod
+    def has_requirements(name: str) -> bool:
+        """
+        Checks if a requirements.yml or requirements.yaml exists in the same directory as the playbook.
+        """
+        file_path = PlaybookService._validate_path(name)
+        if not file_path:
+            return False
+            
+        parent = file_path.parent
+        return (parent / "requirements.yml").exists() or (parent / "requirements.yaml").exists()
+
+
 import shutil
 import sys
 import asyncio
@@ -310,7 +323,14 @@ class RunnerService:
             return {'success': False, 'output': error_msg, 'rc': 127}
 
 
+        from app.models import EnvVar
+        with Session(engine) as session:
+            env_vars = session.exec(select(EnvVar)).all()
+            
         env = os.environ.copy()
+        for ev in env_vars:
+            env[ev.key] = ev.value
+            
         env["ANSIBLE_FORCE_COLOR"] = "0"
         env["ANSIBLE_NOCOWS"] = "1"
 
@@ -425,7 +445,14 @@ class RunnerService:
                 session.commit()
              return
 
+        from app.models import EnvVar
+        with Session(engine) as session:
+            env_vars = session.exec(select(EnvVar)).all()
+            
         env = os.environ.copy()
+        for ev in env_vars:
+            env[ev.key] = ev.value
+            
         env["ANSIBLE_FORCE_COLOR"] = "0"
         env["ANSIBLE_NOCOWS"] = "1"
 
@@ -491,6 +518,58 @@ class RunnerService:
                 job.exit_code = 1
                 session.add(job)
                 session.commit()
+
+    @staticmethod
+    async def install_requirements(playbook_name: str):
+        """
+        Runs 'ansible-galaxy install -r requirements.yml' in the playbook's directory.
+        """
+        file_path = PlaybookService._validate_path(playbook_name)
+        if not file_path:
+            yield '<div class="log-error">Error: Invalid playbook path</div>'
+            return
+            
+        parent = file_path.parent
+        req_file = None
+        if (parent / "requirements.yml").exists(): req_file = "requirements.yml"
+        elif (parent / "requirements.yaml").exists(): req_file = "requirements.yaml"
+        
+        if not req_file:
+            yield '<div class="log-error">Error: No requirements.yml found in directory.</div>'
+            return
+
+        ansible_galaxy = shutil.which("ansible-galaxy")
+        
+        # If not found, skip or try wsl
+        if not ansible_galaxy:
+            yield '<div class="log-error">Error: ansible-galaxy not found in PATH.</div>'
+            return
+
+        # -p ./roles ensures roles are installed locally to the playbook project
+        cmd = [ansible_galaxy, "install", "-r", req_file, "-p", "./roles"]
+        
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                cwd=str(parent),
+                env=os.environ.copy()
+            )
+            
+            yield '<div class="log-meta">Sible: Starting installation of roles via ansible-galaxy...</div>'
+            while True:
+                line = await process.stdout.readline()
+                if not line:
+                    break
+                decoded_line = line.decode('utf-8', errors='replace').rstrip()
+                formatted_line = RunnerService.format_log_line(decoded_line)
+                yield formatted_line
+
+            await process.wait()
+            yield f'<div class="log-success">Sible: Installation finished with code {process.returncode}</div>'
+        except Exception as e:
+            yield f'<div class="log-error">Sible Error: {str(e)}</div>'
 
 class LinterService:
     @staticmethod
@@ -617,3 +696,55 @@ class NotificationService:
             emoji = "✅" if status == "success" else "🚨"
             message = f"{emoji} Playbook '{playbook_name}' finished with status: {status.upper()}"
             NotificationService.send_notification(message, title=f"Sible: {playbook_name}")
+
+class InventoryService:
+    INVENTORY_FILE = Path("inventory.ini")
+
+    @staticmethod
+    def get_inventory_content() -> str:
+        if not InventoryService.INVENTORY_FILE.exists():
+            # Create an empty one if it doesn't exist
+            InventoryService.INVENTORY_FILE.write_text("[all]\nlocalhost ansible_connection=local\n", encoding="utf-8")
+        return InventoryService.INVENTORY_FILE.read_text(encoding="utf-8")
+
+    @staticmethod
+    def save_inventory_content(content: str) -> bool:
+        try:
+            InventoryService.INVENTORY_FILE.write_text(content, encoding="utf-8")
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    async def ping_all() -> str:
+        """
+        Runs 'ansible all -m ping -i inventory.ini' and returns the output.
+        """
+        if not InventoryService.INVENTORY_FILE.exists():
+            return "No inventory file found."
+            
+        ansible_bin = shutil.which("ansible")
+        cmd = ["ansible", "all", "-m", "ping", "-i", str(InventoryService.INVENTORY_FILE)]
+        
+        if not ansible_bin:
+            # Check for Windows/WSL
+            if sys.platform == "win32":
+                 wsl_bin = shutil.which("wsl")
+                 if wsl_bin:
+                      # Convert path to WSL style if possible, or just assume it works in current mount
+                      # For now, let's just say "Ansible not found" to keep it simple unless requested.
+                      return "Ansible not found. If using Windows, please run Sible inside WSL for full functionality."
+            return "Ansible not found. Please install it to use ping."
+
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                env=os.environ.copy()
+            )
+            stdout, _ = await process.communicate()
+            return stdout.decode('utf-8', errors='replace')
+        except Exception as e:
+            return f"Error running ping: {str(e)}"
+

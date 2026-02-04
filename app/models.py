@@ -36,3 +36,10 @@ class AppSettings(SQLModel, table=True):
     auth_enabled: bool = Field(default=False)
     auth_username: str = Field(default="admin")
     auth_password: str = Field(default="admin")
+
+class EnvVar(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    key: str = Field(index=True)
+    value: str
+    is_secret: bool = Field(default=False)
+
