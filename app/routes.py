@@ -69,7 +69,9 @@ async def get_playbook_view(name: str, request: Request):
     content = PlaybookService.get_playbook_content(name)
     if content is None:
         return Response(content="<p>File not found</p>", media_type="text/html")
-    
+    return templates.TemplateResponse("partials/editor.html", {
+        "request": request, 
+        "name": name, 
         "content": content,
         "has_requirements": PlaybookService.has_requirements(name)
     })
