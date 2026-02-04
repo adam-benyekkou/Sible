@@ -1,38 +1,36 @@
 # Sible
 >
-> A modern, reactive UI for Ansible Playbooks. Inspired by [Dockge](https://github.com/louislam/dockge).
+> A modern, reactive UI for Ansible Playbooks. Inspired by Dockge.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![Status](https://img.shields.io/badge/status-alpha-orange.svg)
+![Status](https://img.shields.io/badge/status-beta-orange.svg)
 
 **Sible** is a lightweight, self-hosted Web UI to manage, edit, and run Ansible playbooks. It is designed to be a "no-build" alternative to complex tools like AWX/Tower, focusing on simplicity and a great user experience for homelabbers and DevOps engineers.
 
 ---
 
-## 📸 Screenshots
-
-*(Coming Soon)*
-
----
-
-## ✨ Features
+## Features
 
 - **Reactive UI**: Built with HTMX and Alpine.js for a snappy, app-like feel without the bloat.
-- **File Management**: Edit your `.yaml` playbooks directly in the browser with Ace Editor.
-- **Real-Time Logs**: Watch your playbooks run with live terminal output streaming (SSE).
-- **Scheduling**: Built-in cron scheduler to automate your tasks.
-- **Dark Mode**: Default dark theme inspired by standard IDEs and Dockge.
-- **Single Container**: Deploys as a single Docker container. No complex database setup required (uses SQLite).
+- **Playbook Management**: Create, edit, and delete playbooks directly in the browser.
+- **Advanced Editor**: Integrated Ace Editor with custom Dockge-like theme, line numbers, and syntax highlighting.
+- **Ansible Linting**: Real-time code quality checks and annotations directly in the editor.
+- **Execution & Logs**: Run playbooks manually or headless. View real-time output streams via SSE.
+- **Concurrency Control**: Prevents simultaneous execution of the same playbook.
+- **Dry Run Mode**: "Check" button to simulate playbook runs without making changes.
+- **Job History**: Tracks all manual and scheduled runs with full log retention.
+- **Retention Policy**: Configure global or per-playbook log retention settings (by days or run count).
+- **Scheduling**: Built-in Cron scheduler with Queue management.
+- **Status Indicators**: Visual feedback (Green/Red dots) in the sidebar for the last run status.
+- **Single Container**: Deploys as a single Docker container using SQLite.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Backend**: FastAPI (Python)
-- **Frontend**: HTMX, Alpine.js, Pico.css
-- **Process Manager**: Ansible Runner / Asyncio
-- **Scheduler**: APScheduler
+- **Backend**: FastAPI (Python), SQLModel (SQLite), APScheduler, Ansible Core
+- **Frontend**: Jinja2, HTMX, Alpine.js, Ace Editor, Pico.css
+- **Infrastructure**: Docker
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. With Docker Compose (Recommended)
 
@@ -41,14 +39,15 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   sible:
-    image: sible:latest # (Replace with your build or official image later)
+    image: sible:latest
     build: .
     restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
       - ./playbooks:/playbooks
-      - ./data:/app/data # For SQLite database
+      - ./data:/app/data
+      - ~/.ssh:/root/.ssh:ro # Mount SSH keys for Ansible
     environment:
       - SIBLE_SECRET_KEY=change_me
 ```
@@ -56,7 +55,7 @@ services:
 Run it:
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 Visit <http://localhost:8000>
@@ -71,9 +70,9 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-## 📂 Directory Structure for Playbooks
+## Directory Structure
 
-Mount your existing playbooks folder to `/playbooks`. Sible handles flat directory structures best at the moment.
+Mount your existing playbooks folder to `/playbooks`.
 
 ```text
 /playbooks
@@ -81,17 +80,3 @@ Mount your existing playbooks folder to `/playbooks`. Sible handles flat directo
   ├── update-db.yaml
   └── maintenance.yaml
 ```
-
-## 🤝 Contribution
-
-Contributions are welcome!
-
-1. Fork the Project
-2. Create your Feature Branch
-3. Commit your Changes
-4. Push to the Branch
-5. Open a Pull Request
-
-## 📄 License
-
-Destributed under the MIT License.
