@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, Form
 from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from app.services import PlaybookService, RunnerService
+from app.services import PlaybookService, RunnerService, LinterService
 from app.tasks import add_playbook_job, list_jobs, remove_job, update_job, get_job_info
 from app.database import engine
 from app.models import JobRun, GlobalConfig, PlaybookConfig
@@ -286,7 +286,7 @@ async def get_run_details(run_id: int, request: Request):
 
 @router.get("/settings/retention")
 async def get_retention_settings(request: Request):
-    playbook_names = PlaybookService.list_playbooks()
+    playbooks_data = PlaybookService.list_playbooks()
     
     with Session(engine) as session:
         # Get Global
@@ -298,7 +298,8 @@ async def get_retention_settings(request: Request):
         
         # Get Overrides
         playbooks = []
-        for name in playbook_names:
+        for pb in playbooks_data:
+            name = pb['name']
             p_conf = session.get(PlaybookConfig, name)
             retention = p_conf.retention_days if p_conf else ""
             max_runs = p_conf.max_runs if p_conf and p_conf.max_runs is not None else ""
@@ -381,3 +382,17 @@ async def save_retention_settings(request: Request):
     response = Response(status_code=200)
     trigger_toast(response, "Retention settings saved", "success")
     return response
+
+@router.post("/lint")
+async def lint_playbook(request: Request):
+    """
+    Accepts content and returns Ace Editor annotations.
+    """
+    form = await request.form()
+    content = form.get("content")
+    
+    if not content:
+        return []
+        
+    annotations = await LinterService.lint_playbook_content(content)
+    return annotations

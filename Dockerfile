@@ -4,6 +4,7 @@ FROM python:3.11-slim
 # - ansible-core needs ssh-client, etc.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ssh-client \
+    sshpass \
     git \
     curl \
     && rm -rf /var/lib/apt/lists/*

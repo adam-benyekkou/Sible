@@ -32,9 +32,10 @@ class PlaybookService:
             return None
 
     @staticmethod
-    def list_playbooks() -> List[str]:
+    def list_playbooks() -> List[dict]:
         """
-        Scans the playbooks directory and returns a list of .yaml/.yml files.
+        Scans the playbooks directory and returns a list of files with status.
+        Returns: [{"name": "foo.yaml", "status": "success"}, ...]
         """
         if not PLAYBOOKS_DIR.exists():
             PLAYBOOKS_DIR.mkdir(parents=True, exist_ok=True)
@@ -45,7 +46,34 @@ class PlaybookService:
             f.name for f in PLAYBOOKS_DIR.iterdir() 
             if f.is_file() and f.suffix.lower() in extensions
         ]
-        return sorted(playbooks)
+        
+        playbooks_data = []
+        # Lazy import to simplify - or we updated the main import below. 
+        # But PlaybookService is above the imports.
+        # Wait, the imports are at line 119? 
+        # Ah, SERVICES.PY HAS IMPORTS IN THE MIDDLE? 
+        # Checking file content... yes: line 119 `from sqlmodel import ...`
+        # PlaybookService is defined ABOVE those imports? 
+        # The file content shows PlaybookService lines 8-114.
+        # Imports start at 115.
+        # This means PlaybookService CANNOT use `Session` or `JobRun` if they are imported below it?
+        # Unless they are imported at top?
+        # Top imports: `from pathlib import Path`, etc.
+        # The imports at 119 seem to be for RunnerService.
+        # If I want to use DB in PlaybookService, I must move imports up or import locally.
+        
+        from app.database import engine
+        from app.models import JobRun
+        from sqlmodel import Session, select, desc
+
+        with Session(engine) as session:
+             for name in sorted(playbooks):
+                statement = select(JobRun).where(JobRun.playbook == name).order_by(desc(JobRun.start_time)).limit(1)
+                run = session.exec(statement).first()
+                status = run.status if run else None
+                playbooks_data.append({"name": name, "status": status})
+                
+        return playbooks_data
 
     @staticmethod
     def get_playbook_content(name: str) -> Optional[str]:
@@ -116,7 +144,7 @@ import shutil
 import sys
 import asyncio
 import os
-from sqlmodel import Session
+from sqlmodel import Session, select, desc
 from app.database import engine
 from app.models import JobRun
 from datetime import datetime
@@ -381,3 +409,68 @@ class RunnerService:
                 job.exit_code = 1
                 session.add(job)
                 session.commit()
+
+class LinterService:
+    @staticmethod
+    async def lint_playbook_content(content: str) -> list:
+        """
+        Lints the provided playbook content using ansible-lint.
+        Returns a list of dicts: {line, message, severity, rule}
+        """
+        import tempfile
+        import json
+        
+        # Write content to temp file
+        # We use a specific suffix so ansible-lint knows it's yaml
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
+            
+        try:
+            # Run ansible-lint
+            # -f json: Output as JSON
+            # -q: Quiet
+            proc = await asyncio.create_subprocess_exec(
+                "ansible-lint", "-f", "json", "-q", tmp_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await proc.communicate()
+            
+            output = stdout.decode('utf-8')
+            errors = []
+            
+            if output.strip():
+                try:
+                    lint_results = json.loads(output)
+                    for issue in lint_results:
+                        # Extract relevant fields
+                        # ansible-lint json format (varies by version, v6+ uses positions): 
+                        # {"location": {"positions": {"begin": {"line": 8 ...}}}}
+                        
+                        location = issue.get("location", {})
+                        line_num = 1
+                        
+                        # Try v6+ format
+                        if "positions" in location:
+                            line_num = location["positions"].get("begin", {}).get("line", 1)
+                        # Try older format
+                        elif "lines" in location:
+                            line_num = location["lines"].get("begin", 1)
+                            
+                        errors.append({
+                            "row": line_num - 1, # Ace is 0-indexed
+                            "text": f"{issue.get('check_name')}: {issue.get('description')}",
+                            "type": "warning" if issue.get("severity", "major") != "blocker" else "error"
+                        })
+                except json.JSONDecodeError:
+                    # Fallback if not valid JSON (e.g. error message)
+                    pass
+            
+            return errors
+            
+        except Exception as e:
+            return [{"row": 0, "text": f"Linter error: {str(e)}", "type": "error"}]
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)

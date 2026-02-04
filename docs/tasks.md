@@ -62,19 +62,19 @@ Goal: Deployable on K3s with Persistence.
 
 - [ ] **Dockerization**
   - [x] Write Dockerfile based on `python:3.11-slim`.
-  - [ ] CRITICAL: Install `ansible-core`, `sshpass`, and `openssh-client` via apt/pip.
+  - [x] CRITICAL: Install `ansible-core`, `sshpass`, and `openssh-client` via apt/pip.
   - [ ] Set up volume mount points for `/playbooks` and `/root/.ssh`.
-- [ ] **Job History (The "Memory")**
-  - [ ] **Database**: Create `sible.db` with `JobRun` model (id, playbook, status, time, log, exit_code).
-  - [ ] **Backend**: Refactor `run_playbook` to save "Running" -> "Success/Failed" states and logs.
-  - [ ] **Frontend**: Add History icon in sidebar and History View/Modal with logs.
+- [x] **Job History (The "Memory")**
+  - [x] **Database**: Create `sible.db` with `JobRun` model (id, playbook, status, time, log, exit_code).
+  - [x] **Backend**: Refactor `run_playbook` to save "Running" -> "Success/Failed" states and logs.
+  - [x] **Frontend**: Add History icon in sidebar and History View/Modal with logs.
 
 ## Phase 5: Observability
 
 Goal: "Day 2 Operations" - Status Monitoring.
 
-- [ ] **Status Indicators**
-  - [ ] Update Sidebar icons based on last run status (Green Dot = Success, Red Dot = Failed).
+- [x] **Status Indicators**
+  - [x] Update Sidebar icons based on last run status (Green Dot = Success, Red Dot = Failed).
 
 ## Phase 6: Settings & Integrations (Dockge Parity)
 

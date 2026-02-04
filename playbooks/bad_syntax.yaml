@@ -1,0 +1,10 @@
+- name: Playbook with Syntax Errors
+  hosts: localhost
+  tasks:
+    - name: Good Task
+      debug:
+        msg: "This is fine"
+
+    - name: Bad Task (Indentation Error)
+      debug:
+      msg: "This is broken because 'msg' is not indented correctly under 'debug'"

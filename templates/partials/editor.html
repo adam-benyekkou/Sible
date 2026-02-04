@@ -1,4 +1,30 @@
 <div class="h-100 flex-col" x-data="{ isEditing: false, showScheduleModal: false, cronExpression: '0 3 * * *' }">
+    <style>
+        /* Fix Ace Editor Alignment */
+        .ace_editor,
+        .ace_editor * {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Source Code Pro', monospace !important;
+            font-size: 14px !important;
+            line-height: 24px !important;
+        }
+
+        /* Ensure gutter is visible but keep original colors */
+        .ace_gutter-cell {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+            display: block !important;
+            /* Restore block display for visibility */
+        }
+
+        .ace_scroller {
+            line-height: 24px !important;
+        }
+
+        /* Hide fold widgets */
+        .ace_fold-widget {
+            display: none !important;
+        }
+    </style>
 
     <!-- Schedule Modal -->
     <dialog :open="showScheduleModal">
@@ -145,6 +171,47 @@
                         // Update original content to the new saved state
                         originalContent = content;
                     });
+                };
+
+                // Linting Logic
+                function debounce(func, wait) {
+                    let timeout;
+                    return function (...args) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => func.apply(this, args), wait);
+                    };
+                }
+
+                function lintCode() {
+                    var content = editor.getValue();
+                    // Use URLSearchParams for form data
+                    var formData = new URLSearchParams();
+                    formData.append('content', content);
+
+                    fetch('/lint', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(annotations => {
+                            editor.getSession().setAnnotations(annotations);
+                        })
+                        .catch(e => console.error("Lint error", e));
+                }
+
+                var debouncedLint = debounce(lintCode, 1000);
+
+                editor.session.on('change', function () {
+                    if (!editor.getReadOnly()) {
+                        debouncedLint();
+                    }
+                });
+
+                // Initial lint on edit start
+                var _startEditing = window.startEditing;
+                window.startEditing = function () {
+                    _startEditing();
+                    lintCode();
                 };
             }, 100);
         }

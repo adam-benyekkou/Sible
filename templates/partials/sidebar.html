@@ -8,10 +8,10 @@
 {% if not playbooks %}
 <div class="empty-state-message">No playbooks found.</div>
 {% else %}
-{% for name in playbooks %}
-<div class="playbook-item" hx-get="/playbook/{{ name }}" hx-target="#main-content" hx-swap="innerHTML">
-    <span class="status-pill">YAML</span>
-    {{ name }}
+{% for pb in playbooks %}
+<div class="playbook-item" hx-get="/playbook/{{ pb.name }}" hx-target="#main-content" hx-swap="innerHTML">
+    <span class="status-dot {{ pb.status }}"></span>
+    {{ pb.name }}
 </div>
 {% endfor %}
 {% endif %}
