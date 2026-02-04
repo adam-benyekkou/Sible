@@ -332,13 +332,17 @@ button.btn-new:hover {
     /* Side by side */
     overflow: hidden;
     background: var(--ds-background-100);
+    padding: 1rem;
+    gap: 1rem;
 }
 
 .editor-pane {
     flex: 6;
     /* 60% width */
     position: relative;
-    border-right: 1px solid var(--ds-gray-200);
+    border-radius: 12px;
+    border: 1px solid var(--ds-gray-200);
+    overflow: hidden;
 }
 
 .terminal-pane {
@@ -350,6 +354,8 @@ button.btn-new:hover {
     background: #000;
     overflow: hidden;
     /* Container overflow */
+    border-radius: 12px;
+    border: 1px solid #333;
 }
 
 #editor {
@@ -575,7 +581,4 @@ button.btn-new:hover {
     100% {
         opacity: 1;
     }
-}. s e t t i n g s - p a n e l  
- b u t t o n  
-   w i d t h :   a u t o   ! i m p o r t a n t ;    
- 
+}
