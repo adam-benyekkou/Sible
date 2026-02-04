@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Response, Form
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from app.services import PlaybookService, RunnerService, LinterService, SettingsService
@@ -14,6 +14,34 @@ router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+from fastapi import status
+from app.services import SettingsService
+
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request, "app_name": "Sible"})
+
+@router.post("/login", response_class=HTMLResponse)
+async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+    settings = SettingsService.get_settings()
+    if settings.auth_enabled and username == settings.auth_username and password == settings.auth_password:
+        request.session["user"] = username
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    elif not settings.auth_enabled:
+         # Should not happen if middleware works, but just in case
+        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    else:
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "app_name": "Sible",
+            "error": "Invalid username or password"
+        })
+
+@router.get("/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login")
 
 @router.get("/")
 async def root(request: Request):
@@ -398,10 +426,18 @@ import shutil
 async def save_settings_general(
     request: Request,
     app_name: str = Form(...),
+    auth_enabled: str = Form(None), # Checkbox sends "on" or None
+    auth_username: str = Form("admin"),
+    auth_password: str = Form("admin"),
     logo: UploadFile = File(None),
     favicon: UploadFile = File(None)
 ):
-    update_data = {"app_name": app_name}
+    update_data = {
+        "app_name": app_name,
+        "auth_enabled": auth_enabled == "on",
+        "auth_username": auth_username,
+        "auth_password": auth_password
+    }
     
     # Ensure static/uploads exists
     upload_dir = BASE_DIR / "static" / "uploads"

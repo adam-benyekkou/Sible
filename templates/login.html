@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - {{ app_name }}</title>
+    <!-- Pico.css -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body>main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        article {
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: var(--ds-background-100);
+            border: 1px solid var(--ds-gray-200);
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <article>
+            <hgroup style="text-align: center; margin-bottom: 2rem;">
+                <h3>{{ app_name }}</h3>
+                <p>Please sign in</p>
+            </hgroup>
+
+            <form method="POST" action="/login">
+                {% if error %}
+                <div class="toast toast-error" style="margin-bottom: 1rem; width: 100%; box-sizing: border-box;">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <input type="text" name="username" placeholder="Username" required autocomplete="username">
+                <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+                <button type="submit" class="contrast">Login</button>
+            </form>
+        </article>
+    </main>
+</body>
+
+</html>

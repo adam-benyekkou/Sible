@@ -16,6 +16,18 @@ def migrate():
         if 'favicon_path' not in columns:
             print("Adding favicon_path column...")
             cursor.execute("ALTER TABLE appsettings ADD COLUMN favicon_path VARCHAR")
+
+        if 'auth_enabled' not in columns:
+            print("Adding auth_enabled column...")
+            cursor.execute("ALTER TABLE appsettings ADD COLUMN auth_enabled BOOLEAN DEFAULT 0")
+
+        if 'auth_username' not in columns:
+            print("Adding auth_username column...")
+            cursor.execute("ALTER TABLE appsettings ADD COLUMN auth_username VARCHAR DEFAULT 'admin'")
+
+        if 'auth_password' not in columns:
+            print("Adding auth_password column...")
+            cursor.execute("ALTER TABLE appsettings ADD COLUMN auth_password VARCHAR DEFAULT 'admin'")
             
         conn.commit()
         conn.close()
