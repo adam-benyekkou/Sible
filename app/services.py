@@ -116,61 +116,211 @@ import shutil
 import sys
 import asyncio
 import os
+from sqlmodel import Session
+from app.database import engine
+from app.models import JobRun
+from datetime import datetime
 
 class RunnerService:
+    @staticmethod
+    def _get_ansible_command(playbook_path: Path):
+        """
+        Helper to construct the ansible-playbook command.
+        Returns: (cmd_list, error_message)
+        """
+        # Check if ansible-playbook is installed
+        ansible_bin = shutil.which("ansible-playbook")
+        
+        if ansible_bin:
+            return [ansible_bin, str(playbook_path)], None
+        elif sys.platform == "win32":
+            # Try via WSL
+            wsl_bin = shutil.which("wsl")
+            if wsl_bin:
+                # Mock Mode logic moved to caller or handled here? 
+                # For simplicity, keeping Mock logic in caller or distinct.
+                return None, '<div class="log-changed">Ansible not found. (WSL detection incomplete)</div>'
+            else:
+                 return None, '<div class="log-error">Error: Ansible not found and WSL not available.</div>'
+        else:
+             return None, '<div class="log-error">Error: ansible-playbook executable not found in PATH.</div>'
+
+    @staticmethod
+    def format_log_line(line: str) -> str:
+        """
+        Applies CSS classes to a log line based on its content.
+        """
+        css_class = ""
+        if "TASK [" in line or "PLAY [" in line or "PLAY RECAP" in line:
+            css_class = "log-meta"
+        elif "ok: [" in line or "ok=" in line:
+            css_class = "log-success"
+        elif "changed: [" in line or "changed=" in line:
+            css_class = "log-changed"
+        elif "fatal:" in line or "failed=" in line or "unreachable=" in line:
+            css_class = "log-error"
+        elif "skipping:" in line:
+            css_class = "log-debug"
+        
+        if css_class:
+            return f'<div class="{css_class}">{line}</div>'
+        else:
+            return f'<div>{line}</div>'
+
+    @staticmethod
+    async def run_playbook_headless(playbook_name: str) -> dict:
+        """
+        Runs a playbook in the background (headless) and returns the result.
+        Returns: { 'success': bool, 'output': str, 'rc': int }
+        """
+        # DB: Start Run
+        job = JobRun(playbook=playbook_name, status="running", trigger="cron")
+        with Session(engine) as session:
+            session.add(job)
+            session.commit()
+            session.refresh(job)
+            job_id = job.id
+
+        playbook_path = PLAYBOOKS_DIR / playbook_name
+        if not playbook_path.exists():
+            msg = f"Playbook {playbook_name} not found"
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "failed"
+                job.end_time = datetime.utcnow()
+                job.log_output = msg
+                job.exit_code = 1
+                session.add(job)
+                session.commit()
+            return {'success': False, 'output': msg, 'rc': 1}
+
+        # Mock Mode Hook for Testing
+        if "mock" in playbook_name.lower() or "hello" in playbook_name.lower():
+            # Real execution for hello.yaml too? Optional.
+            # If user wants to see logs in history, we should probably record mock output too.
+            # But let's stick to the existing logic + saving.
+            pass # Continue to real logic if not purely mock return
+            
+        # Re-using previous Mock logic for fast returns if strictly "mock" string
+        if "mock" in playbook_name.lower():
+             await asyncio.sleep(2)
+             msg = "Mock execution successful."
+             formatted_msg = RunnerService.format_log_line(msg)
+             with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "success"
+                job.end_time = datetime.utcnow()
+                job.log_output = formatted_msg
+                job.exit_code = 0
+                session.add(job)
+                session.commit()
+             return {'success': True, 'output': msg, 'rc': 0}
+
+        cmd, error_msg = RunnerService._get_ansible_command(playbook_path)
+        if not cmd:
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "failed"
+                job.end_time = datetime.utcnow()
+                job.log_output = error_msg
+                job.exit_code = 127
+                session.add(job)
+                session.commit()
+            return {'success': False, 'output': error_msg, 'rc': 127}
+
+
+        env = os.environ.copy()
+        env["ANSIBLE_FORCE_COLOR"] = "0"
+        env["ANSIBLE_NOCOWS"] = "1"
+
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+                env=env
+            )
+            stdout, _ = await process.communicate()
+            output = stdout.decode('utf-8', errors='replace')
+            
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "success" if process.returncode == 0 else "failed"
+                job.end_time = datetime.utcnow()
+                # Apply formatting to all lines for headless
+                formatted_output = "\n".join([RunnerService.format_log_line(line) for line in output.splitlines()])
+                job.log_output = formatted_output
+                job.exit_code = process.returncode
+                session.add(job)
+                session.commit()
+            
+            return {
+                'success': process.returncode == 0,
+                'output': output,
+                'rc': process.returncode
+            }
+        except Exception as e:
+            msg = str(e)
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "failed"
+                job.end_time = datetime.utcnow()
+                job.log_output = msg
+                job.exit_code = 1
+                session.add(job)
+                session.commit()
+            return {'success': False, 'output': msg, 'rc': 1}
+
     @staticmethod
     async def run_playbook(playbook_name: str):
         """
         Runs an ansible-playbook and yields the output line by line.
         """
+        # DB: Start Run
+        job = JobRun(playbook=playbook_name, status="running", trigger="manual")
+        with Session(engine) as session:
+            session.add(job)
+            session.commit()
+            session.refresh(job)
+            job_id = job.id
+            
+        log_buffer = []
+
         playbook_path = PLAYBOOKS_DIR / playbook_name
         if not playbook_path.exists():
-            yield f'<div class="log-error">❌ Error: Playbook {playbook_name} not found.</div>'
+            msg = f'<div class="log-error">Error: Playbook {playbook_name} not found.</div>'
+            yield msg
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "failed"
+                job.end_time = datetime.utcnow()
+                job.log_output = msg
+                job.exit_code = 1
+                session.add(job)
+                session.commit()
             return
 
-
-        
-        # Check if ansible-playbook is installed
-        ansible_bin = shutil.which("ansible-playbook")
-        cmd = []
-        
-        if ansible_bin:
-            cmd = [ansible_bin, str(playbook_path)]
-        elif sys.platform == "win32":
-            # Try via WSL
-            wsl_bin = shutil.which("wsl")
-            if wsl_bin:
-                # Convert path to WSL format (naive)
-                # sible/playbooks/hello.yaml -> /mnt/c/Users/...
-                # This is tricky without wslpath. Let's just try running it assuming relative path if within WSL mount?
-                # Actually, simplest is to warn user.
-                yield f'<div class="log-changed">⚠️ Ansible not found on Windows Host.</div>'
-                yield f'<div class="log-meta">ℹ️ Tip: Run this app via Docker to execute playbooks.</div>'
-                # Optional: Mock mode for UI testing
-                if "mock" in playbook_name.lower() or "hello" in playbook_name.lower():
-                     yield f'<div class="log-meta">🧪 Starting Mock Execution for UI Testing...</div>'
-                     await asyncio.sleep(1)
-                     yield f'<div class="log-meta">TASK [Gathering Facts] ***************************************************************</div>'
-                     await asyncio.sleep(0.5)
-                     yield f'<div class="log-success">ok: [localhost]</div>'
-                     await asyncio.sleep(0.5)
-                     yield f'<div class="log-meta">TASK [debug] *************************************************************************</div>'
-                     await asyncio.sleep(0.5)
-                     yield f'<div class="log-success">ok: [localhost] => {{ "msg": "Hello from Sible!" }}</div>'
-                     await asyncio.sleep(0.5)
-                     yield f'<div class="log-meta">PLAY RECAP ***************************************************************************</div>'
-                     yield f'<div class="log-success">localhost                  : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0</div>'
-                     yield f'<div class="log-success">🏁 Mock Process finished with exit code 0</div>'
-                return
-            else:
-                 yield f'<div class="log-error">❌ Error: Ansible not found and WSL not available.</div>'
-                 return
-        else:
-             yield f'<div class="log-error">❌ Error: ansible-playbook executable not found in PATH.</div>'
+        # Mock Hook for UI
+        if "mock" in playbook_name.lower():
+             yield f'<div class="log-meta">Starting Mock Execution...</div>'
+             await asyncio.sleep(1)
+             # ... simplified mock ...
+             yield f'<div class="log-success">Mock Process finished</div>'
              return
 
-        # Prepare the command
-        # Parsing logs manually, so we disable ANSI colors to keep text clean
+        cmd, error_msg = RunnerService._get_ansible_command(playbook_path)
+        if not cmd:
+             yield error_msg
+             with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "failed"
+                job.end_time = datetime.utcnow()
+                job.log_output = error_msg
+                job.exit_code = 127
+                session.add(job)
+                session.commit()
+             return
+
         env = os.environ.copy()
         env["ANSIBLE_FORCE_COLOR"] = "0"
         env["ANSIBLE_NOCOWS"] = "1"
@@ -183,41 +333,51 @@ class RunnerService:
                 env=env
             )
 
-            yield f'<div class="log-meta">🚀 Sible: Starting execution of {playbook_name}...</div>'
+            msg = f'<div class="log-meta">Sible: Starting execution of {playbook_name}...</div>'
+            yield msg
+            log_buffer.append(f"Starting execution of {playbook_name}...")
 
             # Yield output as it comes
             while True:
                 line = await process.stdout.readline()
                 if not line:
                     break
-                # Decode bytes to string, replace null bytes if any
-                decoded_line = line.decode('utf-8', errors='replace').rstrip()
                 
-                # Apply Styling Logic
-                css_class = ""
-                if "TASK [" in decoded_line or "PLAY [" in decoded_line or "PLAY RECAP" in decoded_line:
-                    css_class = "log-meta"
-                elif "ok: [" in decoded_line or "ok=" in decoded_line:
-                    css_class = "log-success"
-                elif "changed: [" in decoded_line or "changed=" in decoded_line:
-                    css_class = "log-changed"
-                elif "fatal:" in decoded_line or "failed=" in decoded_line or "unreachable=" in decoded_line:
-                    css_class = "log-error"
-                elif "skipping:" in decoded_line:
-                    css_class = "log-debug"
+                # Raw text for logs
+                decoded_line_raw = line.decode('utf-8', errors='replace').rstrip()
                 
-                # Wrap in div
-                if css_class:
-                    formatted_line = f'<div class="{css_class}">{decoded_line}</div>'
-                else:
-                    formatted_line = f'<div>{decoded_line}</div>'
+                # HTML for Stream
+                decoded_line = decoded_line_raw
+                formatted_line = RunnerService.format_log_line(decoded_line)
+                
+                # Buffer the FORMATTED line for DB so history looks same as stream
+                log_buffer.append(formatted_line)
                 
                 yield formatted_line
 
             await process.wait()
             
             exit_class = "log-success" if process.returncode == 0 else "log-error"
-            yield f'<div class="{exit_class}">🏁 Sible: Process finished with exit code {process.returncode}</div>'
+            yield f'<div class="{exit_class}">Sible: Process finished with exit code {process.returncode}</div>'
+            
+            # DB: Save logs
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "success" if process.returncode == 0 else "failed"
+                job.end_time = datetime.utcnow()
+                job.log_output = "\n".join(log_buffer)
+                job.exit_code = process.returncode
+                session.add(job)
+                session.commit()
         
         except Exception as e:
-            yield f'<div class="log-error">❌ Sible Error: Failed to start process: {str(e)}</div>'
+            err_msg = str(e)
+            yield f'<div class="log-error">Sible Error: Failed to start process: {err_msg}</div>'
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "failed"
+                job.end_time = datetime.utcnow()
+                job.log_output = err_msg
+                job.exit_code = 1
+                session.add(job)
+                session.commit()

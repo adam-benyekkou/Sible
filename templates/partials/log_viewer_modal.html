@@ -1,0 +1,18 @@
+<dialog open>
+    <article style="min-width: 80vw;">
+        <header>
+            <button aria-label="Close" rel="prev" onclick="this.closest('dialog').remove()"></button>
+            <h5>Log Output (Run #{{ run.id }})</h5>
+            <small>{{ run.start_time.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+        </header>
+
+        <pre
+            style="max-height: 60vh; overflow-y: auto; background-color: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 4px;">
+{{ run.log_output | safe }}
+        </pre>
+
+        <footer>
+            <button class="secondary" onclick="this.closest('dialog').remove()">Close</button>
+        </footer>
+    </article>
+</dialog>

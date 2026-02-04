@@ -1,0 +1,81 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid" style="padding-top: 20px;">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <hgroup>
+            <h1>Global History</h1>
+            <h2>Audit logs for all playbook executions</h2>
+        </hgroup>
+        <button class="outline" hx-get="/settings/retention" hx-target="body" hx-swap="beforeend">
+            Retention Settings
+        </button>
+    </header>
+
+    <div style="overflow-x: auto;">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Playbook</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                <tr id="run-row-{{ run.id }}">
+                    <td>{{ run.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <a href="#" hx-get="/playbook/{{ run.playbook }}" hx-target="#main-content" hx-swap="innerHTML">
+                            {{ run.playbook }}
+                        </a>
+                    </td>
+                    <td>
+                        {% if run.status == 'success' %}
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="color: green;">●</span> Success
+                        </div>
+                        {% elif run.status == 'failed' %}
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="color: red;">●</span> Failed
+                        </div>
+                        {% else %}
+                        <span aria-busy="true">Running</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if run.end_time %}
+                        {{ (run.end_time - run.start_time).total_seconds()|round(1) }}s
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>{{ run.trigger }}</td>
+                    <td>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="outline secondary" style="padding: 5px 10px; font-size: 0.8rem; width: auto;"
+                                hx-get="/history/run/{{ run.id }}" hx-target="body" hx-swap="beforeend">
+                                Logs
+                            </button>
+                            <button class="outline danger" style="padding: 5px 10px; font-size: 0.8rem; width: auto;"
+                                hx-delete="/history/run/{{ run.id }}"
+                                hx-confirm="Are you sure you want to delete this log permanently?"
+                                hx-target="#run-row-{{ run.id }}" hx-swap="outerHTML">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center">No runs recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

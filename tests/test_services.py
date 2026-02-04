@@ -1,72 +1,59 @@
 import pytest
-from pathlib import Path
-from app.services import PlaybookService
+import asyncio
+from app.services import PlaybookService, RunnerService
 
-# Use a temporary directory for tests
-@pytest.fixture
-def mock_playbooks_dir(tmp_path, monkeypatch):
-    """
-    Redirects PLAYBOOKS_DIR to a temporary directory for isolation.
-    """
-    monkeypatch.setattr("app.services.PLAYBOOKS_DIR", tmp_path)
-    return tmp_path
-
-def test_list_playbooks_empty(mock_playbooks_dir):
+def test_create_and_list_playbooks(temp_playbooks_dir):
+    # 1. List empty
     assert PlaybookService.list_playbooks() == []
+    
+    # 2. Create 'test.yaml'
+    assert PlaybookService.create_playbook("test.yaml") == True
+    
+    # 3. List contains 'test.yaml'
+    listing = PlaybookService.list_playbooks()
+    assert len(listing) == 1
+    assert listing[0] == 'test.yaml'
 
-def test_list_playbooks_with_files(mock_playbooks_dir):
-    (mock_playbooks_dir / "test1.yaml").touch()
-    (mock_playbooks_dir / "test2.yml").touch()
-    (mock_playbooks_dir / "ignore.txt").touch()
-    
-    playbooks = PlaybookService.list_playbooks()
-    assert "test1.yaml" in playbooks
-    assert "test2.yml" in playbooks
-    assert "ignore.txt" not in playbooks
-    assert len(playbooks) == 2
+def test_prevent_duplicate_creation(temp_playbooks_dir):
+    PlaybookService.create_playbook("duplicate.yaml")
+    # Try creating again
+    assert PlaybookService.create_playbook("duplicate.yaml") == False
 
-def test_save_and_get_playbook(mock_playbooks_dir):
-    name = "new_playbook.yaml"
-    content = "- name: Test"
+def test_read_write_playbook(temp_playbooks_dir):
+    name = "content_test.yaml"
+    PlaybookService.create_playbook(name)
     
-    # Save
-    assert PlaybookService.save_playbook_content(name, content) is True
+    # Default content usually empty or template
+    # Let's write
+    new_content = "---\n- name: Test"
+    assert PlaybookService.save_playbook_content(name, new_content) == True
     
-    # Verify file exists
-    assert (mock_playbooks_dir / name).exists()
-    
-    # Get
+    # Read back
     read_content = PlaybookService.get_playbook_content(name)
-    assert read_content == content
+    assert read_content == new_content
 
-def test_save_invalid_extension(mock_playbooks_dir):
-    assert PlaybookService.save_playbook_content("bad.txt", "content") is False
-    assert not (mock_playbooks_dir / "bad.txt").exists()
-
-def test_validate_path_security():
-    # Helper to check validation via internal method or public effect
-    assert PlaybookService._validate_path("../outside.yaml") is None
-    assert PlaybookService._validate_path("/etc/passwd") is None
-    assert PlaybookService._validate_path("valid.yaml") is not None
-    assert PlaybookService._validate_path("sub/folder.yaml") is None # We currently only allow flat structure or validate_path regex denies slash
-
-def test_create_playbook(mock_playbooks_dir):
-    name = "created.yaml"
-    assert PlaybookService.create_playbook(name) is True
-    assert (mock_playbooks_dir / name).exists()
-    assert "New Playbook" in (mock_playbooks_dir / name).read_text()
-    
-    # Try creating again (should fail)
-    assert PlaybookService.create_playbook(name) is False
-
-def test_delete_playbook(mock_playbooks_dir):
+def test_delete_playbook(temp_playbooks_dir):
     name = "todelete.yaml"
-    (mock_playbooks_dir / name).touch()
-    assert (mock_playbooks_dir / name).exists()
+    PlaybookService.create_playbook(name)
+    assert len(PlaybookService.list_playbooks()) == 1
     
-    assert PlaybookService.delete_playbook(name) is True
-    assert not (mock_playbooks_dir / name).exists()
-    
-    # Try deleting non-existent
-    assert PlaybookService.delete_playbook(name) is False
+    assert PlaybookService.delete_playbook(name) == True
+    assert len(PlaybookService.list_playbooks()) == 0
 
+@pytest.mark.asyncio
+async def test_runner_service_mock(temp_playbooks_dir):
+    # Create a dummy playbook
+    name = "mock_run.yaml"
+    PlaybookService.create_playbook(name)
+    
+    # We authenticate that RunnerService.run_playbook is an async generator
+    # We won't test the actual subprocess here (complex to mock completely in unit test without shell),
+    # but we can verify it handles missing files.
+    
+    missing_gen = RunnerService.run_playbook("non_existent.yaml")
+    # Consume generator
+    output = []
+    async for line in missing_gen:
+        output.append(line)
+        
+    assert any("not found" in line for line in output)

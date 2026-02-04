@@ -1,0 +1,57 @@
+<dialog open>
+    <article style="min-width: 600px;">
+        <header>
+            <button aria-label="Close" rel="prev" onclick="this.closest('dialog').remove()"></button>
+            <h5>Retention Settings</h5>
+        </header>
+
+        <form hx-post="/settings/retention" hx-swap="none">
+            <label>
+                <strong>Global Retention (Days)</strong>
+                <input type="number" name="global_retention" value="{{ global_retention }}" required min="1">
+            </label>
+            <label>
+                <strong>Global Max Logs (Count)</strong>
+                <small>Keep at most this many logs per playbook.</small>
+                <input type="number" name="global_max_runs" value="{{ global_max_runs }}" required min="1">
+            </label>
+
+            <hr>
+
+            <h6>Per-Playbook Overrides</h6>
+            <small>Set specific retention rules for individual playbooks.</small>
+
+            <table class="striped">
+                <thead>
+                    <tr>
+                        <th>Playbook</th>
+                        <th>Retention (Days)</th>
+                        <th>Max Logs (Count)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pb in playbooks %}
+                    <tr>
+                        <td>{{ pb.name }}</td>
+                        <td>
+                            <input type="number" name="retention_{{ pb.name }}" value="{{ pb.retention }}"
+                                placeholder="Global ({{ global_retention }})" style="margin-bottom: 0;">
+                        </td>
+                        <td>
+                            <input type="number" name="max_runs_{{ pb.name }}" value="{{ pb.max_runs }}"
+                                placeholder="Global ({{ global_max_runs }})" style="margin-bottom: 0;">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <footer>
+                <div class="grid">
+                    <button class="secondary" type="button" onclick="this.closest('dialog').remove()">Cancel</button>
+                    <button type="submit" onclick="this.closest('dialog').remove()">Save Settings</button>
+                </div>
+            </footer>
+        </form>
+    </article>
+</dialog>

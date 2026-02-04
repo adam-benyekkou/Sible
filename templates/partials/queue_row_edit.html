@@ -1,0 +1,25 @@
+<tr id="job-row-{{ job.id }}">
+    <td>
+        <strong>{{ job.args[0] }}</strong>
+    </td>
+    <td>
+        <!-- Input for Cron -->
+        <input type="text" name="cron" value="{{ job.cron }}" placeholder="* * * * *"
+            style="margin-bottom: 0; padding: 0.25rem;" hx-put="/schedule/{{ job.id }}" hx-include="closest tr"
+            hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML" aria-label="Cron Expression">
+    </td>
+    <td>
+        <!-- Status placeholder or kept same -->
+        {{ job.next_run_human or 'Paused' }}
+    </td>
+    <td>
+        <button class="outline primary" hx-put="/schedule/{{ job.id }}" hx-include="closest tr"
+            hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML">
+            Save
+        </button>
+        <button class="outline secondary" hx-get="/partials/queue/row/{{ job.id }}" hx-target="#job-row-{{ job.id }}"
+            hx-swap="outerHTML">
+            Cancel
+        </button>
+    </td>
+</tr>

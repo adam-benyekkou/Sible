@@ -1,7 +1,33 @@
-<div class="h-100 flex-col" x-data="{ isEditing: false }">
+<div class="h-100 flex-col" x-data="{ isEditing: false, showScheduleModal: false, cronExpression: '0 3 * * *' }">
+
+    <!-- Schedule Modal -->
+    <dialog :open="showScheduleModal">
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev" @click="showScheduleModal = false"></button>
+                <h5>Schedule {{ name }}</h5>
+            </header>
+            <p>
+                Run this playbook automatically using a Cron expression.
+            </p>
+            <input type="text" x-model="cronExpression" placeholder="* * * * *">
+            <small>Example: <code>0 3 * * *</code> (Every day at 3am)</small>
+            <footer>
+                <button class="secondary" @click="showScheduleModal = false">Cancel</button>
+                <button @click="
+                    htmx.ajax('POST', '/schedule', {
+                        values: { playbook: '{{ name }}', cron: cronExpression },
+                        swap: 'none'
+                    });
+                    showScheduleModal = false;
+                ">
+                    Save Schedule
+                </button>
+            </footer>
+        </article>
+    </dialog>
     <header class="main-header">
         <div class="header-left">
-            <span class="status-pill status-text-lg" x-text="isEditing ? 'EDITING' : 'IDLE'">IDLE</span>
             <h4>{{ name }}</h4>
         </div>
         <div class="actions">
@@ -23,9 +49,14 @@
                 Save
             </button>
 
-            <!-- Schedule -->
-            <button class="contrast">
+            <!-- Schedule (Modal Trigger) -->
+            <button class="contrast" @click="showScheduleModal = true">
                 Schedule
+            </button>
+
+            <!-- History -->
+            <button class="contrast" hx-get="/history/{{ name }}" hx-target="body" hx-swap="beforeend">
+                History
             </button>
 
             <!-- Delete Button -->

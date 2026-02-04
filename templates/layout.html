@@ -30,9 +30,22 @@
     <!-- Sidebar -->
     <aside>
         <hgroup>
-            <h3>Sible</h3>
+            <a href="/" hx-target="#main-content" hx-push-url="true" style="text-decoration: none; color: inherit;">
+                <h3>Sible</h3>
+            </a>
             <p><small>Playbook Manager</small></p>
         </hgroup>
+        <hr>
+        <nav>
+            <ul>
+                <li><a href="/queue" role="button" class="secondary outline w-100">Queue / Jobs</a></li>
+                <li>
+                    <a href="/history" role="button" class="secondary outline w-100">
+                        Global History
+                    </a>
+                </li>
+            </ul>
+        </nav>
         <hr>
         <nav class="playbook-list" hx-get="/partials/sidebar" hx-trigger="load, sidebar-refresh from:body">
             <!-- Items via HTMX -->
@@ -42,13 +55,13 @@
 
     <!-- Main Content -->
     <main>
-        {% block content %}
         <div id="main-content" class="h-100">
+            {% block content %}
             <div class="container text-center flex-col-center h-100 color-muted">
                 <p>Select a playbook to get started</p>
             </div>
+            {% endblock %}
         </div>
-        {% endblock %}
     </main>
 
     <script>

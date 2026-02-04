@@ -1,0 +1,31 @@
+<tr id="job-row-{{ job.id }}">
+    <td>
+        <strong>{{ job.args[0] }}</strong>
+    </td>
+    <td>
+        <!-- We display the cron expression if we can parsed it, or just the name/desc -->
+        <!-- Since we don't store the raw cron separate from the trigger easily without accessing trigger fields, -->
+        <!-- For MVP let's imply the user knows what they set or we just show the name. -->
+        <!-- But wait, the user wants to EDIT the cron. We need to pre-fill the input. -->
+        <!-- APScheduler trigger doesn't always strictly give back the original string. -->
+        <!-- We might need to inspect job.trigger.fields to reconstruct? -->
+        <!-- Or just let them type a new one. -->
+        <span class="secondary">{{ job.name }}</span>
+    </td>
+    <td>
+        <span data-tooltip="{{ job.next_run }}">
+            {{ job.next_run_human or 'Paused' }}
+        </span>
+    </td>
+    <td>
+        <button class="outline secondary" hx-get="/partials/queue/row/{{ job.id }}/edit"
+            hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML">
+            Edit
+        </button>
+        <button class="outline danger contrast" hx-delete="/schedule/{{ job.id }}"
+            hx-confirm="Are you sure you want to delete this scheduled job?" hx-target="#job-row-{{ job.id }}"
+            hx-swap="outerHTML">
+            Delete
+        </button>
+    </td>
+</tr>
