@@ -3,7 +3,9 @@
 > A modern, reactive UI for Ansible Playbooks. Inspired by Dockge.
 
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![Status](https://img.shields.io/badge/status-beta-orange.svg)
+![Status](https://img.shields.io/badge/status-wip-orange.svg)
+
+**Note: This project is currently a Work in Progress.**
 
 **Sible** is a lightweight, self-hosted Web UI to manage, edit, and run Ansible playbooks. It is designed to be a "no-build" alternative to complex tools like AWX/Tower, focusing on simplicity and a great user experience for homelabbers and DevOps engineers.
 
@@ -13,7 +15,7 @@
 
 - **Reactive UI**: Built with HTMX and Alpine.js for a snappy, app-like feel without the bloat.
 - **Playbook Management**: Create, edit, and delete playbooks directly in the browser.
-- **Advanced Editor**: Integrated Ace Editor with custom Dockge-like theme, line numbers, and syntax highlighting.
+- **Advanced Editor**: Integrated Ace Editor with custom theme, line numbers, and syntax highlighting.
 - **Ansible Linting**: Real-time code quality checks and annotations directly in the editor.
 - **Execution & Logs**: Run playbooks manually or headless. View real-time output streams via SSE.
 - **Concurrency Control**: Prevents simultaneous execution of the same playbook.
