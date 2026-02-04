@@ -1,12 +1,23 @@
 from fastapi import Request, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
+import bcrypt
 from app.services import SettingsService
+
+def verify_password(plain_password, hashed_password):
+    try:
+        # bcrypt.checkpw expects bytes
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception:
+        # Fallback if valid hash format check failed, it might be plain text
+        return plain_password == hashed_password
+
+def get_password_hash(password):
+    # bcrypt.hashpw returns bytes, we decode to store as string
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 async def get_current_user(request: Request):
     """
     Dependency that checks if the user is authenticated via session.
-    If auth is disabled, allow access.
-    If auth is enabled and no session, redirect to /login (via exception or return None).
     """
     settings = SettingsService.get_settings()
     
@@ -16,25 +27,16 @@ async def get_current_user(request: Request):
         
     user = request.session.get("user")
     if not user:
-        # If accessing an API/HTMX endpoint, return 401
-        if "hx-request" in request.headers or request.url.path.startswith("/api/"):
-             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-        
-        # For page loads, we want to redirect, but dependencies can't easily return RedirectResponse 
-        # to the route handler directly without raising.
-        # We'll rely on the route handler or a middleware to catch this, OR
-        # better yet, we simply raise an HTTP exception that we catch in global exception handler? 
-        # Or, we just use a helper function in routes instead of a pure dependency for redirects.
-        # Let's try raising an HTTPException and catching it in main.py? 
-        # actually, standard pattern is `raise HTTPException(status_code=401)` and redirect.
-        # But for simplicity in `routes.py`, we can check:
-        # user = await get_current_user(req); if not user: return Redirect...
-        return None 
-        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
     return user
 
 def check_auth(request: Request) -> bool:
-    """Helper to check check auth status boolean"""
+    """
+    Synchronous helper for middleware.
+    """
     settings = SettingsService.get_settings()
     if not settings.auth_enabled:
         return True

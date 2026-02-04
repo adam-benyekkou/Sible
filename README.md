@@ -27,6 +27,14 @@
 - **Status Indicators**: Visual feedback (Green/Red dots) in the sidebar for the last run status.
 - **Single Container**: Deploys as a single Docker container using SQLite.
 
+## Authentication (Optional)
+
+Sible includes an optional authentication system to protect your instance.
+
+- **Toggleable**: Enable or disable login via **Settings > General > Security**.
+- **Secure**: Passwords are stored using secure **BCrypt** hashing.
+- **Session Management**: Secure cookie-based sessions with handled redirects for HTMX interactions.
+
 ## Tech Stack
 
 - **Backend**: FastAPI (Python), SQLModel (SQLite), APScheduler, Ansible Core

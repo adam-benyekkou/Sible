@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from app.services import PlaybookService, RunnerService, LinterService, SettingsService
+from app.auth import check_auth, verify_password, get_password_hash
 from app.tasks import add_playbook_job, list_jobs, remove_job, update_job, get_job_info
 from app.database import engine
 from app.models import JobRun, GlobalConfig, PlaybookConfig
@@ -25,7 +26,8 @@ async def login_page(request: Request):
 @router.post("/login", response_class=HTMLResponse)
 async def login(request: Request, username: str = Form(...), password: str = Form(...)):
     settings = SettingsService.get_settings()
-    if settings.auth_enabled and username == settings.auth_username and password == settings.auth_password:
+    # verify_password handles plain text fallback or hash check
+    if settings.auth_enabled and username == settings.auth_username and verify_password(password, settings.auth_password):
         request.session["user"] = username
         return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
     elif not settings.auth_enabled:
@@ -428,7 +430,7 @@ async def save_settings_general(
     app_name: str = Form(...),
     auth_enabled: str = Form(None), # Checkbox sends "on" or None
     auth_username: str = Form("admin"),
-    auth_password: str = Form("admin"),
+    auth_password: str = Form(None),
     logo: UploadFile = File(None),
     favicon: UploadFile = File(None)
 ):
@@ -436,8 +438,12 @@ async def save_settings_general(
         "app_name": app_name,
         "auth_enabled": auth_enabled == "on",
         "auth_username": auth_username,
-        "auth_password": auth_password
+        "auth_username": auth_username
     }
+    
+    # Only update password if provided
+    if auth_password and auth_password.strip():
+        update_data["auth_password"] = get_password_hash(auth_password)
     
     # Ensure static/uploads exists
     upload_dir = BASE_DIR / "static" / "uploads"
