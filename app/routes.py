@@ -504,6 +504,45 @@ async def delete_env_var(env_id: int):
             return response
     return Response(status_code=404)
 
+@router.get("/settings/secrets/edit/{env_id}")
+async def get_settings_secrets_edit(request: Request, env_id: int):
+    from app.models import EnvVar
+    with Session(engine) as session:
+        env_var = session.get(EnvVar, env_id)
+        if not env_var:
+            return Response(status_code=404)
+        return templates.TemplateResponse("partials/secrets_edit_row.html", {
+            "request": request,
+            "var": env_var
+        })
+
+@router.post("/settings/secrets/{env_id}")
+async def update_env_var(request: Request, env_id: int, key: str = Form(...), value: str = Form(""), is_secret: str = Form(None)):
+    from app.models import EnvVar
+    with Session(engine) as session:
+        env_var = session.get(EnvVar, env_id)
+        if not env_var:
+            return Response(status_code=404)
+        
+        env_var.key = key
+        # Handle secret value privacy
+        if is_secret == "on":
+            env_var.is_secret = True
+            if value.strip(): # Only update if a new value is provided
+                env_var.value = value
+        else:
+            env_var.is_secret = False
+            env_var.value = value
+            
+        session.add(env_var)
+        session.commit()
+    
+    response = Response(status_code=200)
+    trigger_toast(response, f"Variable '{key}' updated", "success")
+    response.headers["HX-Trigger"] = "secrets-refresh"
+    # We could return the updated row, but refresh is easier for consistency
+    return ""
+
 @router.get("/partials/settings/secrets/list")
 async def get_secrets_list(request: Request):
     from app.models import EnvVar
