@@ -65,6 +65,12 @@
                 Discard
             </button>
 
+            <!-- Check (Dry Run) -->
+            <button class="contrast" hx-post="/check/{{ name }}" hx-target="#terminal-container" hx-swap="innerHTML"
+                title="Dry Run (Check Mode)">
+                Check
+            </button>
+
             <!-- Run -->
             <button class="primary" hx-post="/run/{{ name }}" hx-target="#terminal-container" hx-swap="innerHTML">
                 Run Playbook

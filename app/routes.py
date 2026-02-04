@@ -141,19 +141,33 @@ async def run_playbook_endpoint(name: str, request: Request):
     # We return the "Running..." state UI which includes the hx-ext="sse" connection
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
-        "name": name
+        "name": name,
+        "mode": "run"
+    })
+
+@router.post("/check/{name}")
+async def check_playbook_endpoint(name: str, request: Request):
+    """
+    Triggers the playbook Dry Run (Check Mode).
+    """
+    return templates.TemplateResponse("partials/terminal_connect.html", {
+        "request": request,
+        "name": name,
+        "mode": "check"
     })
 
 @router.get("/stream/{name}")
-async def stream_playbook_endpoint(name: str):
+async def stream_playbook_endpoint(name: str, mode: str = "run"):
     """
     SSE Endpoint.
     """
+    check_mode = (mode == "check")
+    
     async def event_generator():
         yield "event: start\ndata: Connected to stream\n\n"
-        async for line in RunnerService.run_playbook(name):
+        # Pass check_mode to the runner
+        async for line in RunnerService.run_playbook(name, check_mode=check_mode):
             # Server-Sent Events format: "data: <payload>\n\n"
-            # We must handle newlines in the data carefully or just send line by line
             yield f"data: {line}\n\n"
         yield "event: end\ndata: Execution finished\n\n"
 

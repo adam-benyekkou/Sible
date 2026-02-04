@@ -149,9 +149,20 @@ from app.database import engine
 from app.models import JobRun
 from datetime import datetime
 
+from datetime import datetime
+from typing import Dict, Optional
+
 class RunnerService:
+    _locks: Dict[str, asyncio.Lock] = {}
+
     @staticmethod
-    def _get_ansible_command(playbook_path: Path):
+    def _get_lock(playbook_name: str) -> asyncio.Lock:
+        if playbook_name not in RunnerService._locks:
+            RunnerService._locks[playbook_name] = asyncio.Lock()
+        return RunnerService._locks[playbook_name]
+
+    @staticmethod
+    def _get_ansible_command(playbook_path: Path, check_mode: bool = False):
         """
         Helper to construct the ansible-playbook command.
         Returns: (cmd_list, error_message)
@@ -160,7 +171,10 @@ class RunnerService:
         ansible_bin = shutil.which("ansible-playbook")
         
         if ansible_bin:
-            return [ansible_bin, str(playbook_path)], None
+            cmd = [ansible_bin, str(playbook_path)]
+            if check_mode:
+                cmd.append("--check")
+            return cmd, None
         elif sys.platform == "win32":
             # Try via WSL
             wsl_bin = shutil.which("wsl")
@@ -196,13 +210,15 @@ class RunnerService:
             return f'<div>{line}</div>'
 
     @staticmethod
-    async def run_playbook_headless(playbook_name: str) -> dict:
+    async def run_playbook_headless(playbook_name: str, check_mode: bool = False) -> dict:
         """
         Runs a playbook in the background (headless) and returns the result.
         Returns: { 'success': bool, 'output': str, 'rc': int }
         """
         # DB: Start Run
-        job = JobRun(playbook=playbook_name, status="running", trigger="cron")
+        # DB: Start Run
+        trigger = "cron" if notPB_check_mode else "manual_check"
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger)
         with Session(engine) as session:
             session.add(job)
             session.commit()
@@ -300,12 +316,14 @@ class RunnerService:
             return {'success': False, 'output': msg, 'rc': 1}
 
     @staticmethod
-    async def run_playbook(playbook_name: str):
+    async def run_playbook(playbook_name: str, check_mode: bool = False):
         """
         Runs an ansible-playbook and yields the output line by line.
         """
         # DB: Start Run
-        job = JobRun(playbook=playbook_name, status="running", trigger="manual")
+        # DB: Start Run
+        trigger = "manual" if not check_mode else "manual_check"
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger)
         with Session(engine) as session:
             session.add(job)
             session.commit()
@@ -314,7 +332,25 @@ class RunnerService:
             
         log_buffer = []
 
-        playbook_path = PLAYBOOKS_DIR / playbook_name
+        # Lock Check
+        lock = RunnerService._get_lock(playbook_name)
+        if lock.locked():
+            msg = f'<div class="log-error">Error: Playbook {playbook_name} is already running.</div>'
+            yield msg
+            # Mark failed in DB immediately? Or just skip logging?
+            # Better to record the attempt failure.
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                job.status = "failed"
+                job.end_time = datetime.utcnow()
+                job.log_output = msg
+                job.exit_code = 1
+                session.add(job)
+                session.commit()
+            return
+
+        async with lock:
+            playbook_path = PLAYBOOKS_DIR / playbook_name
         if not playbook_path.exists():
             msg = f'<div class="log-error">Error: Playbook {playbook_name} not found.</div>'
             yield msg
@@ -361,7 +397,10 @@ class RunnerService:
                 env=env
             )
 
-            msg = f'<div class="log-meta">Sible: Starting execution of {playbook_name}...</div>'
+            if check_mode:
+                yield '<div class="log-changed" style="font-weight: bold; padding: 10px; border: 1px dashed #fbbf24; margin-bottom: 10px;">⚠️ DRY RUN MODE: No changes will be applied.</div>'
+            
+            msg = f'<div class="log-meta">Sible: Starting execution of {playbook_name}...{" (Dry Run)" if check_mode else ""}</div>'
             yield msg
             log_buffer.append(f"Starting execution of {playbook_name}...")
 
