@@ -1,0 +1,32 @@
+<div class="settings-panel">
+    <h3>General Settings</h3>
+    <hr>
+
+    <form hx-post="/settings/general" hx-encoding="multipart/form-data" hx-swap="none">
+        <label>
+            <strong>App Name</strong>
+            <input type="text" name="app_name" value="{{ settings.app_name|default('Sible') }}"
+                placeholder="e.g. Sible Prod">
+        </label>
+
+        <label>
+            <strong>Logo</strong>
+            <input type="file" name="logo" accept="image/*" lang="en">
+            {% if settings.logo_path %}
+            <small>Current: <a href="{{ settings.logo_path }}" target="_blank">View Logo</a></small>
+            {% endif %}
+        </label>
+
+        <label>
+            <strong>Favicon</strong>
+            <input type="file" name="favicon" accept=".ico,.png,.jpg,.jpeg" lang="en">
+            {% if settings.favicon_path %}
+            <small>Current: <a href="{{ settings.favicon_path }}" target="_blank">View Favicon</a></small>
+            {% endif %}
+        </label>
+
+        <div style="margin-top: 2rem; text-align: right;">
+            <button type="submit" class="primary">Save General Settings</button>
+        </div>
+    </form>
+</div>

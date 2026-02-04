@@ -1,14 +1,23 @@
 <dialog open>
     <article style="min-width: 800px;">
-        <header>
-            <button aria-label="Close" rel="prev" onclick="this.closest('dialog').remove()"></button>
-            <h5>
-                {% if playbook_name %}
-                History: {{ playbook_name }}
-                {% else %}
-                Global History
-                {% endif %}
-            </h5>
+        <header style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button aria-label="Close" rel="prev" onclick="this.closest('dialog').remove()"></button>
+                <h5 style="margin-bottom: 0;">
+                    {% if playbook_name %}
+                    History: {{ playbook_name }}
+                    {% else %}
+                    Global History
+                    {% endif %}
+                </h5>
+            </div>
+            {% if playbook_name %}
+            <button class="outline danger" hx-delete="/history/playbook/{{ playbook_name }}/all"
+                hx-confirm="Are you sure you want to delete all history for this playbook?"
+                style="padding: 5px 10px; font-size: 0.8rem; width: auto; margin-bottom: 0;">
+                Delete All
+            </button>
+            {% endif %}
         </header>
 
         <table class="striped">

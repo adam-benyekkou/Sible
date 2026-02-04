@@ -131,6 +131,58 @@ aside hr {
     font-weight: 600;
 }
 
+/* Sidebar Hierarchy */
+.sidebar-folder {
+    margin-bottom: 2px;
+}
+
+.folder-title {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--pico-border-radius);
+    color: var(--ds-gray-900);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-size: 0.9rem;
+    font-weight: 600;
+    list-style: none;
+    /* Remove default arrow */
+}
+
+.folder-title::-webkit-details-marker {
+    display: none;
+}
+
+.folder-title:hover {
+    background: var(--ds-gray-100);
+}
+
+.folder-icon {
+    margin-right: 8px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+details[open]>summary .folder-icon {
+    transform: rotate(5deg);
+    /* subtle tilt */
+}
+
+/* Sidebar scroll fix if needed */
+.playbook-list {
+    overflow-y: auto;
+    max-height: calc(100vh - 250px);
+}
+
+.folder-content {
+    margin-left: 1rem;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--ds-gray-200);
+}
+
 /* Pill / Badge */
 .status-pill {
     font-size: 11px;
@@ -523,4 +575,7 @@ button.btn-new:hover {
     100% {
         opacity: 1;
     }
-}
+}. s e t t i n g s - p a n e l  
+ b u t t o n  
+   w i d t h :   a u t o   ! i m p o r t a n t ;    
+ 

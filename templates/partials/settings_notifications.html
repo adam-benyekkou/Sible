@@ -1,0 +1,33 @@
+<div class="settings-panel">
+    <h3>Notifications</h3>
+    <p class="color-muted">Get alerted when your playbooks run.</p>
+    <hr>
+
+    <form hx-post="/settings/notifications" hx-swap="none">
+
+        <label>
+            <strong>Apprise URL</strong>
+            <small>Supports Discord, Slack, Telegram, Teams, Email, and <a href="https://github.com/caronc/apprise"
+                    target="_blank">more</a>.</small>
+            <input type="password" name="apprise_url" placeholder="discord://webhook_id/token"
+                value="{{ apprise_url }}">
+        </label>
+
+        <fieldset style="margin-top: 1.5rem;">
+            <legend><strong>Triggers</strong></legend>
+            <label>
+                <input type="checkbox" name="notify_on_failure" {% if notify_on_failure %}checked{% endif %}>
+                Notify on Failure 🔴
+            </label>
+            <label>
+                <input type="checkbox" name="notify_on_success" {% if notify_on_success %}checked{% endif %}>
+                Notify on Success 🟢
+            </label>
+        </fieldset>
+
+        <div class="grid" style="margin-top: 2rem;">
+            <button type="button" class="contrast" hx-post="/settings/test-notification">Test Notification</button>
+            <button type="submit" class="primary">Save Configuration</button>
+        </div>
+    </form>
+</div>

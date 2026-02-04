@@ -1,0 +1,53 @@
+<div class="settings-panel">
+    <h3>Retention Policy</h3>
+    <p class="color-muted">Configure how long logs and history records are kept.</p>
+    <hr>
+
+    <form hx-post="/settings/retention" hx-swap="none">
+        <div class="grid">
+            <label>
+                <strong>Global Retention (Days)</strong>
+                <input type="number" name="global_retention" value="{{ global_retention }}" required min="1">
+            </label>
+            <label>
+                <strong>Global Max Logs (Count)</strong>
+                <small>Keep at most this many logs per playbook.</small>
+                <input type="number" name="global_max_runs" value="{{ global_max_runs }}" required min="1">
+            </label>
+        </div>
+
+        <hr>
+
+        <h5>Per-Playbook Overrides</h5>
+        <small class="color-muted">Set specific retention rules for individual playbooks.</small>
+
+        <table class="striped" style="margin-top: 1rem;">
+            <thead>
+                <tr>
+                    <th>Playbook</th>
+                    <th>Retention (Days)</th>
+                    <th>Max Logs (Count)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pb in playbooks %}
+                <tr>
+                    <td>{{ pb.name }}</td>
+                    <td>
+                        <input type="number" name="retention_{{ pb.name }}" value="{{ pb.retention }}"
+                            placeholder="Global ({{ global_retention }})" style="margin-bottom: 0;">
+                    </td>
+                    <td>
+                        <input type="number" name="max_runs_{{ pb.name }}" value="{{ pb.max_runs }}"
+                            placeholder="Global ({{ global_max_runs }})" style="margin-bottom: 0;">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div style="margin-top: 2rem; text-align: right;">
+            <button type="submit" class="primary">Save Retention Settings</button>
+        </div>
+    </form>
+</div>

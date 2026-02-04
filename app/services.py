@@ -12,9 +12,8 @@ class PlaybookService:
         Validates the filename to prevent path traversal and ensures it's a YAML file.
         Returns the resolved Path if valid, None otherwise.
         """
-        # 1. Allow alphanumeric, dashes, underscores, dots
-        # This prevents ".." or weird characters.
-        if not re.match(r'^[a-zA-Z0-9_\-\.]+$', name):
+        # 1. Allow alphanumeric, dashes, underscores, dots, AND slashes
+        if not re.match(r'^[a-zA-Z0-9_\-\.\/]+$', name):
             return None
             
         # 2. Check extension
@@ -32,48 +31,86 @@ class PlaybookService:
             return None
 
     @staticmethod
+    def list_playbooks_flat() -> List[dict]:
+        """
+        Returns a flat list of all playbook files with their relative paths.
+        """
+        if not PLAYBOOKS_DIR.exists():
+            return []
+            
+        from app.database import engine
+        from app.models import JobRun
+        from sqlmodel import Session, select, desc
+        
+        items = []
+        # Walk through the directory
+        for root, dirs, files in os.walk(PLAYBOOKS_DIR):
+            for file in files:
+                if file.endswith((".yaml", ".yml")):
+                    full_path = Path(root) / file
+                    rel_path = str(full_path.relative_to(PLAYBOOKS_DIR)).replace("\\", "/")
+                    
+                    with Session(engine) as session:
+                        statement = select(JobRun).where(JobRun.playbook == rel_path).order_by(desc(JobRun.start_time)).limit(1)
+                        run = session.exec(statement).first()
+                        status = run.status if run else None
+                        
+                    items.append({
+                        "name": rel_path, # Use relative path as name
+                        "path": rel_path,
+                        "status": status
+                    })
+        
+        # Sort by name
+        items.sort(key=lambda x: x['name'])
+        return items
+
+    @staticmethod
     def list_playbooks() -> List[dict]:
         """
-        Scans the playbooks directory and returns a list of files with status.
-        Returns: [{"name": "foo.yaml", "status": "success"}, ...]
+        Scans the playbooks directory recursively and returns a tree structure.
         """
         if not PLAYBOOKS_DIR.exists():
             PLAYBOOKS_DIR.mkdir(parents=True, exist_ok=True)
             return []
             
-        extensions = {".yaml", ".yml"}
-        playbooks = [
-            f.name for f in PLAYBOOKS_DIR.iterdir() 
-            if f.is_file() and f.suffix.lower() in extensions
-        ]
-        
-        playbooks_data = []
-        # Lazy import to simplify - or we updated the main import below. 
-        # But PlaybookService is above the imports.
-        # Wait, the imports are at line 119? 
-        # Ah, SERVICES.PY HAS IMPORTS IN THE MIDDLE? 
-        # Checking file content... yes: line 119 `from sqlmodel import ...`
-        # PlaybookService is defined ABOVE those imports? 
-        # The file content shows PlaybookService lines 8-114.
-        # Imports start at 115.
-        # This means PlaybookService CANNOT use `Session` or `JobRun` if they are imported below it?
-        # Unless they are imported at top?
-        # Top imports: `from pathlib import Path`, etc.
-        # The imports at 119 seem to be for RunnerService.
-        # If I want to use DB in PlaybookService, I must move imports up or import locally.
-        
         from app.database import engine
         from app.models import JobRun
         from sqlmodel import Session, select, desc
 
-        with Session(engine) as session:
-             for name in sorted(playbooks):
-                statement = select(JobRun).where(JobRun.playbook == name).order_by(desc(JobRun.start_time)).limit(1)
-                run = session.exec(statement).first()
-                status = run.status if run else None
-                playbooks_data.append({"name": name, "status": status})
-                
-        return playbooks_data
+        def build_tree(current_path: Path, relative_root: Path = PLAYBOOKS_DIR) -> List[dict]:
+            items = []
+            # Sort files and folders
+            entries = sorted(list(current_path.iterdir()), key=lambda e: (not e.is_dir(), e.name.lower()))
+            
+            with Session(engine) as session:
+                for entry in entries:
+                    rel_path = str(entry.relative_to(relative_root)).replace("\\", "/")
+                    
+                    if entry.is_dir():
+                        children = build_tree(entry, relative_root)
+                        if children: # Only show folders with content (or just show all)
+                            items.append({
+                                "type": "directory",
+                                "name": entry.name,
+                                "path": rel_path,
+                                "children": children
+                            })
+                    elif entry.suffix.lower() in {".yaml", ".yml"}:
+                        # Get Status for this specific path
+                        statement = select(JobRun).where(JobRun.playbook == rel_path).order_by(desc(JobRun.start_time)).limit(1)
+                        run = session.exec(statement).first()
+                        status = run.status if run else None
+                        
+                        items.append({
+                            "type": "file",
+                            "name": entry.name,
+                            "path": rel_path,
+                            "status": status
+                        })
+            return items
+
+        return build_tree(PLAYBOOKS_DIR)
 
     @staticmethod
     def get_playbook_content(name: str) -> Optional[str]:
@@ -95,8 +132,8 @@ class PlaybookService:
             return False
             
         try:
-            # Ensure directory exists (helper for first save)
-            PLAYBOOKS_DIR.mkdir(parents=True, exist_ok=True)
+            # Ensure parent directory exists
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             
             file_path.write_text(content, encoding="utf-8")
             return True
@@ -119,7 +156,7 @@ class PlaybookService:
             return False # Already exists
             
         try:
-            PLAYBOOKS_DIR.mkdir(parents=True, exist_ok=True)
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.write_text("---\n- name: New Playbook\n  hosts: localhost\n  tasks:\n    - debug:\n        msg: 'Hello World'\n", encoding="utf-8")
             return True
         except OSError:
@@ -215,9 +252,9 @@ class RunnerService:
         Runs a playbook in the background (headless) and returns the result.
         Returns: { 'success': bool, 'output': str, 'rc': int }
         """
-        # DB: Start Run
-        # DB: Start Run
-        trigger = "cron" if notPB_check_mode else "manual_check"
+        # Normalize path to forward slashes for DB consistency
+        playbook_name = playbook_name.replace("\\", "/")
+        trigger = "cron" if not check_mode else "manual_check"
         job = JobRun(playbook=playbook_name, status="running", trigger=trigger)
         with Session(engine) as session:
             session.add(job)
@@ -298,6 +335,9 @@ class RunnerService:
                 session.add(job)
                 session.commit()
             
+            # Send Notification
+            NotificationService.send_playbook_notification(playbook_name, "success" if process.returncode == 0 else "failed")
+            
             return {
                 'success': process.returncode == 0,
                 'output': output,
@@ -320,8 +360,8 @@ class RunnerService:
         """
         Runs an ansible-playbook and yields the output line by line.
         """
-        # DB: Start Run
-        # DB: Start Run
+        # Normalize path to forward slashes for DB consistency
+        playbook_name = playbook_name.replace("\\", "/")
         trigger = "manual" if not check_mode else "manual_check"
         job = JobRun(playbook=playbook_name, status="running", trigger=trigger)
         with Session(engine) as session:
@@ -436,6 +476,9 @@ class RunnerService:
                 job.exit_code = process.returncode
                 session.add(job)
                 session.commit()
+
+            # Send Notification
+            NotificationService.send_playbook_notification(playbook_name, "success" if process.returncode == 0 else "failed")
         
         except Exception as e:
             err_msg = str(e)
@@ -513,3 +556,64 @@ class LinterService:
         finally:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
+
+class SettingsService:
+    @staticmethod
+    def get_settings() -> "AppSettings":
+        from app.models import AppSettings
+        with Session(engine) as session:
+            settings = session.get(AppSettings, 1)
+            if not settings:
+                settings = AppSettings(id=1)
+                session.add(settings)
+                session.commit()
+                session.refresh(settings)
+            return settings
+
+    @staticmethod
+    def update_settings(data: dict) -> "AppSettings":
+        from app.models import AppSettings
+        with Session(engine) as session:
+            settings = session.get(AppSettings, 1)
+            if not settings:
+                settings = AppSettings(id=1)
+            
+            for key, value in data.items():
+                if hasattr(settings, key):
+                    # Check box conversion if needed (but routes handle it)
+                    setattr(settings, key, value)
+            
+            session.add(settings)
+            session.commit()
+            session.refresh(settings)
+            return settings
+
+class NotificationService:
+    @staticmethod
+    def send_notification(message: str, title: str = "Sible Alert"):
+        import apprise
+        settings = SettingsService.get_settings()
+        if not settings.apprise_url:
+            return
+        
+        apobj = apprise.Apprise()
+        apobj.add(settings.apprise_url)
+        apobj.notify(
+            body=message,
+            title=title,
+        )
+
+    @staticmethod
+    def send_playbook_notification(playbook_name: str, status: str):
+        settings = SettingsService.get_settings()
+        
+        should_notify = False
+        if status == "success" and settings.notify_on_success:
+            should_notify = True
+        elif status == "failed" and settings.notify_on_failure:
+            should_notify = True
+            
+        if should_notify:
+            emoji = "✅" if status == "success" else "🚨"
+            message = f"{emoji} Playbook '{playbook_name}' finished with status: {status.upper()}"
+            NotificationService.send_notification(message, title=f"Sible: {playbook_name}")

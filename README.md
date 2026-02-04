@@ -19,7 +19,8 @@
 - **Concurrency Control**: Prevents simultaneous execution of the same playbook.
 - **Dry Run Mode**: "Check" button to simulate playbook runs without making changes.
 - **Job History**: Tracks all manual and scheduled runs with full log retention.
-- **Retention Policy**: Configure global or per-playbook log retention settings (by days or run count).
+- **Retention Policy**: Advanced retention settings with support for nested playbooks (folder structure).
+- **Custom Branding**: Upload your own Logo and Favicon via the UI.
 - **Scheduling**: Built-in Cron scheduler with Queue management.
 - **Status Indicators**: Visual feedback (Green/Red dots) in the sidebar for the last run status.
 - **Single Container**: Deploys as a single Docker container using SQLite.

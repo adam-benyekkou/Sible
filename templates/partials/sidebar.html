@@ -5,13 +5,46 @@
     </button>
 </div>
 
+{% macro render_tree(items) %}
+{% for item in items %}
+{% if item.type == 'directory' %}
+<details class="sidebar-folder">
+    <summary class="folder-title">
+        <span class="folder-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--ds-gray-600);">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </span> {{ item.name }}
+    </summary>
+    <div class="folder-content">
+        {{ render_tree(item.children) }}
+    </div>
+</details>
+{% else %}
+<div class="playbook-item" hx-get="/playbook/{{ item.path }}" hx-target="#main-content" hx-swap="innerHTML">
+    <span class="status-dot {{ item.status }}"></span>
+    {{ item.name }}
+</div>
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
 {% if not playbooks %}
 <div class="empty-state-message">No playbooks found.</div>
 {% else %}
-{% for pb in playbooks %}
-<div class="playbook-item" hx-get="/playbook/{{ pb.name }}" hx-target="#main-content" hx-swap="innerHTML">
-    <span class="status-dot {{ pb.status }}"></span>
-    {{ pb.name }}
-</div>
-{% endfor %}
+<details class="sidebar-folder" open>
+    <summary class="folder-title">
+        <span class="folder-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--ds-gray-600);">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </span>
+        Playbooks
+    </summary>
+    <div class="folder-content">
+        {{ render_tree(playbooks) }}
+    </div>
+</details>
 {% endif %}
