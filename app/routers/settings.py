@@ -321,7 +321,7 @@ async def test_notification(
     service: NotificationService = Depends(get_notification_service)
 ):
     try:
-        service.send_notification("This is a test notification from Sible! 🚀", title="Sible Test")
+        service.send_notification("This is a test notification from Sible!", title="Sible Test")
         response = Response(status_code=200)
         trigger_toast(response, "Test notification sent!", "success")
     except Exception as e:

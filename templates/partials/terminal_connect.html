@@ -7,7 +7,8 @@
 </div>
 
 <!-- Stream Controller: Manages SSE connection and self-destructs on 'end' -->
-<div id="stream-controller" hx-ext="sse" sse-connect="/stream/{{ name }}?mode={{ mode|default('run') }}">
+<div id="stream-controller" hx-ext="sse"
+    sse-connect="/stream/{{ name | safe }}?mode={{ mode|default('run') }}&limit={{ limit|default('') }}&tags={{ tags|default('') }}&verbosity={{ verbosity|default(0) }}&extra_vars={{ extra_vars|default('') }}">
     <!-- 1. Log Lines: Append to the main container -->
     <div sse-swap="message" hx-target="#terminal-container" hx-swap="beforeend"></div>
 

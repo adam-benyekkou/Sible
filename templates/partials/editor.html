@@ -1,4 +1,29 @@
-<div class="h-100 flex-col" x-data="{ isEditing: false, showScheduleModal: false, cronExpression: '0 3 * * *' }">
+<div class="h-100 flex-col" x-data="{ 
+    isEditing: false, 
+    showScheduleModal: false, 
+    showLaunchModal: false,
+    launchMode: 'run',
+    cronExpression: '0 3 * * *',
+    launchParams: {
+        limit: '',
+        tags: '',
+        verbosity: 0,
+        extraVars: []
+    },
+    addExtraVar() {
+        this.launchParams.extraVars.push({ key: '', value: '' });
+    },
+    removeExtraVar(index) {
+        this.launchParams.extraVars.splice(index, 1);
+    },
+    getExtraVarsJson() {
+        let obj = {};
+        this.launchParams.extraVars.forEach(v => {
+            if (v.key) obj[v.key] = v.value;
+        });
+        return JSON.stringify(obj);
+    }
+}">
     <style>
         /* Fix Ace Editor Alignment */
         .ace_editor,
@@ -39,26 +64,96 @@
     <dialog :open="showScheduleModal">
         <article>
             <header>
-                <button aria-label="Close" rel="prev" @click="showScheduleModal = false"></button>
+                <a href="#close" aria-label="Close" class="close" @click="showScheduleModal = false"></a>
                 <h5>Schedule {{ name }}</h5>
             </header>
-            <p>
-                Run this playbook automatically using a Cron expression.
-            </p>
+            <p>Run this playbook automatically using a Cron expression.</p>
             <input type="text" x-model="cronExpression" placeholder="* * * * *">
             <small>Example: <code>0 3 * * *</code> (Every day at 3am)</small>
             <footer>
                 <button class="secondary" @click="showScheduleModal = false">Cancel</button>
                 <button @click="
                     htmx.ajax('POST', '/schedule', {
-                        values: { playbook: '{{ name }}', cron: cronExpression },
+                        values: { playbook: '{{ name | safe }}', cron: cronExpression },
                         swap: 'none'
                     });
                     showScheduleModal = false;
-                ">
-                    Save Schedule
-                </button>
+                ">Save Schedule</button>
             </footer>
+        </article>
+    </dialog>
+
+    <!-- Launchpad Modal -->
+    <dialog :open="showLaunchModal">
+        <article style="max-width: 600px; width: 100%;">
+            <header>
+                <a href="#close" aria-label="Close" class="close" @click="showLaunchModal = false"></a>
+                <h5 x-text="launchMode === 'check' ? 'Dry Run: ' + '{{ name }}' : 'Launch: ' + '{{ name }}'"></h5>
+            </header>
+
+            <form @submit.prevent="
+                let vals = {
+                    limit: launchParams.limit,
+                    tags: launchParams.tags,
+                    verbosity: launchParams.verbosity,
+                    extra_vars: getExtraVarsJson()
+                };
+                htmx.ajax('POST', (launchMode === 'check' ? '/check/{{ name | safe }}' : '/run/{{ name | safe }}'), {
+                    values: vals,
+                    target: '#terminal-container',
+                    swap: 'innerHTML'
+                });
+                showLaunchModal = false;
+            ">
+                <div class="grid">
+                    <label>
+                        Limit Targets (Hosts)
+                        <input type="text" x-model="launchParams.limit" placeholder="e.g. prod, 10.0.0.5">
+                    </label>
+                    <label>
+                        Tags
+                        <input type="text" x-model="launchParams.tags" placeholder="e.g. deploy, !db">
+                    </label>
+                </div>
+
+                <label>
+                    Verbosity
+                    <select x-model="launchParams.verbosity">
+                        <option value="0">Normal</option>
+                        <option value="1">Verbose (-v)</option>
+                        <option value="2">More Verbose (-vv)</option>
+                        <option value="3">Debug (-vvv)</option>
+                    </select>
+                </label>
+
+                <div style="margin-top: 1rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <strong>Extra Variables</strong>
+                        <button type="button" class="outline" style="padding: 2px 8px; font-size: 0.8rem;"
+                            @click="addExtraVar()">+ Add Var</button>
+                    </div>
+
+                    <template x-for="(v, index) in launchParams.extraVars" :key="index">
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
+                            <input type="text" x-model="v.key" placeholder="Key" style="margin-bottom: 0;">
+                            <input type="text" x-model="v.value" placeholder="Value" style="margin-bottom: 0;">
+                            <button type="button" class="secondary outline"
+                                style="padding: 4px 10px; border-color: #ff4444; color: #ff4444;"
+                                @click="removeExtraVar(index)">×</button>
+                        </div>
+                    </template>
+                    <div x-show="launchParams.extraVars.length === 0"
+                        style="color: #868e96; font-size: 0.9rem; text-align: center; padding: 10px; border: 1px dashed #dee2e6; border-radius: 4px;">
+                        No extra variables defined.
+                    </div>
+                </div>
+
+                <footer style="margin-top: 2rem;">
+                    <button type="button" class="secondary" @click="showLaunchModal = false">Cancel</button>
+                    <button type="submit" x-text="launchMode === 'check' ? 'Run Check' : 'Launch'"></button>
+                </footer>
+            </form>
         </article>
     </dialog>
     <header class="main-header">
@@ -75,14 +170,12 @@
             </button>
 
             <!-- Check (Dry Run) -->
-            <button class="contrast" hx-post="/check/{{ name | safe }}" hx-target="#terminal-container"
-                hx-swap="innerHTML" title="Dry Run (Check Mode)">
+            <button class="contrast" @click="launchMode = 'check'; showLaunchModal = true" title="Dry Run (Check Mode)">
                 Check
             </button>
 
             <!-- Run -->
-            <button class="primary" hx-post="/run/{{ name | safe }}" hx-target="#terminal-container"
-                hx-swap="innerHTML">
+            <button class="primary" @click="launchMode = 'run'; showLaunchModal = true">
                 Run Playbook
             </button>
 

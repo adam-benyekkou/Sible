@@ -26,7 +26,18 @@ class RunnerService:
         return RunnerService._locks[playbook_name]
 
     @staticmethod
-    def _get_ansible_command(playbook_path: Path, check_mode: bool = False, env_vars: dict = None, galaxy: bool = False, galaxy_req_file: str = None, galaxy_cwd: Path = None) -> Tuple[List[str], str]:
+    def _get_ansible_command(
+        playbook_path: Path, 
+        check_mode: bool = False, 
+        env_vars: dict = None, 
+        galaxy: bool = False, 
+        galaxy_req_file: str = None, 
+        galaxy_cwd: Path = None,
+        limit: str = None,
+        tags: str = None,
+        verbosity: int = 0,
+        extra_vars: dict = None
+    ) -> Tuple[List[str], str]:
         inventory_file = "inventory.ini"
         
         # 1. Try Docker execution if enabled
@@ -56,7 +67,14 @@ class RunnerService:
                     
                     inner_cmd = f"ansible-playbook '{container_playbook_path}' -i '{container_workdir}/{inventory_file}'"
                     if check_mode: inner_cmd += " --check"
-
+                    if limit: inner_cmd += f" --limit '{limit}'"
+                    if tags: inner_cmd += f" --tags '{tags}'"
+                    if verbosity > 0: inner_cmd += f" -{'v' * verbosity}"
+                    if extra_vars:
+                        import json
+                        ev_json = json.dumps(extra_vars)
+                        inner_cmd += f" -e '{ev_json}'"
+ 
                 cmd = [
                     docker_bin, "run", "--rm",
                     "-v", f"{host_workdir}:{container_workdir}",
@@ -73,7 +91,7 @@ class RunnerService:
                 
                 print(f"DEBUG: Constructing Docker command: {cmd}")
                 return cmd, None
-
+ 
         # 2. Try native host execution as fallback
         ansible_bin = shutil.which("ansible-playbook" if not galaxy else "ansible-galaxy")
         if ansible_bin:
@@ -82,6 +100,12 @@ class RunnerService:
             else:
                  cmd = [ansible_bin, str(playbook_path), "-i", inventory_file]
                  if check_mode: cmd.append("--check")
+                 if limit: cmd.extend(["--limit", limit])
+                 if tags: cmd.extend(["--tags", tags])
+                 if verbosity > 0: cmd.append(f"-{'v' * verbosity}")
+                 if extra_vars:
+                     import json
+                     cmd.extend(["-e", json.dumps(extra_vars)])
             return cmd, None
             
         # 3. Try WSL if on Windows as final fallback
@@ -93,7 +117,7 @@ class RunnerService:
                     drive = abs_p.drive.strip(':').lower()
                     parts = list(abs_p.parts[1:])
                     return f"/mnt/{drive}/" + "/".join(parts)
-
+ 
                 if galaxy:
                      wsl_cwd = to_wsl_path(galaxy_cwd)
                      bash_cmd = f"cd '{wsl_cwd}' && ansible-galaxy install -r '{galaxy_req_file}' -p ./roles"
@@ -110,6 +134,13 @@ class RunnerService:
                     
                     bash_cmd = f"{env_prefix}ansible-playbook '{wsl_playbook_path}' -i '{wsl_inventory_path}'"
                     if check_mode: bash_cmd += " --check"
+                    if limit: bash_cmd += f" --limit '{limit}'"
+                    if tags: bash_cmd += f" --tags '{tags}'"
+                    if verbosity > 0: bash_cmd += f" -{'v' * verbosity}"
+                    if extra_vars:
+                        import json
+                        ev_json = json.dumps(extra_vars).replace("'", "'\\''")
+                        bash_cmd += f" -e '{ev_json}'"
                 
                 res = [wsl_bin, "bash", "-c", bash_cmd]
                 return res, None
@@ -117,7 +148,7 @@ class RunnerService:
             return None, '<div class="log-error">Error: Ansible not found (Docker/Host/WSL).</div>'
             
         return None, '<div class="log-error">Error: ansible-playbook executable not found in PATH.</div>'
-
+ 
     @staticmethod
     def format_log_line(line: str) -> str:
         css_class = ""
@@ -127,34 +158,53 @@ class RunnerService:
         elif "fatal:" in line or "failed=" in line or "unreachable=" in line: css_class = "log-error"
         elif "skipping:" in line: css_class = "log-debug"
         return f'<div class="{css_class}">{line}</div>' if css_class else f'<div>{line}</div>'
-
-    async def run_playbook_headless(self, playbook_name: str, check_mode: bool = False) -> dict:
+ 
+    async def run_playbook_headless(self, playbook_name: str, check_mode: bool = False, limit: str = None, tags: str = None, verbosity: int = 0, extra_vars: dict = None) -> dict:
         playbook_name = playbook_name.replace("\\", "/")
         trigger = "cron" if not check_mode else "manual_check"
-        job = JobRun(playbook=playbook_name, status="running", trigger=trigger)
+        
+        # Create job record with params
+        import json
+        params_dict = {
+            "limit": limit,
+            "tags": tags,
+            "verbosity": verbosity,
+            "extra_vars": extra_vars
+        }
+        db_params = json.dumps(params_dict) if any(v is not None and v != "" and v != {} and v != 0 for v in params_dict.values()) else None
+        
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params)
         
         self.db.add(job)
         self.db.commit()
         self.db.refresh(job)
         job_id = job.id
-
+ 
         playbook_path = settings.PLAYBOOKS_DIR / playbook_name
         if not playbook_path.exists():
             msg = f"Playbook {playbook_name} not found"
             job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = msg; job.exit_code = 1
             self.db.add(job); self.db.commit()
             return {'success': False, 'output': msg, 'rc': 1}
-
+ 
         env_vars_db = self.db.exec(select(EnvVar)).all()
         custom_env = {ev.key: ev.value for ev in env_vars_db}
         custom_env.update({"ANSIBLE_FORCE_COLOR": "0", "ANSIBLE_NOCOWS": "1"})
-
-        cmd, error_msg = self._get_ansible_command(playbook_path, env_vars=custom_env)
+ 
+        cmd, error_msg = self._get_ansible_command(
+            playbook_path, 
+            check_mode=check_mode,
+            env_vars=custom_env,
+            limit=limit,
+            tags=tags,
+            verbosity=verbosity,
+            extra_vars=extra_vars
+        )
         if not cmd:
             job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = error_msg; job.exit_code = 127
             self.db.add(job); self.db.commit()
             return {'success': False, 'output': error_msg, 'rc': 127}
-
+ 
         env = os.environ.copy()
         env.update(custom_env)
         
@@ -183,7 +233,7 @@ class RunnerService:
                 job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = msg; job.exit_code = 1
                 self.db.add(job); self.db.commit()
             return {'success': False, 'output': msg, 'rc': 1}
-
+ 
     def stop_playbook(self, playbook_name: str) -> bool:
         playbook_name = playbook_name.replace("\\", "/")
         process = RunnerService._processes.get(playbook_name)
@@ -194,11 +244,22 @@ class RunnerService:
             except ProcessLookupError:
                 return False
         return False
-
-    async def run_playbook(self, playbook_name: str, check_mode: bool = False):
+ 
+    async def run_playbook(self, playbook_name: str, check_mode: bool = False, limit: str = None, tags: str = None, verbosity: int = 0, extra_vars: dict = None):
         playbook_name = playbook_name.replace("\\", "/")
         trigger = "manual" if not check_mode else "manual_check"
-        job = JobRun(playbook=playbook_name, status="running", trigger=trigger)
+        
+        # Create job record with params
+        import json
+        params_dict = {
+            "limit": limit,
+            "tags": tags,
+            "verbosity": verbosity,
+            "extra_vars": extra_vars
+        }
+        db_params = json.dumps(params_dict) if any(v is not None and v != "" and v != {} and v != 0 for v in params_dict.values()) else None
+        
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params)
         
         self.db.add(job); self.db.commit(); self.db.refresh(job); job_id = job.id
             
@@ -210,7 +271,7 @@ class RunnerService:
             job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = msg; job.exit_code = 1
             self.db.add(job); self.db.commit()
             return
-
+ 
         async with lock:
             playbook_path = settings.PLAYBOOKS_DIR / playbook_name
             if not playbook_path.exists():
@@ -219,24 +280,32 @@ class RunnerService:
                 job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = msg; job.exit_code = 1
                 self.db.add(job); self.db.commit()
                 return
-
+ 
             if "mock" in playbook_name.lower():
                  yield f'<div class="log-meta">Starting Mock Execution...</div>'
                  await asyncio.sleep(1)
                  yield f'<div class="log-success">Mock Process finished</div>'
                  return
-
+ 
             env_vars_db = self.db.exec(select(EnvVar)).all()
             custom_env = {ev.key: ev.value for ev in env_vars_db}
             custom_env.update({"ANSIBLE_FORCE_COLOR": "0", "ANSIBLE_NOCOWS": "1"})
-
-            cmd, error_msg = self._get_ansible_command(playbook_path, check_mode=check_mode, env_vars=custom_env)
+ 
+            cmd, error_msg = self._get_ansible_command(
+                playbook_path, 
+                check_mode=check_mode, 
+                env_vars=custom_env,
+                limit=limit,
+                tags=tags,
+                verbosity=verbosity,
+                extra_vars=extra_vars
+            )
             if not cmd:
                  yield error_msg
                  job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = error_msg; job.exit_code = 127
                  self.db.add(job); self.db.commit()
                  return
-
+ 
             try:
                 env = os.environ.copy(); env.update(custom_env)
                 print(f"DEBUG: Executing command: {cmd}")
@@ -245,7 +314,7 @@ class RunnerService:
                 loop = asyncio.get_event_loop()
                 if sys.platform == 'win32' and not isinstance(loop, asyncio.ProactorEventLoop):
                      print("WARNING: Not using ProactorEventLoop on Windows. Subprocesses might fail.")
-
+ 
                 process = await asyncio.create_subprocess_exec(
                     *cmd, 
                     stdout=asyncio.subprocess.PIPE, 
@@ -291,31 +360,19 @@ class RunnerService:
             finally:
                 if playbook_name in RunnerService._processes:
                     del RunnerService._processes[playbook_name]
-
-    async def install_requirements(self, playbook_name: str):
-         # ... copy logic ...
-         # Need PlaybookService logic here or duplicating _validate_path?
-         # _validate_path is in PlaybookService.
-         # Can I replicate it or use PlaybookService? 
-         # I'll just adapt path logic simply here since RunnerService shouldn't depend on PlaybookService circularly if possible, but actually RunnerService assumes valid path usually.
-         # But install_requirements needs to finding requirements.yml.
-         
-         # It's better to duplicate simple path validation or use config.
-         pass
-         # Implementing below in write_to_file
-
+ 
     async def install_requirements(self, playbook_name: str):
         playbook_name = playbook_name.replace("\\", "/")
         playbook_path = settings.PLAYBOOKS_DIR / playbook_name
         # Simple validation
         if not str(playbook_path.resolve()).startswith(str(settings.PLAYBOOKS_DIR.resolve())):
              yield '<div class="log-error">Error: Invalid playbook path</div>'; return
-
+ 
         parent = playbook_path.parent
         req_file = "requirements.yml" if (parent / "requirements.yml").exists() else "requirements.yaml" if (parent / "requirements.yaml").exists() else None
         if not req_file:
             yield '<div class="log-error">Error: No requirements.yml found in directory.</div>'; return
-
+ 
         cmd, error_msg = self._get_ansible_command(
             playbook_path, 
             galaxy=True, 
@@ -343,7 +400,7 @@ class RunnerService:
             yield f'<div class="log-success">Sible: Installation finished with code {process.returncode}</div>'
         except Exception as e:
             yield f'<div class="log-error">Sible Error: {str(e)}</div>'
-
+ 
     def cleanup_started_jobs(self):
         running_jobs = self.db.exec(select(JobRun).where(JobRun.status == "running")).all()
         count = len(running_jobs)

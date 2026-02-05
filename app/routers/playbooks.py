@@ -99,18 +99,28 @@ async def delete_playbook(
 
 @router.post("/run/{name:path}")
 async def run_playbook_endpoint(name: str, request: Request):
+    form = await request.form()
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
         "name": name,
-        "mode": "run"
+        "mode": "run",
+        "limit": form.get("limit"),
+        "tags": form.get("tags"),
+        "verbosity": form.get("verbosity"),
+        "extra_vars": form.get("extra_vars")
     })
 
 @router.post("/check/{name:path}")
 async def check_playbook_endpoint(name: str, request: Request):
+    form = await request.form()
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
         "name": name,
-        "mode": "check"
+        "mode": "check",
+        "limit": form.get("limit"),
+        "tags": form.get("tags"),
+        "verbosity": form.get("verbosity"),
+        "extra_vars": form.get("extra_vars")
     })
 
 @router.post("/stop/{name:path}")

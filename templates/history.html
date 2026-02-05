@@ -54,7 +54,14 @@
                         -
                         {% endif %}
                     </td>
-                    <td>{{ run.trigger }}</td>
+                    <td>
+                        {{ run.trigger }}
+                        {% if run.params %}
+                        <div style="font-size: 0.75rem; color: #888;" title="{{ run.params }}">
+                            (Custom)
+                        </div>
+                        {% endif %}
+                    </td>
                     <td>
                         <div style="display: flex; gap: 10px;">
                             <button class="outline secondary" style="padding: 5px 10px; font-size: 0.8rem; width: auto;"
