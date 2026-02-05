@@ -1,0 +1,70 @@
+from fastapi import APIRouter, Request, Response, Depends
+from app.templates import templates
+from app.config import get_settings
+from app.dependencies import get_history_service
+from app.services import HistoryService
+from app.utils.htmx import trigger_toast
+
+settings = get_settings()
+router = APIRouter()
+
+@router.get("/history")
+async def get_history_page(
+    request: Request,
+    service: HistoryService = Depends(get_history_service)
+):
+    runs = service.get_recent_runs()
+    return templates.TemplateResponse("history.html", {"request": request, "runs": runs, "active_tab": "history"})
+
+@router.delete("/history/all")
+async def delete_all_history(
+    service: HistoryService = Depends(get_history_service)
+):
+    service.delete_all_runs()
+    response = Response(status_code=200)
+    response.headers["HX-Refresh"] = "true"
+    return response
+
+@router.delete("/history/run/{run_id}")
+async def delete_run(
+    run_id: int,
+    service: HistoryService = Depends(get_history_service)
+):
+    success = service.delete_run(run_id)
+    if success:
+        return Response(status_code=200)
+    return Response(status_code=404)
+
+@router.get("/history/run/{run_id}")
+async def get_run_details(
+    run_id: int, 
+    request: Request,
+    service: HistoryService = Depends(get_history_service)
+):
+    run = service.get_run(run_id)
+    if not run: return Response("Run not found", status_code=404)
+    return templates.TemplateResponse("partials/log_viewer_modal.html", {"request": request, "run": run})
+
+@router.get("/history/{name:path}")
+async def get_playbook_history(
+    name: str,
+    request: Request,
+    service: HistoryService = Depends(get_history_service)
+):
+    runs = service.get_playbook_runs(name)
+    return templates.TemplateResponse("partials/history_list_modal.html", {
+        "request": request,
+        "playbook_name": name,
+        "manual_runs": runs
+    })
+
+@router.delete("/history/playbook/{name:path}/all")
+async def delete_playbook_history(
+    name: str,
+    service: HistoryService = Depends(get_history_service)
+):
+    service.delete_playbook_runs(name)
+    response = Response(status_code=200)
+    trigger_toast(response, f"History for {name} cleared", "success")
+    response.headers["HX-Refresh"] = "true"
+    return response

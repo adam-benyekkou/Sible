@@ -1,74 +1,74 @@
+import asyncio
+import sys
+
+# Windows subprocess support requires ProactorEventLoop
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    print("Sible: Windows Proactor Event Loop Policy set.")
+
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
-from pathlib import Path
 from contextlib import asynccontextmanager
-import os
 import traceback
 
-from app.routes import router
-from app.tasks import scheduler
+from app.config import get_settings
 from app.database import create_db_and_tables
 from app.auth import check_auth
-from app.services import RunnerService
+from app.services import RunnerService, SchedulerService, SettingsService
+from app.database import engine
+from sqlmodel import Session
 
-import sys
-import asyncio
+# Import Routers
+from app.routers import playbooks, history, settings as settings_router, websocket, scheduler as scheduler_router, core
 
-# Fix for Windows subprocess support in asyncio
-if sys.platform == 'win32':
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+settings_conf = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+
     # Startup
     create_db_and_tables()
-    RunnerService.cleanup_started_jobs()
-    scheduler.start()
+    
+    # Cleanup jobs needs DB session
+    with Session(engine) as session:
+        RunnerService(session).cleanup_started_jobs()
+    
+    SchedulerService.start()
+    
     yield
     # Shutdown
-    scheduler.shutdown()
+    SchedulerService.shutdown()
 
 app = FastAPI(lifespan=lifespan)
 
-# Auth Middleware (Added first, so it is inner)
+# Auth Middleware
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
-    try:
-        # List of paths to exclude from auth
-        public_paths = ["/login", "/static", "/docs", "/openapi.json", "/favicon.ico"]
-        
-        # Check if path is public
-        is_public = any(request.url.path.startswith(path) for path in public_paths)
-        
-        if is_public:
-            return await call_next(request)
-            
-        # Check Auth
-        if not check_auth(request):
-            # HTMX Redirect Support
-            if request.headers.get("HX-Request"):
-                 return Response(headers={"HX-Redirect": "/login"})
-            # Standard Redirect
-            return RedirectResponse(url="/login", status_code=303)
-            
+    if request.url.path.startswith("/static") or request.url.path in ["/login", "/logout"]:
         return await call_next(request)
-    except Exception:
-        # Log to file in case stdout is missed
-        with open("crash.log", "w") as f:
-            traceback.print_exc(file=f)
-        traceback.print_exc()
-        return Response("Internal Server Error (Check Logs)", status_code=500)
+    
+    if not check_auth(request):
+        # HTMX requests should probably be redirected to login or show 401
+        if request.headers.get("HX-Request"):
+             return RedirectResponse(url="/login", status_code=302)
+        return RedirectResponse(url="/login")
+        
+    response = await call_next(request)
+    return response
 
-# Session Middleware (Must be added LAST to be OUTERMOST/FIRST to execute)
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "sible-secret-key-change-me"), https_only=False)
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-STATIC_DIR = BASE_DIR / "static"
+# Session Middleware
+app.add_middleware(SessionMiddleware, secret_key=settings_conf.SECRET_KEY, https_only=False)
 
 # Mount Static
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/static", StaticFiles(directory=str(settings_conf.STATIC_DIR)), name="static")
 
-# Include Routes
-app.include_router(router)
+# Include Routers
+app.include_router(core.router)
+app.include_router(playbooks.router)
+app.include_router(history.router)
+app.include_router(settings_router.router)
+app.include_router(websocket.router)
+app.include_router(scheduler_router.router)

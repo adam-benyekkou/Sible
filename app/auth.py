@@ -2,6 +2,8 @@ from fastapi import Request, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 import bcrypt
 from app.services import SettingsService
+from app.database import engine
+from sqlmodel import Session
 
 def verify_password(plain_password, hashed_password):
     try:
@@ -19,7 +21,8 @@ async def get_current_user(request: Request):
     """
     Dependency that checks if the user is authenticated via session.
     """
-    settings = SettingsService.get_settings()
+    with Session(engine) as session:
+        settings = SettingsService(session).get_settings()
     
     # If Auth is disabled, everyone is "authenticated"
     if not settings.auth_enabled:
@@ -37,7 +40,9 @@ def check_auth(request: Request) -> bool:
     """
     Synchronous helper for middleware.
     """
-    settings = SettingsService.get_settings()
+    with Session(engine) as session:
+        settings = SettingsService(session).get_settings()
+        
     if not settings.auth_enabled:
         return True
     return request.session.get("user") is not None
