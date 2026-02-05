@@ -13,3 +13,5 @@ venv/
 app/services_fix.py
 docs/
 static/uploads/
+
+crash.log

@@ -1,4 +1,10 @@
-<div class="log-meta">Connecting to stream for {{ name }}...</div>
+<div class="log-meta" style="display: flex; justify-content: space-between; align-items: center;">
+    <span>Connecting to stream for {{ name }}...</span>
+    <button type="button" class="secondary" hx-post="/stop/{{ name }}" hx-swap="none"
+        style="padding: 2px 8px; font-size: 0.75rem; height: auto; background-color: #ef4444; border: 1px solid #dc2626; color: white; border-radius: 4px; cursor: pointer;">
+        Stop
+    </button>
+</div>
 
 <!-- Stream Controller: Manages SSE connection and self-destructs on 'end' -->
 <div id="stream-controller" hx-ext="sse" sse-connect="/stream/{{ name }}?mode={{ mode|default('run') }}">

@@ -11,11 +11,20 @@ from app.routes import router
 from app.tasks import scheduler
 from app.database import create_db_and_tables
 from app.auth import check_auth
+from app.services import RunnerService
+
+import sys
+import asyncio
+
+# Fix for Windows subprocess support in asyncio
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     create_db_and_tables()
+    RunnerService.cleanup_started_jobs()
     scheduler.start()
     yield
     # Shutdown
