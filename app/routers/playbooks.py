@@ -133,3 +133,14 @@ async def lint_playbook(request: Request):
     content = form.get("content")
     if not content: return []
     return await LinterService.lint_playbook_content(content)
+@router.post("/playbook/{name:path}/install-requirements")
+async def install_requirements_endpoint(
+    name: str,
+    request: Request,
+    service: RunnerService = Depends(get_runner_service)
+):
+    return templates.TemplateResponse("partials/terminal_connect.html", {
+        "request": request,
+        "name": name,
+        "mode": "install-requirements"
+    })
