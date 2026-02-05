@@ -12,7 +12,7 @@ class PlaybookService:
         self.db = db
 
     def _validate_path(self, name: str) -> Optional[Path]:
-        if not re.match(r'^[a-zA-Z0-9_\-\.\/]+$', name):
+        if not re.match(r'^[a-zA-Z0-9_\-\.\/ ]+$', name):
             return None
         if not name.endswith((".yaml", ".yml")):
             return None
