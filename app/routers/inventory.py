@@ -134,3 +134,30 @@ async def get_inventory_secrets(db: Session = Depends(get_db)):
     secrets = db.exec(select(EnvVar)).all()
     # return simple list
     return [{"key": s.key, "is_secret": s.is_secret} for s in secrets]
+
+@router.get("/host/{host_id}/card")
+async def get_host_card(request: Request, host_id: int, db: Session = Depends(get_db)):
+    from app.models.host import Host
+    host = db.get(Host, host_id)
+    if not host:
+        return Response(status_code=404)
+    
+    # Render with component
+    from app.routers.core import templates
+    return templates.TemplateResponse("components/server_card.html", {
+        "request": request,
+        "host": host
+    })
+
+@router.get("/api/dashboard/stats")
+async def get_dashboard_stats(db: Session = Depends(get_db)):
+    hosts = db.exec(select(Host)).all()
+    total = len(hosts)
+    online = len([h for h in hosts if h.status == "online"])
+    uptime_pct = (online / total * 100) if total > 0 else 0
+    
+    return {
+        "total": total,
+        "online": online,
+        "uptime_percentage": round(uptime_pct, 1)
+    }

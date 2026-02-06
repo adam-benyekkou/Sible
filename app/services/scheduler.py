@@ -9,6 +9,7 @@ import math
 from app.database import engine
 from sqlmodel import Session, select, desc
 from app.models import JobRun, PlaybookConfig
+from app.services.inventory import InventoryService
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,14 @@ jobstores = {
 }
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)
+
+async def refresh_inventory_status():
+    """
+    Periodic task to refresh all host statuses.
+    """
+    logger.info("Scheduler: Refreshing inventory statuses...")
+    with Session(engine) as session:
+        await InventoryService.refresh_all_statuses(session)
 
 async def execute_playbook_job(playbook_name: str, **kwargs):
     """
@@ -92,6 +101,14 @@ class SchedulerService:
                     IntervalTrigger(days=1),
                     id="cleanup_logs",
                     name="Cleanup Old Logs",
+                    replace_existing=True
+                )
+            if not scheduler.get_job("refresh_inventory_status"):
+                scheduler.add_job(
+                    refresh_inventory_status,
+                    IntervalTrigger(minutes=2),
+                    id="refresh_inventory_status",
+                    name="Refresh Inventory Status",
                     replace_existing=True
                 )
             logger.info("Scheduler started.")

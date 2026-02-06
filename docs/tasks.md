@@ -171,23 +171,12 @@ Goal: Replace the generic "Welcome" page with a live monitoring grid. This is th
   - [x] **Secrets Integration**: Native support for referencing `EnvVar` secrets (SSH Key/Password) with UI dropdowns.
   - [x] **Connection Validation**: Automated Ansible-ping check during host registration.
 
-### 10.3 Visual Dashboard (Monitoring Hub)
+### 10.3 Visual Dashboard (Monitoring Hub) [COMPLETED]
 
-Goal: Display the inventory as a live-status grid.
-
-- [ ] **Heartbeat Utility**:
-  - [ ] Create `app/utils/network.py` with an async `check_ssh(ip, port)` function (faster and more accurate than ICMP ping for DevOps).
-- [ ] **Background Worker**:
-  - [ ] Configure a FastAPI background task to refresh statuses every 2 minutes.
-  - [ ] Store result (online/offline) and latency in the `Host` table.
-- [ ] **The Server Card UI**:
-  - [ ] Create `templates/components/server_card.html`.
-  - [ ] Style: Charcoal background (#1a1a1a), 1px subtle white border, white typography.
-  - [ ] Status Dot: CSS pulse animation (Green/Red).
-  - [ ] Polling: Use `hx-get` and `hx-trigger="every 60s"` to refresh the card status.
-- [ ] **Global Health Header**:
-  - [ ] Implement `GET /api/dashboard/stats` returning `{total, online, uptime_percentage}`.
-  - [ ] Display a minimalist progress bar at the top of the dashboard.
+- [x] **Heartbeat Utility**: Created `app/utils/network.py` with an async `check_ssh(ip, port)`.
+- [x] **Background Worker**: Configured a recurring scheduler task to refresh statuses every 2 minutes.
+- [x] **The Server Card UI**: Implemented `templates/components/server_card.html` with CSS pulse animations.
+- [x] **Global Health Header**: Integrated real-time stats and health progress bar in the main dashboard.
 
 ## Phase 11: Template Library (The Blueprints)
 

@@ -8,6 +8,7 @@ import sys
 import os
 import logging
 import uuid
+from app.utils.network import check_ssh
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -214,4 +215,27 @@ class InventoryService:
             logger.error(f"Failed to import INI: {e}")
             db.rollback()
             return False
+
+    @staticmethod
+    async def refresh_all_statuses(db: Session):
+        """
+        Iterates through all hosts and updates their status/latency.
+        """
+        hosts = db.exec(select(Host)).all()
+        tasks = []
+        for host in hosts:
+            tasks.append(InventoryService._check_and_update_host(db, host))
+        await asyncio.gather(*tasks)
+
+    @staticmethod
+    async def _check_and_update_host(db: Session, host: Host):
+        is_online, latency = await check_ssh(host.hostname, host.ssh_port)
+        host.status = "online" if is_online else "offline"
+        host.latency = latency
+        db.add(host)
+        try:
+            db.commit()
+        except Exception as e:
+            logger.error(f"Failed to update host status for {host.hostname}: {e}")
+            db.rollback()
 

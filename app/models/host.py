@@ -11,3 +11,5 @@ class Host(SQLModel, table=True):
     ssh_key_secret: Optional[str] = Field(default=None) # Name of EnvVar secret for key
     ssh_password_secret: Optional[str] = Field(default=None) # Name of EnvVar secret for password
     group_name: str = Field(default="all")
+    status: Optional[str] = Field(default="unknown") # online, offline, unknown
+    latency: Optional[float] = Field(default=None) # Latency in ms

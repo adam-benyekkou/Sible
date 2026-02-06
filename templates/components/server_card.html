@@ -1,0 +1,85 @@
+<div class="server-card"
+    style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1rem; color: #fff; position: relative; transition: transform 0.2s;"
+    onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"
+    hx-get="/api/inventory/host/{{ host.id }}/card" hx-trigger="every 60s" hx-swap="outerHTML">
+
+    <style>
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background-color: #238636;
+            box-shadow: 0 0 0 rgba(35, 134, 54, 0.4);
+            animation: pulse-green 2s infinite;
+        }
+
+        .status-offline {
+            background-color: #da3633;
+            box-shadow: 0 0 0 rgba(218, 54, 51, 0.4);
+            animation: pulse-red 2s infinite;
+        }
+
+        .text-online {
+            color: #238636;
+        }
+
+        .text-offline {
+            color: #da3633;
+        }
+
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 rgba(35, 134, 54, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(35, 134, 54, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(35, 134, 54, 0);
+            }
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(218, 54, 51, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(218, 54, 51, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(218, 54, 51, 0);
+            }
+        }
+    </style>
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h4 style="margin: 0; font-size: 1.1rem; color: #fff;">{{ host.alias }}</h4>
+            <code
+                style="font-size: 0.85rem; color: #8b949e; background: transparent; padding: 0;">{{ host.hostname }}</code>
+        </div>
+        <div style="text-align: right;">
+            <span class="status-dot {{ 'status-online' if host.status == 'online' else 'status-offline' }}"></span>
+            <span style="font-size: 0.8rem;" class="{{ 'text-online' if host.status == 'online' else 'text-offline' }}">
+                {{ host.status|upper }}
+            </span>
+        </div>
+    </div>
+
+    <div
+        style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #8b949e;">
+        <span><i class="fas fa-user-circle"></i> {{ host.ssh_user }}</span>
+        {% if host.latency %}
+        <span><i class="fas fa-bolt"></i> {{ host.latency }}ms</span>
+        {% endif %}
+    </div>
+</div>

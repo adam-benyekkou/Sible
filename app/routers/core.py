@@ -33,7 +33,12 @@ async def logout(request: Request):
 
 @router.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    from app.models.host import Host
+    from app.database import engine
+    from sqlmodel import Session, select
+    with Session(engine) as session:
+        hosts = session.exec(select(Host)).all()
+    return templates.TemplateResponse("index.html", {"request": request, "hosts": hosts})
 
 @router.get("/partials/sidebar")
 async def get_sidebar(
