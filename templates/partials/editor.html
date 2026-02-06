@@ -194,14 +194,14 @@
                 History
             </button>
 
-            <button class="contrast" hx-post="/playbook/{{ name | safe }}/install-requirements"
+            <button class="contrast" hx-post="/playbooks/{{ name | safe }}/install-requirements"
                 hx-target="#terminal-container" hx-swap="innerHTML"
                 title="Install Ansible Galaxy dependencies (requires requirements.yml)">
                 Install Roles
             </button>
 
             <!-- Delete Button -->
-            <button class="danger" hx-delete="/playbook/{{ name | safe }}"
+            <button class="danger" hx-delete="/playbooks/{{ name | safe }}"
                 hx-confirm="Are you sure you want to delete {{ name }}? This cannot be undone."
                 hx-target="#main-content">
                 Delete
@@ -279,7 +279,7 @@
                 // Save handler
                 window.saveFile = function () {
                     var content = editor.getValue();
-                    htmx.ajax('POST', '/playbook/{{ name }}', {
+                    htmx.ajax('POST', '/playbooks/{{ name }}', {
                         values: { content: content },
                         swap: 'none'
                     }).then(() => {

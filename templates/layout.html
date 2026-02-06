@@ -50,6 +50,7 @@
         <hr>
         <nav>
             <ul>
+                <li><a href="/" role="button" class="secondary outline w-100">Dashboard</a></li>
                 <li><a href="/queue" role="button" class="secondary outline w-100">Queue / Jobs</a></li>
                 <li>
                     <a href="/history" role="button" class="secondary outline w-100">
@@ -57,7 +58,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="/settings" role="button" class="secondary outline w-100">
+                    <a href="/settings/general" role="button" class="secondary outline w-100">
                         Settings
                     </a>
                 </li>
@@ -132,6 +133,8 @@
             </div>
         </template>
     </div>
+    <!-- Modals -->
+    {% include "partials/new_playbook_modal.html" %}
 </body>
 
 </html>

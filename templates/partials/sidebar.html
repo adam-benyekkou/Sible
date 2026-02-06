@@ -1,5 +1,5 @@
 <div class="sidebar-btn-container">
-    <button class="btn-new" hx-post="/playbook" hx-prompt="Enter new playbook name (e.g., install-nginx):"
+    <button class="btn-new" hx-post="/playbooks" hx-prompt="Enter new playbook name (e.g., install-nginx):"
         hx-swap="none">
         + New Playbook
     </button>
@@ -22,7 +22,8 @@
     </div>
 </details>
 {% else %}
-<div class="playbook-item" hx-get="/playbook/{{ item.path | safe }}" hx-target="#main-content" hx-swap="innerHTML">
+<div class="playbook-item" hx-get="/playbooks/{{ item.path | safe }}" hx-target="#main-content" hx-swap="innerHTML"
+    hx-push-url="true">
     <span class="status-dot {{ item.status }}"></span>
     {{ item.name }}
 </div>

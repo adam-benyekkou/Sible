@@ -13,23 +13,25 @@ import json
 settings_conf = get_settings()
 router = APIRouter()
 
-@router.get("/settings")
-async def get_settings_page(
-    request: Request,
-    service: SettingsService = Depends(get_settings_service),
-    playbook_service: PlaybookService = Depends(get_playbook_service),
-    db: Session = Depends(get_db)
-):
-    settings = service.get_settings()
-    playbooks = playbook_service.list_playbooks()
-    configs = {c.playbook_name: c for c in db.exec(select(PlaybookConfig)).all()}
-    return templates.TemplateResponse("settings.html", {
+# Helper to render the common settings shell with active tab
+async def render_settings_page(request: Request, active_tab: str, context: dict = {}):
+    settings = get_settings_conf() # use the loaded config or service
+    # We need to make sure we have the basics for the sidebar or common elements
+    # Currently layout.html handles most. settings.html handles the sidebar.
+    
+    full_context = {
         "request": request,
-        "settings": settings,
-        "playbooks": playbooks,
-        "overrides": configs,
-        "active_tab": "retention"
-    })
+        "active_tab": active_tab, 
+        **context
+    }
+    return templates.TemplateResponse("settings.html", full_context)
+
+def get_settings_conf():
+    return get_settings()
+
+@router.get("/settings")
+async def get_settings_root(request: Request):
+    return RedirectResponse(url="/settings/general")
 
 @router.get("/settings/general")
 async def get_settings_general(
@@ -37,10 +39,95 @@ async def get_settings_general(
     service: SettingsService = Depends(get_settings_service)
 ):
     settings = service.get_settings()
-    return templates.TemplateResponse("partials/settings_general.html", {
-        "request": request,
-        "settings": settings
-    })
+    context = {"settings": settings}
+    
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/settings_general.html", {"request": request, **context})
+        
+    return await render_settings_page(request, "general", context)
+
+@router.get("/settings/secrets")
+async def get_settings_secrets(
+    request: Request,
+    service: SettingsService = Depends(get_settings_service)
+):
+    env_vars = service.get_env_vars()
+    context = {"env_vars": env_vars}
+
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/settings_secrets.html", {"request": request, **context})
+
+    return await render_settings_page(request, "secrets", context)
+
+@router.get("/settings/inventory")
+async def get_settings_inventory(request: Request):
+    content = InventoryService.get_inventory_content()
+    context = {"content": content}
+
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/settings_inventory.html", {"request": request, **context})
+
+    return await render_settings_page(request, "inventory", context)
+
+@router.get("/settings/retention")
+async def get_settings_retention(
+    request: Request,
+    service: SettingsService = Depends(get_settings_service),
+    playbook_service: PlaybookService = Depends(get_playbook_service),
+    db: Session = Depends(get_db)
+):
+    settings = service.get_settings()
+    
+    # Get flat list of playbooks from tree
+    def flatten_playbooks(items):
+        flat = []
+        for item in items:
+            if item["type"] == "file":
+                flat.append(item)
+            elif item["type"] == "directory":
+                flat.extend(flatten_playbooks(item["children"]))
+        return flat
+
+    playbooks_tree = playbook_service.list_playbooks()
+    all_playbooks = flatten_playbooks(playbooks_tree)
+    
+    # Get overrides
+    configs = {c.playbook_name: c for c in db.exec(select(PlaybookConfig)).all()}
+    
+    # Prepare data for template
+    pb_list = []
+    for pb in all_playbooks:
+        path = pb["path"]
+        conf = configs.get(path)
+        pb_list.append({
+            "name": path,
+            "retention": conf.retention_days if conf else None,
+            "max_runs": conf.max_runs if conf else None
+        })
+        
+    context = {
+        "global_retention": settings.global_retention_days,
+        "global_max_runs": settings.global_max_runs,
+        "playbooks": pb_list
+    }
+
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/settings_retention.html", {"request": request, **context})
+
+    return await render_settings_page(request, "retention", context)
+
+@router.get("/settings/notifications")
+async def get_settings_notifications(
+    request: Request,
+    service: SettingsService = Depends(get_settings_service)
+):
+    settings = service.get_settings()
+    context = {"settings": settings}
+    
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/settings_notifications.html", {"request": request, **context})
+
+    return await render_settings_page(request, "notifications", context)
 
 @router.post("/settings/general")
 async def save_settings_general(

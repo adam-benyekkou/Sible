@@ -1,0 +1,15 @@
+# Title: System Update
+# Description: Updates apt cache and upgrades all packages.
+# Category: System
+# Author: Sible Team
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist

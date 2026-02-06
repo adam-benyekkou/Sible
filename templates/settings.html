@@ -11,28 +11,24 @@
         </div>
 
         <nav style="flex-grow: 1; padding: 0 1rem;">
-            <a href="#" class="settings-nav-item active" hx-get="/settings/general" hx-target="#settings-content"
-                onclick="document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.remove('active')); this.classList.add('active');">
+            <a href="/settings/general" class="settings-nav-item {{ 'active' if active_tab == 'general' else '' }}">
                 General
             </a>
 
-            <a href="#" class="settings-nav-item" hx-get="/settings/retention_tab" hx-target="#settings-content"
-                onclick="document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.remove('active')); this.classList.add('active');">
+            <a href="/settings/retention" class="settings-nav-item {{ 'active' if active_tab == 'retention' else '' }}">
                 Retention Policies
             </a>
 
-            <a href="#" class="settings-nav-item" hx-get="/settings/notifications" hx-target="#settings-content"
-                onclick="document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.remove('active')); this.classList.add('active');">
+            <a href="/settings/notifications"
+                class="settings-nav-item {{ 'active' if active_tab == 'notifications' else '' }}">
                 Notifications
             </a>
 
-            <a href="#" class="settings-nav-item" hx-get="/settings/inventory" hx-target="#settings-content"
-                onclick="document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.remove('active')); this.classList.add('active');">
+            <a href="/settings/inventory" class="settings-nav-item {{ 'active' if active_tab == 'inventory' else '' }}">
                 Inventory
             </a>
 
-            <a href="#" class="settings-nav-item" hx-get="/settings/secrets" hx-target="#settings-content"
-                onclick="document.querySelectorAll('.settings-nav-item').forEach(el => el.classList.remove('active')); this.classList.add('active');">
+            <a href="/settings/secrets" class="settings-nav-item {{ 'active' if active_tab == 'secrets' else '' }}">
                 Secrets
             </a>
 
@@ -44,8 +40,17 @@
 
     <!-- Content Area -->
     <main id="settings-content" style="flex-grow: 1; padding: 2rem; overflow-y: auto;">
-        <!-- Default content loaded via HTMX or include -->
+        {% if active_tab == 'general' %}
         {% include "partials/settings_general.html" %}
+        {% elif active_tab == 'retention' %}
+        {% include "partials/settings_retention.html" %}
+        {% elif active_tab == 'notifications' %}
+        {% include "partials/settings_notifications.html" %}
+        {% elif active_tab == 'inventory' %}
+        {% include "partials/settings_inventory.html" %}
+        {% elif active_tab == 'secrets' %}
+        {% include "partials/settings_secrets.html" %}
+        {% endif %}
     </main>
 </div>
 

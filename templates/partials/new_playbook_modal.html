@@ -1,0 +1,106 @@
+<div x-data="{ 
+    open: false, 
+    templates: [], 
+    selectedTemplate: '',
+    filename: '',
+    async loadTemplates() {
+        const res = await fetch('/api/templates');
+        this.templates = await res.json();
+    },
+    async create() {
+        if (!this.filename) return;
+        
+        let url = '/playbook';
+        let headers = {
+            'HX-Prompt': this.filename
+        };
+        
+        if (this.selectedTemplate) {
+            url = `/api/templates/use?path=${this.selectedTemplate}`;
+            // If using template, logic is slightly different, dealt by backend redirect
+        } else {
+            // Standard create
+        }
+
+        // Ideally we use HTMX here, but for dynamic endpoint construction easier to use fetch or standard form.
+        // Let's use standard HTMX via a hidden form or simply trigger the hx-post manually.
+        
+        // Re-using the existing hx-post=/playbook logic is tricky if we want to support templates.
+        // Let's make the form submit to a new handler or use the 'use_template' endpoint directly.
+    }
+}" @open-new-playbook-modal.window="open = true; loadTemplates();" class="modal" :class="{ 'open': open }">
+    <article>
+        <header>
+            <button aria-label="Close" rel="prev" @click="open = false"></button>
+            <h3>Create New Playbook</h3>
+        </header>
+
+        <form hx-post="/api/templates/use" hx-target="#main-content" hx-swap="outerHTML">
+            <!-- If no template selected, we might want standard create. 
+                 But the current /playbook endpoint expects HX-Prompt header. 
+                 Let's unify or handle via Alpine x-if. -->
+
+            <label>
+                Playbook Name
+                <input type="text" name="filename" x-model="filename" placeholder="e.g. webserver.yaml" required>
+            </label>
+
+            <label>
+                Start from Blueprint (Optional)
+                <select name="path" x-model="selectedTemplate"
+                    @change="if(selectedTemplate && !filename) { filename = selectedTemplate.split('/').pop().replace('.yaml', '_new.yaml'); }">
+                    <option value="">-- Blank Playbook --</option>
+                    <template x-for="t in templates" :key="t.id">
+                        <option :value="t.id" x-text="t.title + ' (' + t.category + ')'"></option>
+                    </template>
+                </select>
+                <small x-show="selectedTemplate" x-text="templates.find(t => t.id === selectedTemplate)?.description"
+                    class="color-muted"></small>
+            </label>
+
+            <footer>
+                <button type="button" class="secondary" @click="open = false">Cancel</button>
+
+                <!-- Different buttons based on mode -->
+                <button type="submit" x-show="selectedTemplate">Create from Blueprint</button>
+
+                <button type="button" x-show="!selectedTemplate"
+                    @click="$el.setAttribute('hx-post', '/playbooks'); $el.setAttribute('hx-headers', JSON.stringify({'HX-Prompt': filename})); htmx.process($el); htmx.trigger($el, 'click'); open = false;">
+                    Create Blank
+                </button>
+                <!-- Hidden button for the manual HTMX trigger above -->
+            </footer>
+        </form>
+    </article>
+
+    <!-- Modal Background -->
+    <div class="modal-backdrop" @click="open = false"></div>
+</div>
+
+<style>
+    .modal {
+        display: none;
+    }
+
+    .modal.open {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 999;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+</style>
