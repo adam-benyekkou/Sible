@@ -4,19 +4,14 @@ from app.templates import templates
 from typing import List, Optional
 from pydantic import BaseModel
 from app.services.template import TemplateService
-from app.auth import get_current_user
+from app.core.security import get_current_user
 
 router = APIRouter(
     tags=["templates"],
     dependencies=[Depends(get_current_user)]
 )
 
-class TemplateCreate(BaseModel):
-    name: str # Filename or path ID
-    content: str
-
-class TemplateUpdate(BaseModel):
-    content: str
+from app.schemas.template import TemplateCreate, TemplateUpdate
 
 @router.get("/templates", response_class=HTMLResponse)
 async def templates_index(request: Request):

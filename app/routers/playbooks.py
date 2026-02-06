@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Response, Form, Depends
 from app.templates import templates
-from app.config import get_settings
+from app.core.config import get_settings
 from app.dependencies import get_playbook_service, get_runner_service
 from app.services import PlaybookService, RunnerService, LinterService
 from app.utils.htmx import trigger_toast
@@ -211,10 +211,7 @@ async def use_template(
 from pydantic import BaseModel
 from typing import Optional
 
-class CreatePlaybookRequest(BaseModel):
-    name: str
-    folder: Optional[str] = None
-    template_id: Optional[str] = None
+from app.schemas.playbook import CreatePlaybookRequest
 
 @router.post("/api/playbooks/create")
 async def create_playbook_api(

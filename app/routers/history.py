@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Response, Depends
 from app.templates import templates
-from app.config import get_settings
+from app.core.config import get_settings
 from app.dependencies import get_history_service
 from app.services import HistoryService
 from app.utils.htmx import trigger_toast

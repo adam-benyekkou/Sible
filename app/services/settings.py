@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from app.config import get_settings
+from app.core.config import get_settings
 from app.models import AppSettings
 from pathlib import Path
 import shutil

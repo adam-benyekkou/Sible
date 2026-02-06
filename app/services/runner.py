@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime
 from sqlmodel import Session, select
 from app.models import JobRun, EnvVar
-from app.config import get_settings
+from app.core.config import get_settings
 from app.services.notification import NotificationService
 
 settings = get_settings()

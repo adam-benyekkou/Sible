@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Optional
 from sqlmodel import Session, select, desc
 import re
-from app.config import get_settings
+from app.core.config import get_settings
 from app.models import JobRun
 
 settings = get_settings()

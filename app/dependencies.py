@@ -1,5 +1,5 @@
 from sqlmodel import Session
-from app.database import engine
+from app.core.database import engine
 from typing import Generator
 from fastapi import Depends
 from app.services import PlaybookService, RunnerService, HistoryService, SettingsService, NotificationService, InventoryService

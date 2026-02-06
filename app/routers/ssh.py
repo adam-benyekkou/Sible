@@ -1,8 +1,10 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlmodel import Session, select
-from app.database import engine
+from sqlmodel import Session, select
+from app.core.database import engine
 from app.models import Host
-from app.auth import get_current_user_ws
+from app.core.security import get_current_user_ws
+from typing import Optional
 import asyncssh
 import asyncio
 import logging

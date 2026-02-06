@@ -13,11 +13,11 @@ from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
 import traceback
 
-from app.config import get_settings
-from app.database import create_db_and_tables
-from app.auth import check_auth
+from app.core.config import get_settings
+from app.core.database import create_db_and_tables
+from app.core.security import check_auth
 from app.services import RunnerService, SchedulerService, SettingsService
-from app.database import engine
+from app.core.database import engine
 from sqlmodel import Session
 
 # Import Routers

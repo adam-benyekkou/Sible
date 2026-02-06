@@ -2,7 +2,7 @@ from fastapi import Request, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 import bcrypt
 from app.services import SettingsService
-from app.database import engine
+from app.core.database import engine
 from sqlmodel import Session
 
 def verify_password(plain_password, hashed_password):

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Request, Response, Form, status, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from app.templates import templates
-from app.config import get_settings
+from app.core.config import get_settings
 from app.dependencies import get_settings_service, get_playbook_service
 from app.services import SettingsService, PlaybookService
-from app.auth import verify_password
+from app.core.security import verify_password
 
 settings_conf = get_settings()
 router = APIRouter()
@@ -34,7 +34,7 @@ async def logout(request: Request):
 @router.get("/")
 async def root(request: Request):
     from app.models.host import Host
-    from app.database import engine
+    from app.core.database import engine
     from sqlmodel import Session, select
     with Session(engine) as session:
         hosts = session.exec(select(Host)).all()

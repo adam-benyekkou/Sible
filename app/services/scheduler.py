@@ -6,7 +6,7 @@ from app.services.runner import RunnerService
 import logging
 from datetime import datetime, timezone, timedelta
 import math
-from app.database import engine
+from app.core.database import engine
 from sqlmodel import Session, select, desc
 from app.models import JobRun, PlaybookConfig
 from app.services.inventory import InventoryService

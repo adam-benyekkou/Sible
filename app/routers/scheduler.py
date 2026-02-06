@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Response, Form, Depends
 from app.templates import templates
-from app.config import get_settings
+from app.core.config import get_settings
 from app.services import SchedulerService
 from app.utils.htmx import trigger_toast
 

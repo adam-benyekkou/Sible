@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Request, Response, Form, File, UploadFile, Depends
 from app.templates import templates
-from app.config import get_settings
+from app.templates import templates
+from app.core.config import get_settings
 from app.dependencies import get_settings_service, get_playbook_service, get_notification_service, get_db
 from app.services import SettingsService, PlaybookService, NotificationService, InventoryService
 from app.utils.htmx import trigger_toast
-from app.auth import get_password_hash
+from app.core.security import get_password_hash
 from app.models import PlaybookConfig
 import shutil
 from sqlmodel import Session, select

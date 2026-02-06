@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, create_engine
-from app.config import get_settings
+from app.core.config import get_settings
 
 settings = get_settings()
 connect_args = {"check_same_thread": False}

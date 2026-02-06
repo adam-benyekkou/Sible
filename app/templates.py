@@ -1,6 +1,7 @@
 from fastapi.templating import Jinja2Templates
-from app.config import get_settings
-from app.database import engine
+from fastapi.templating import Jinja2Templates
+from app.core.config import get_settings
+from app.core.database import engine
 from sqlmodel import Session
 from app.services import SettingsService
 
