@@ -179,29 +179,34 @@ Goal: Replace the generic "Welcome" page with a live monitoring grid. This is th
 - [x] **Global Health Header**: Integrated real-time stats and health progress bar in the main dashboard.
 - [x] **Terminal UX**: Renamed button to `>_` and added toast notifications for connection failures.
 
-## Phase 11: Template Library (The Blueprints)
+## Phase 11: Template Library (The Blueprints) (Completed)
 
 Goal: Provide a "Gallery" of best-practice playbooks.
 
 ### 11.1 Blueprint Structure & Metadata
 
-- [ ] **Metadata Extraction**: Define a standard where the first few lines of a template contain YAML comments for the UI.
+- [x] **Metadata Extraction**: Define a standard where the first few lines of a template contain YAML comments for the UI.
   - *Example*: `# Title: Update Systems`, `# Description: Runs apt update and upgrade.`
-- [ ] **Template Service**: Create `app/services/template_service.py`.
-  - [ ] `list_templates()`: Scans `/app/blueprints/`, parses the title/description comments, and returns a JSON list.
-  - [ ] `get_template_content(filename)`: Returns the raw YAML string.
+- [x] **Template Service**: Create `app/services/template.py`.
+  - [x] `list_templates()`: Scans `/app/blueprints/`, parses the title/description comments, and returns a JSON list.
+  - [x] `get_template_content(filename)`: Returns the raw YAML string.
+- [x] **Template Dashboard (Manager)**
+  - [x] CRUD Interface for Templates (`templates/templates_index.html`).
+  - [x] Table Layout with Edit/Delete actions.
+  - [x] Title & Filename separation in Editor.
 
 ### 11.2 UI Integration (The "Bridge")
 
-- [ ] **Enhanced New Playbook Modal**:
-  - [ ] Add a `<select>` dropdown titled "Start from Blueprint (Optional)".
-  - [ ] Populated via `hx-get="/api/templates"` on modal load.
-- [ ] **Frontend Logic (Alpine.js/HTMX)**:
-  - [ ] When a template is selected, send a request to `GET /api/templates/{name}`.
-  - [ ] **Ace Editor Injection**: Use a JavaScript event to push the returned YAML content into the Ace Editor instance immediately.
-- [ ] **The "Instantiate" Endpoint**:
-  - [ ] `POST /api/playbooks/create-from-template`: Takes `template_name` and `new_filename`.
-  - [ ] **Safety Check**: Ensure the new filename doesn't already exist in the `/playbooks` folder.
+- [x] **Enhanced New Playbook Modal**:
+  - [x] Add a `<select>` dropdown titled "Start from Template".
+  - [x] Populated templates via API.
+- [x] **Frontend Logic (Alpine.js)**:
+  - [x] Fetch template content and inject into editor.
+- [x] **Subdirectory Support**:
+  - [x] Allow creating playbooks in subfolders (e.g., `web/nginx.yml`).
+- [x] **The "Instantiate" Flow**:
+  - [x] Create Playbook from Template content.
+  - [x] **Safety Check**: Ensure filename doesn't collide.
 
 ## Phase 12: Security & Architecture (Production Readiness)
 
