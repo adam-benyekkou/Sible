@@ -82,4 +82,26 @@
         <span><i class="fas fa-bolt"></i> {{ host.latency }}ms</span>
         {% endif %}
     </div>
+    <div style="margin-top: 1rem; text-align: right;">
+        <button class="outline"
+            style="padding: 5px 10px; font-size: 0.8rem; width: auto; color: #fff; border-color: #666;"
+            onmouseover="this.style.borderColor='#fff'; this.style.color='#fff';"
+            onmouseout="this.style.borderColor='#666'; this.style.color='#8b949e';"
+            onclick="openTerminal('{{ host.id }}', '{{ host.alias }}')">
+            <i class="fas fa-terminal"></i> >_
+        </button>
+    </div>
+
+    <!-- Script for handling terminal modal (if not already global) -->
+    <script>
+        function openTerminal(hostId, alias) {
+            // check if modal exists, if not, might need to load it. 
+            // ideally this function is defined globally in layout.html
+            // providing a simple alert as placeholder as requested
+            // alert('Connecting to ' + alias + ' (' + hostId + ')...');
+
+            // Dispatch event to open modal
+            window.dispatchEvent(new CustomEvent('open-ssh-terminal', { detail: { hostId: hostId, alias: alias } }));
+        }
+    </script>
 </div>

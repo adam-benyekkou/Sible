@@ -1,0 +1,19 @@
+<!-- Toast Container -->
+<div id="toast-container" x-data="toastManager" @show-toast.window="add($event.detail)">
+
+    <template x-for="toast in toasts" :key="toast.id">
+        <div class="toast" :class="'toast-' + toast.level"
+            style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem; border-radius: 4px; color: white; margin-top: 0.5rem;"
+            :style="toast.level === 'error' ? 'background-color: #d32f2f;' : 'background-color: #388e3c;'">
+            <span class="toast-icon">
+                <template x-if="toast.level === 'success'">
+                    <i class="fas fa-check-circle"></i>
+                </template>
+                <template x-if="toast.level === 'error'">
+                    <i class="fas fa-exclamation-circle"></i>
+                </template>
+            </span>
+            <span class="toast-message" x-text="toast.message"></span>
+        </div>
+    </template>
+</div>

@@ -1,0 +1,130 @@
+<div x-data="sshTerminalModal()" @open-ssh-terminal.window="openModal($event.detail)" class="modal-backdrop"
+    x-show="isOpen" x-transition.opacity style="display: none;">
+
+    <dialog open x-show="isOpen" x-transition.scale>
+        <article style="min-width: 800px; width: 90vw; max-width: 1200px;">
+            <header>
+                <button aria-label="Close" rel="prev" @click="closeModal()"></button>
+                <h5>
+                    <i class="fas fa-terminal"></i> Terminal: <span x-text="alias"></span>
+                </h5>
+            </header>
+
+            <div id="ssh-terminal-container" style="height: 600px; width: 100%; background: #000; padding: 5px;"></div>
+
+            <footer>
+                <button class="secondary" @click="closeModal()">Close Connection</button>
+            </footer>
+        </article>
+    </dialog>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('sshTerminalModal', () => ({
+            isOpen: false,
+            hostId: null,
+            alias: '',
+            term: null,
+            fitAddon: null,
+            socket: null,
+
+            openModal(detail) {
+                this.hostId = detail.hostId;
+                this.alias = detail.alias;
+                this.isOpen = true;
+                this.$nextTick(() => {
+                    this.initTerminal();
+                });
+            },
+
+            closeModal() {
+                this.isOpen = false;
+                if (this.socket) {
+                    this.socket.close();
+                }
+                if (this.term) {
+                    this.term.dispose();
+                    this.term = null;
+                }
+                this.hostId = null;
+            },
+
+            initTerminal() {
+                const container = document.getElementById('ssh-terminal-container');
+                container.innerHTML = ''; // Clear previous
+
+                this.term = new Terminal({
+                    cursorBlink: true,
+                    theme: {
+                        background: '#0a0a0a',
+                        foreground: '#f0f0f0'
+                    },
+                    fontSize: 14,
+                    fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace"
+                });
+
+                this.fitAddon = new FitAddon.FitAddon();
+                this.term.loadAddon(this.fitAddon);
+                this.term.open(container);
+                this.fitAddon.fit();
+
+                // Connect WebSocket
+                this.connectWebSocket();
+
+                // Handle Resize
+                window.addEventListener('resize', () => {
+                    if (this.isOpen && this.fitAddon) {
+                        this.fitAddon.fit();
+                        // Optional: Send resize event to backend if supported
+                    }
+                });
+            },
+
+            connectWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const url = `${protocol}//${window.location.host}/ws/ssh/${this.hostId}`;
+
+                this.socket = new WebSocket(url);
+
+                this.socket.onopen = () => {
+                    this.term.write('\r\n\x1b[32mConnecting to SSH...\x1b[0m\r\n');
+                };
+
+                this.socket.onmessage = (event) => {
+                    this.term.write(event.data);
+                };
+
+                this.socket.onclose = (event) => {
+                    this.term.write('\r\n\x1b[31mConnection closed.\x1b[0m\r\n');
+
+                    if (event.code === 4001) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: {
+                                message: "Connection Failed: " + (event.reason || "Unknown Error"),
+                                level: 'error'
+                            }
+                        }));
+                    }
+                };
+
+                this.socket.onerror = (error) => {
+                    console.error('WebSocket Error:', error);
+                    // Often onerror fires before onclose for connection failures
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: {
+                            message: "Connection Error: check console for details",
+                            level: 'error'
+                        }
+                    }));
+                };
+
+                this.term.onData((data) => {
+                    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                        this.socket.send(data);
+                    }
+                });
+            }
+        }));
+    });
+</script>
