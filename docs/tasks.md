@@ -212,17 +212,50 @@ Goal: Provide a "Gallery" of best-practice playbooks.
 
 Goal: Secure the application so it can be exposed on a LAN.
 
-- [ ] **Authentication (The Gatekeeper)**
-  - [ ] Implement `AuthService` with `passlib` (bcrypt) and `python-jose` (JWT).
-  - [ ] Create `POST /auth/login` and a simple `login.html` page (Vercel style).
-  - [ ] Secure all API routes (Middleware) to require a valid HttpOnly Cookie.
-  - [ ] Create a default admin user on startup if none exists.
-- [ ] **Refactoring (Service Layer)**
-  - [ ] Crucial: Apply the "Service Layer Pattern" refactor.
-  - [ ] Move logic out of `main.py` into `app/services/` and `app/routers/` to ensure the code is readable by others.
+### 12.1 The "Gatekeeper" (Authentication)
+
+Goal: Move from an open access to a secure multi-user platform.
+
+- [ ] **User Model & DB Migration**
+  - [ ] Update SQLAlchemy models to include a User table: `id`, `username`, `hashed_password`, `role` (Admin/Operator/Watcher).
+- [ ] **Auth Service (`app/services/auth.py`)**
+  - [ ] Implement `verify_password` and `get_password_hash` using passlib (bcrypt).
+  - [ ] Implement JWT generation using `python-jose`.
+- [ ] **Authentication Flow**
+  - [ ] `POST /api/auth/login`: Validates credentials and returns a HttpOnly Cookie containing the JWT.
+  - [ ] `GET /login`: Minimalist UI using Pico.css.
+  - [ ] `GET /api/auth/logout`: Clears the cookie.
+- [ ] **Middleware / Dependencies**
+  - [ ] Create a `get_current_user` dependency to protect all sensitive routers.
+
+### 12.2 RBAC (Role-Based Access Control)
+
+Goal: Enforce permissions based on the 3 roles defined.
+
+- [ ] **Permission Decorator**
+  - [ ] Create a `requires_role(role_name)` dependency.
+- [ ] **Access Logic**
+  - [ ] **Watcher**: Only GET requests (Dashboard, Inventory, Logs).
+  - [ ] **Operator**: GET + POST /run (Can execute but not change code/inventory).
+  - [ ] **Admin**: Full CRUD + Settings + User Management.
+- [ ] **UI Masking**
+  - [ ] Update Jinja2 templates to hide buttons (Save, Delete, Run) if the current user lacks permissions.
+  - [ ] Allow users creation, deletion, edit and assign them roles (only Admin can create users)
+
+### 12.3 Service Layer Refactor (The "Clean Code" Move)
+
+Goal: Decouple business logic from route definitions to ensure maintainability.
+
+- [ ] **Router Extraction**
+  - [ ] Move all `@app.get("/")` and similar into specific files: `app/routers/playbooks.py`, `app/routers/inventory.py`, `app/routers/auth.py`.
+- [ ] **Service Consolidation**
+  - [ ] Ensure `main.py` is strictly for app initialization (Lifespan, Middlewares, Router Includes).
+- [ ] **Global Config**
+  - [ ] Create `app/config.py` (or `app/core/config.py`) using Pydantic Settings to handle all `os.getenv` calls.
+
 - [ ] **Security Hardening (Public Readiness)**
   - [ ] **Secret Scan**: Use `trufflehog` or `git-secrets` to ensure no SSH keys or passwords exist in Git history.
-  - [ ] **No Hardcoded Secrets**: Ensure all configuration uses `os.getenv` with no dangerous default values (e.g., `SECRET_KEY`).
+  - [ ] **No Hardcoded Secrets**: Ensure all configuration uses `os.getenv` with no dangerous default values.
 
 ## Phase 13: GitOps Lite (The Sync)
 
@@ -258,7 +291,7 @@ Goal: Elevate the project from a "basic tool" to a "SaaS-grade" application with
 
 - [ ] **Onboarding (First Launch)**
   - [ ] Problem: Fresh stalls display an empty dashboard.
-  - [ ] Solution: On first startup, auto-create a `demo-playbook.yml` (e.g., ping) and populate the inventory with `localhost`.
+  - [ ] Solution: On first startup, auto-create a `demo-playbook.yml` (e.g., ping) and populate the inventory with `localhost` the PC not the docker container localhost.
 - [ ] **"Empty State" Design**
   - [ ] Problem: A dashboard with no playbooks looks broken.
   - [ ] Solution: Add aesthetic "Empty State" messages: "No playbooks here. Create one or use a template!" with a clean SVG illustration.
@@ -274,7 +307,7 @@ Goal: Elevate the project from a "basic tool" to a "SaaS-grade" application with
 Goal: Build trust and enable community contributions for the public release.
 
 - [ ] **Licensing**
-  - [ ] Add a `LICENSE` file (MIT for high permissiveness or AGPL v3 for viral open-source enforcement).
+  - [x] Add a `LICENSE` file (MIT for high permissiveness or AGPL v3 for viral open-source enforcement).
 - [ ] **The "Sale" README**
   - [ ] Create a high-quality `README.md` with:
     - [ ] Demo GIF/Video (Sible in action).
@@ -285,4 +318,4 @@ Goal: Build trust and enable community contributions for the public release.
     - [ ] Development environment setup (`pip install -r requirements.txt`).
     - [ ] How to run the test suite.
 - [ ] **GitHub Templates**
-  - [ ] Create `.github/ISSUE_TEMPLATE/` for Bug Reports and Feature Requests to standardize feedback.
+  - [x] Create `.github/ISSUE_TEMPLATE/` for Bug Reports and Feature Requests to standardize feedback.
