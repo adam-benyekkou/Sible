@@ -191,25 +191,27 @@ Goal: Display the inventory as a live-status grid.
 
 ## Phase 11: Template Library (The Blueprints)
 
-### 11.1 Blueprint Architecture
+Goal: Provide a "Gallery" of best-practice playbooks.
 
-Goal: File-based system for sharing best-practice playbooks.
+### 11.1 Blueprint Structure & Metadata
 
-- [ ] **Storage Logic**:
-  - [ ] Create `/app/blueprints/` with subfolders for categorization.
-  - [ ] Add metadata parsing logic: Read the first 2 lines of the YAML to extract `# Description: ...` and `# Category: ...`.
-- [ ] **Template Service**:
-  - [ ] Method `get_all_blueprints()`: Returns a list of dictionaries with path, name, and description.
+- [ ] **Metadata Extraction**: Define a standard where the first few lines of a template contain YAML comments for the UI.
+  - *Example*: `# Title: Update Systems`, `# Description: Runs apt update and upgrade.`
+- [ ] **Template Service**: Create `app/services/template_service.py`.
+  - [ ] `list_templates()`: Scans `/app/blueprints/`, parses the title/description comments, and returns a JSON list.
+  - [ ] `get_template_content(filename)`: Returns the raw YAML string.
 
-### 11.2 The Gallery UI
+### 11.2 UI Integration (The "Bridge")
 
-- [ ] **Route /templates**:
-  - [ ] A clean grid of "Blueprint Cards" (lighter charcoal than the dashboard).
-  - [ ] Display "Badge" for categories (System, Docker, Security).
-- [ ] **Instantiation Logic**:
-  - [ ] Button "Use This Template": Triggers `POST /api/templates/use?path=...`.
-  - [ ] Logic: Copies the file to `/playbooks/` with a timestamped name.
-  - [ ] Success: Redirects directly to the Ace Editor with the new file loaded.
+- [ ] **Enhanced New Playbook Modal**:
+  - [ ] Add a `<select>` dropdown titled "Start from Blueprint (Optional)".
+  - [ ] Populated via `hx-get="/api/templates"` on modal load.
+- [ ] **Frontend Logic (Alpine.js/HTMX)**:
+  - [ ] When a template is selected, send a request to `GET /api/templates/{name}`.
+  - [ ] **Ace Editor Injection**: Use a JavaScript event to push the returned YAML content into the Ace Editor instance immediately.
+- [ ] **The "Instantiate" Endpoint**:
+  - [ ] `POST /api/playbooks/create-from-template`: Takes `template_name` and `new_filename`.
+  - [ ] **Safety Check**: Ensure the new filename doesn't already exist in the `/playbooks` folder.
 
 ## Phase 12: Security & Architecture (Production Readiness)
 
