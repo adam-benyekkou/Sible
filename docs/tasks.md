@@ -270,15 +270,20 @@ Goal: Add a live terminal to access servers directly from Sible.
 
 ## Phase 13: GitOps Lite (The Sync)
 
-Goal: Stop editing code in production. Pull it from GitHub.
+Goal: Bridge the gap between Infrastructure as Code (IaC) and your UI.
 
-- [ ] **Backend: Git Service**
-  - [ ] Add `git` to the Dockerfile.
-  - [ ] Create endpoint `POST /api/git/pull`.
-  - [ ] Implementation: Runs `git pull origin main` inside the `/playbooks` folder.
-- [ ] **UI: The Sync Button**
-  - [ ] Add a "Sync" or "Pull" button in the Sidebar header.
-  - [ ] Show a toast notification: "Updated 3 files from remote."
+- [ ] **GitService Implementation (`app/services/git_service.py`)**:
+  - [ ] Create a method `pull_playbooks()` that executes `git pull origin main` in the playbooks directory.
+  - [ ] Add error handling to detect if the directory isn't a Git repo yet and return a specific error.
+  - [ ] **The "SSH Challenge"**: Ensure the Docker container has the host's `~/.ssh/known_hosts` and keys mounted so it can talk to GitHub/GitLab without interactive prompts.
+
+- [ ] **The Sync API**:
+  - [ ] `POST /api/git/sync`: Triggers the pull and returns a list of changed files (using `git diff --name-only`).
+
+- [ ] **UI Integration**:
+  - [ ] Add a "Sync" button in the Sidebar header (Cloud icon).
+  - [ ] Add a "Last Synced" timestamp in the footer or sidebar.
+  - [ ] Trigger a Sidebar refresh (HTMX) after a successful pull to show new files.
 
 ## Phase 14: Release Engineering (The Launch)
 
