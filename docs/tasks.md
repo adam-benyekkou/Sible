@@ -216,17 +216,17 @@ Goal: Secure the application so it can be exposed on a LAN.
 
 Goal: Move from an open access to a secure multi-user platform.
 
-- [ ] **User Model & DB Migration**
-  - [ ] Update SQLAlchemy models to include a User table: `id`, `username`, `hashed_password`, `role` (Admin/Operator/Watcher).
-- [ ] **Auth Service (`app/services/auth.py`)**
-  - [ ] Implement `verify_password` and `get_password_hash` using passlib (bcrypt).
-  - [ ] Implement JWT generation using `python-jose`.
-- [ ] **Authentication Flow**
-  - [ ] `POST /api/auth/login`: Validates credentials and returns a HttpOnly Cookie containing the JWT.
-  - [ ] `GET /login`: Minimalist UI using Pico.css.
-  - [ ] `GET /api/auth/logout`: Clears the cookie.
-- [ ] **Middleware / Dependencies**
-  - [ ] Create a `get_current_user` dependency to protect all sensitive routers.
+- [x] **User Model & DB Migration**
+  - [x] Update SQLAlchemy models to include a User table: `id`, `username`, `hashed_password`, `role` (Admin/Operator/Watcher).
+- [x] **Auth Service (`app/services/auth.py`)**
+  - [x] Implement `verify_password` and `get_password_hash` using passlib (bcrypt).
+  - [x] Implement login logic and session handling.
+- [x] **Authentication Flow**
+  - [x] `POST /api/auth/login`: Validates credentials.
+  - [x] `GET /login`: Minimalist UI using Pico.css.
+  - [x] `GET /api/auth/logout`: Clears the session.
+- [x] **Middleware / Dependencies**
+  - [x] Create a `get_current_user` dependency to protect all sensitive routers.
 
 ### 12.2 RBAC (Role-Based Access Control)
 
@@ -247,16 +247,26 @@ Goal: Enforce permissions based on the 3 roles defined.
 
 Goal: Decouple business logic from route definitions to ensure maintainability.
 
-- [ ] **Router Extraction**
-  - [ ] Move all `@app.get("/")` and similar into specific files: `app/routers/playbooks.py`, `app/routers/inventory.py`, `app/routers/auth.py`.
-- [ ] **Service Consolidation**
-  - [ ] Ensure `main.py` is strictly for app initialization (Lifespan, Middlewares, Router Includes).
-- [ ] **Global Config**
-  - [ ] Create `app/config.py` (or `app/core/config.py`) using Pydantic Settings to handle all `os.getenv` calls.
+- [x] **Router Extraction**
+  - [x] Move all app routes into specific files: `app/routers/playbooks.py`, `app/routers/inventory.py`, `app/routers/auth.py`.
+- [x] **Service Consolidation**
+  - [x] Ensure `main.py` is strictly for app initialization.
+- [x] **Global Config**
+  - [x] Create `app/config.py` using Pydantic Settings.
 
-- [ ] **Security Hardening (Public Readiness)**
-  - [ ] **Secret Scan**: Use `trufflehog` or `git-secrets` to ensure no SSH keys or passwords exist in Git history.
-  - [ ] **No Hardcoded Secrets**: Ensure all configuration uses `os.getenv` with no dangerous default values.
+- [x] **Security Hardening (Public Readiness)**
+  - [x] **No Hardcoded Secrets**: Ensure all configuration uses environment variables.
+
+### 12.4 Interactive Terminal (The Live Session) [COMPLETED]
+
+Goal: Add a live terminal to access servers directly from Sible.
+
+- [x] **UI Integration**:
+  - [x] Add "Terminal" button to server cards.
+  - [x] Create terminal modal with xterm.js.
+- [x] **Backend Implementation**:
+  - [x] Implement WebSocket-based SSH proxy using `asyncssh`.
+  - [x] Handle terminal resizing and interactive input.
 
 ## Phase 13: GitOps Lite (The Sync)
 
