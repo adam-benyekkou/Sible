@@ -177,6 +177,7 @@ Goal: Replace the generic "Welcome" page with a live monitoring grid. This is th
 - [x] **Background Worker**: Configured a recurring scheduler task to refresh statuses every 2 minutes.
 - [x] **The Server Card UI**: Implemented `templates/components/server_card.html` with CSS pulse animations.
 - [x] **Global Health Header**: Integrated real-time stats and health progress bar in the main dashboard.
+- [x] **Terminal UX**: Renamed button to `>_` and added toast notifications for connection failures.
 
 ## Phase 11: Template Library (The Blueprints)
 
