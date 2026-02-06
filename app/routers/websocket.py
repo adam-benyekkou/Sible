@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from app.dependencies import get_runner_service
+from app.dependencies import get_runner_service, requires_role
 from app.services import RunnerService
 
 router = APIRouter()
@@ -13,7 +13,8 @@ async def stream_playbook_endpoint(
     tags: str = None,
     verbosity: int = 0,
     extra_vars: str = None,
-    service: RunnerService = Depends(get_runner_service)
+    service: RunnerService = Depends(get_runner_service),
+    current_user: object = Depends(requires_role(["admin", "operator"]))
 ):
     check_mode = (mode == "check")
     

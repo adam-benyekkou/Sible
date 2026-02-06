@@ -51,6 +51,7 @@
                 <button :class="viewMode === 'raw' ? 'primary' : 'outline'" @click="viewMode = 'raw'">Raw File</button>
             </div>
 
+            {% if request.state.user.role == 'admin' %}
             <button class="secondary" hx-post="/settings/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
                 hx-indicator="#ping-loading">
                 <i class="fas fa-network-wired"></i> Ping All
@@ -61,6 +62,7 @@
                     <i class="fas fa-plus"></i> Add Server
                 </button>
             </template>
+            {% endif %}
         </div>
     </div>
     <hr>
@@ -103,7 +105,11 @@
                 <p class="font-sm color-muted" style="display: inline-block; margin-right: 1rem;">
                     Saving will overwrite the database configuration.
                 </p>
+                {% if request.state.user.role == 'admin' %}
                 <button type="submit">Save & Import Raw File</button>
+                {% else %}
+                <button type="button" disabled>Read Only (Watcher)</button>
+                {% endif %}
             </div>
         </form>
     </div>

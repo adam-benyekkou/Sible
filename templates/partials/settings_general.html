@@ -25,26 +25,7 @@
             {% endif %}
         </label>
 
-        <div class="settings-panel" style="margin-top: 2rem;">
-            <h4>Security</h4>
-            <p class="color-muted">Protect your instance with a username and password.</p>
-            <hr>
 
-            <label>
-                <input type="checkbox" name="auth_enabled" {% if settings.auth_enabled %}checked{% endif %}>
-                Enable Authentication
-            </label>
-
-            <label>
-                <strong>Username</strong>
-                <input type="text" name="auth_username" value="{{ settings.auth_username }}" placeholder="admin">
-            </label>
-
-            <label>
-                <strong>Password</strong>
-                <input type="password" name="auth_password" placeholder="Leave empty to keep unchanged">
-            </label>
-        </div>
 
         <div style="margin-top: 2rem; text-align: right;">
             <button type="submit" class="primary" style="width: auto;">Save General Settings</button>

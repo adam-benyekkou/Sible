@@ -7,12 +7,18 @@
             <h2>Template Library</h2>
             <p class="color-muted">Manage reusable playbooks templates.</p>
         </div>
+        {% if request.state.user and request.state.user.role == 'admin' %}
         <button class="primary" @click="openNewTemplateModal()">
             <i class="fas fa-plus"></i> New Template
         </button>
+        {% endif %}
     </header>
 
     <div class="overflow-auto">
+        <!-- Inject Role -->
+        <script>
+            window.currentUserRole = "{{ request.state.user.role if request.state.user else 'watcher' }}";
+        </script>
         <table class="striped">
             <thead>
                 <tr>
@@ -31,7 +37,7 @@
                         <td><span class="badge secondary" x-text="template.category || 'General'"></span></td>
                         <td class="color-muted text-sm" x-text="template.author || 'Unknown'"></td>
                         <td>
-                            <div class="flex gap-2">
+                            <div class="flex gap-2" x-show="window.currentUserRole === 'admin'">
                                 <button class="outline secondary sm" @click="editTemplate(template)"
                                     data-tooltip="Edit">
                                     <i class="fas fa-edit"></i>

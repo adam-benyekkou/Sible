@@ -232,15 +232,16 @@ Goal: Move from an open access to a secure multi-user platform.
 
 Goal: Enforce permissions based on the 3 roles defined.
 
-- [ ] **Permission Decorator**
-  - [ ] Create a `requires_role(role_name)` dependency.
-- [ ] **Access Logic**
-  - [ ] **Watcher**: Only GET requests (Dashboard, Inventory, Logs).
-  - [ ] **Operator**: GET + POST /run (Can execute but not change code/inventory).
-  - [ ] **Admin**: Full CRUD + Settings + User Management.
-- [ ] **UI Masking**
-  - [ ] Update Jinja2 templates to hide buttons (Save, Delete, Run) if the current user lacks permissions.
-  - [ ] Allow users creation, deletion, edit and assign them roles (only Admin can create users)
+- [x] **Permission Decorator**
+  - [x] Create a `requires_role(role_name)` dependency.
+- [x] **Access Logic**
+  - [x] **Watcher**: Only GET requests (Dashboard, Inventory, Logs).
+  - [x] **Operator**: GET + POST /run (Can execute but not change code/inventory).
+  - [x] **Admin**: Full CRUD + Settings + User Management.
+- [x] **UI Masking**
+  - [x] Update Jinja2 templates to hide buttons (Save, Delete, Run) if the current user lacks permissions.
+  - [x] Restrict Settings pages: Watcher only sees Inventory & Retention.
+  - [x] Allow users creation, deletion, edit and assign them roles (only Admin can create users)
 
 ### 12.3 Service Layer Refactor (The "Clean Code" Move)
 

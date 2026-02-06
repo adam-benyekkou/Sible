@@ -11,26 +11,38 @@
         </div>
 
         <nav style="flex-grow: 1; padding: 0 1rem;">
+            {% if request.state.user.role == 'admin' %}
             <a href="/settings/general" class="settings-nav-item {{ 'active' if active_tab == 'general' else '' }}">
                 General
             </a>
+            {% endif %}
 
             <a href="/settings/retention" class="settings-nav-item {{ 'active' if active_tab == 'retention' else '' }}">
                 Retention Policies
             </a>
 
+            {% if request.state.user.role == 'admin' %}
             <a href="/settings/notifications"
                 class="settings-nav-item {{ 'active' if active_tab == 'notifications' else '' }}">
                 Notifications
             </a>
+            {% endif %}
 
             <a href="/settings/inventory" class="settings-nav-item {{ 'active' if active_tab == 'inventory' else '' }}">
                 Inventory
             </a>
 
+            {% if request.state.user.role == 'admin' %}
             <a href="/settings/secrets" class="settings-nav-item {{ 'active' if active_tab == 'secrets' else '' }}">
                 Secrets
             </a>
+            {% endif %}
+
+            {% if request.state.user and request.state.user.role == 'admin' %}
+            <a href="/settings/users" class="settings-nav-item {{ 'active' if active_tab == 'users' else '' }}">
+                Users
+            </a>
+            {% endif %}
 
             <a href="/" class="settings-nav-item" style="margin-top: auto; border-top: 1px solid var(--ds-gray-200);">
                 ← Back to Dashboard
@@ -50,6 +62,8 @@
         {% include "partials/settings_inventory.html" %}
         {% elif active_tab == 'secrets' %}
         {% include "partials/settings_secrets.html" %}
+        {% elif active_tab == 'users' %}
+        {% include "partials/settings_users.html" %}
         {% endif %}
     </main>
 </div>

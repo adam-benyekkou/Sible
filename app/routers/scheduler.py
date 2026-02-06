@@ -2,18 +2,26 @@ from fastapi import APIRouter, Request, Response, Form, Depends
 from app.templates import templates
 from app.core.config import get_settings
 from app.services import SchedulerService
-from app.utils.htmx import trigger_toast
+from app.dependencies import get_db, requires_role
+from app.models import User
 
 settings = get_settings()
 router = APIRouter()
 
 @router.get("/queue")
-async def get_queue_view(request: Request):
+async def get_queue_view(
+    request: Request,
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
     jobs = SchedulerService.list_jobs()
     return templates.TemplateResponse("queue.html", {"request": request, "jobs": jobs, "active_tab": "queue"})
 
 @router.post("/schedule")
-async def create_schedule(playbook: str = Form(...), cron: str = Form(...)):
+async def create_schedule(
+    playbook: str = Form(...), 
+    cron: str = Form(...),
+    current_user: object = Depends(requires_role(["admin"]))
+):
     job_id = SchedulerService.add_playbook_job(playbook, cron)
     response = Response(status_code=200)
     if job_id:
@@ -23,7 +31,10 @@ async def create_schedule(playbook: str = Form(...), cron: str = Form(...)):
     return response
 
 @router.delete("/schedule/{job_id}")
-async def delete_schedule(job_id: str):
+async def delete_schedule(
+    job_id: str,
+    current_user: object = Depends(requires_role(["admin"]))
+):
     success = SchedulerService.remove_job(job_id)
     response = Response(status_code=200)
     if success:
@@ -36,7 +47,8 @@ async def delete_schedule(job_id: str):
 async def update_schedule(
     job_id: str, 
     request: Request, 
-    cron: str = Form(...)
+    cron: str = Form(...),
+    current_user: object = Depends(requires_role(["admin"]))
 ):
     success = SchedulerService.update_job(job_id, cron)
     if not success:
@@ -49,7 +61,11 @@ async def update_schedule(
     return response
 
 @router.get("/partials/queue/row/{job_id}")
-async def get_job_row(job_id: str, request: Request):
+async def get_job_row(
+    job_id: str, 
+    request: Request,
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
     job = SchedulerService.get_job_info(job_id)
     if not job: return Response("")
     return templates.TemplateResponse("partials/queue_row.html", {"request": request, "job": job})

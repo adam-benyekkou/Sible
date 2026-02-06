@@ -20,13 +20,20 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int):
     # For now, we trust the connection if they can access the UI, but let's check basic session presence if possible
     # We'll skip strict auth for this MVP step but add a TODO
     
-    await websocket.accept()
-    
-    conn = None
-    process = None
-    
     try:
+        username = await get_current_user_ws(websocket)
         with Session(engine) as db:
+            from app.models import User
+            if not username:
+                await websocket.close(code=4001, reason="Not authenticated")
+                return
+            
+            statement = select(User).where(User.username == username)
+            user = db.exec(statement).first()
+            if not user or user.role != "admin":
+                await websocket.close(code=4003, reason="Forbidden: Admin only")
+                return
+
             host = db.get(Host, host_id)
         
         if not host:

@@ -5,6 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from app.services.template import TemplateService
 from app.core.security import get_current_user
+from app.dependencies import requires_role
 
 router = APIRouter(
     tags=["templates"],
@@ -29,7 +30,10 @@ def get_template_content(name_id: str):
     return {"content": content}
 
 @router.post("/api/templates")
-def create_template(template: TemplateCreate):
+def create_template(
+    template: TemplateCreate,
+    current_user: object = Depends(requires_role(["admin"]))
+):
     if TemplateService.get_template_content(template.name) is not None:
          raise HTTPException(status_code=400, detail="Template already exists")
          
@@ -39,7 +43,11 @@ def create_template(template: TemplateCreate):
     return {"message": "Template created"}
 
 @router.put("/api/templates/{name_id:path}")
-def update_template(name_id: str, template: TemplateUpdate):
+def update_template(
+    name_id: str, 
+    template: TemplateUpdate,
+    current_user: object = Depends(requires_role(["admin"]))
+):
     # Verify existence
     if TemplateService.get_template_content(name_id) is None:
          raise HTTPException(status_code=404, detail="Template not found")
@@ -50,7 +58,10 @@ def update_template(name_id: str, template: TemplateUpdate):
     return {"message": "Template updated"}
 
 @router.delete("/api/templates/{name_id:path}")
-def delete_template(name_id: str):
+def delete_template(
+    name_id: str,
+    current_user: object = Depends(requires_role(["admin"]))
+):
     if TemplateService.get_template_content(name_id) is None:
          raise HTTPException(status_code=404, detail="Template not found")
          

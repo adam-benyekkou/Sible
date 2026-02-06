@@ -25,10 +25,12 @@
             </label>
         </fieldset>
 
+        {% if request.state.user.role == 'admin' %}
         <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
             <button type="button" class="contrast" hx-post="/settings/test-notification" style="width: auto;">Test
                 Notification</button>
             <button type="submit" class="primary" style="width: auto;">Save Configuration</button>
         </div>
+        {% endif %}
     </form>
 </div>

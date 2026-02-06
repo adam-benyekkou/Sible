@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request, Response, Depends, Form
 from app.templates import templates
 from sqlmodel import Session, select
-from app.dependencies import get_db
-from app.models import Host
+from app.dependencies import get_db, requires_role
+from app.models import Host, User
 from app.schemas.host import HostCreate, HostUpdate
 from app.services.inventory import InventoryService
 from app.utils.htmx import trigger_toast
@@ -10,7 +10,11 @@ from app.utils.htmx import trigger_toast
 router = APIRouter()
 
 @router.get("/api/inventory/hosts")
-async def list_hosts(request: Request, db: Session = Depends(get_db)):
+async def list_hosts(
+    request: Request, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
     hosts = db.exec(select(Host)).all()
     return templates.TemplateResponse("partials/inventory_table_rows.html", {
         "request": request,
@@ -27,7 +31,8 @@ async def create_host(
     ssh_key_secret: str = Form(None),
     ssh_password_secret: str = Form(None),
     group_name: str = Form("all"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     # Validate connection
     is_valid = await InventoryService.verify_connection(hostname, ssh_user, ssh_port)
@@ -72,7 +77,8 @@ async def update_host(
     ssh_user: str = Form(None),
     ssh_port: int = Form(None),
     group_name: str = Form(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     host = db.get(Host, host_id)
     if not host:
@@ -99,7 +105,11 @@ async def update_host(
     return response
 
 @router.delete("/api/inventory/hosts/{host_id}")
-async def delete_host(host_id: int, db: Session = Depends(get_db)):
+async def delete_host(
+    host_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin"]))
+):
     host = db.get(Host, host_id)
     if not host:
         return Response(status_code=404)
@@ -114,7 +124,11 @@ async def delete_host(host_id: int, db: Session = Depends(get_db)):
     return response
 
 @router.post("/api/inventory/import")
-async def import_inventory(request: Request, db: Session = Depends(get_db)):
+async def import_inventory(
+    request: Request, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin"]))
+):
     """
     Called when 'Save' is clicked in the raw editor to update DB from File.
     """
@@ -128,7 +142,10 @@ async def import_inventory(request: Request, db: Session = Depends(get_db)):
     return response
 
 @router.get("/api/inventory/secrets")
-async def get_inventory_secrets(db: Session = Depends(get_db)):
+async def get_inventory_secrets(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin"]))
+):
     from app.models.settings import EnvVar
     # User asked for secrets dropdown.
     secrets = db.exec(select(EnvVar)).all()
@@ -136,7 +153,12 @@ async def get_inventory_secrets(db: Session = Depends(get_db)):
     return [{"key": s.key, "is_secret": s.is_secret} for s in secrets]
 
 @router.get("/host/{host_id}/card")
-async def get_host_card(request: Request, host_id: int, db: Session = Depends(get_db)):
+async def get_host_card(
+    request: Request, 
+    host_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
     from app.models.host import Host
     host = db.get(Host, host_id)
     if not host:

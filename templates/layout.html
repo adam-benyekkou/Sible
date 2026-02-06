@@ -64,9 +64,15 @@
                     </a>
                 </li>
                 <li>
+                    {% if request.state.user.role in ['operator', 'watcher'] %}
+                    <a href="/settings/retention" role="button" class="secondary outline w-100">
+                        Settings
+                    </a>
+                    {% else %}
                     <a href="/settings/general" role="button" class="secondary outline w-100">
                         Settings
                     </a>
+                    {% endif %}
                 </li>
             </ul>
         </nav>
@@ -75,6 +81,23 @@
             <!-- Items via HTMX -->
             <div aria-busy="true">Loading playbooks...</div>
         </nav>
+
+        <hr>
+        <div style="padding: 0 0.5rem;">
+            {% if request.state.user %}
+            <details class="dropdown">
+                <summary role="button" class="secondary outline"
+                    style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ request.state.user.username }} <small>({{ request.state.user.role }})</small></span>
+                </summary>
+                <ul>
+                    <li><a href="/api/auth/logout">Logout</a></li>
+                </ul>
+            </details>
+            {% else %}
+            <a href="/login" role="button" class="outline w-100">Login</a>
+            {% endif %}
+        </div>
     </aside>
 
     <!-- Main Content -->

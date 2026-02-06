@@ -7,12 +7,14 @@
         <div class="grid">
             <label>
                 <strong>Global Retention (Days)</strong>
-                <input type="number" name="global_retention" value="{{ global_retention }}" required min="1">
+                <input type="number" name="global_retention" value="{{ global_retention }}" required min="1"
+                    {{ 'disabled' if request.state.user.role=='watcher' }}>
             </label>
             <label>
                 <strong>Global Max Logs (Count)</strong>
                 <small>Keep at most this many logs per playbook.</small>
-                <input type="number" name="global_max_runs" value="{{ global_max_runs }}" required min="1">
+                <input type="number" name="global_max_runs" value="{{ global_max_runs }}" required min="1" {{ 'disabled'
+                    if request.state.user.role=='watcher' }}>
             </label>
         </div>
 
@@ -35,19 +37,23 @@
                     <td>{{ pb.name }}</td>
                     <td>
                         <input type="number" name="retention_{{ pb.name }}" value="{{ pb.retention }}"
-                            placeholder="Global ({{ global_retention }})" style="margin-bottom: 0;">
+                            placeholder="Global ({{ global_retention }})" style="margin-bottom: 0;" {{ 'disabled' if
+                            request.state.user.role=='watcher' }}>
                     </td>
                     <td>
                         <input type="number" name="max_runs_{{ pb.name }}" value="{{ pb.max_runs }}"
-                            placeholder="Global ({{ global_max_runs }})" style="margin-bottom: 0;">
+                            placeholder="Global ({{ global_max_runs }})" style="margin-bottom: 0;" {{ 'disabled' if
+                            request.state.user.role=='watcher' }}>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
+        {% if request.state.user.role == 'admin' %}
         <div style="margin-top: 2rem; text-align: right;">
             <button type="submit" class="primary" style="width: auto;">Save Retention Settings</button>
         </div>
+        {% endif %}
     </form>
 </div>

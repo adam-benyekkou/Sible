@@ -19,7 +19,7 @@ class AppSettings(SQLModel, table=True):
     favicon_path: Optional[str] = Field(default=None)
     
     # Authentication
-    auth_enabled: bool = Field(default=False)
+    auth_enabled: bool = Field(default=True)
     auth_username: str = Field(default="admin")
     auth_password: str = Field(default="admin")
 

@@ -1,8 +1,10 @@
+{% if request.state.user.role == 'admin' %}
 <div class="sidebar-btn-container">
     <button class="btn-new" @click="$dispatch('open-new-playbook-modal')">
         + New Playbook
     </button>
 </div>
+{% endif %}
 
 
 

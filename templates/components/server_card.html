@@ -83,6 +83,7 @@
         {% endif %}
     </div>
     <div style="margin-top: 1rem; text-align: right;">
+        {% if request.state.user.role == 'admin' %}
         <button class="outline"
             style="padding: 5px 10px; font-size: 0.8rem; width: auto; color: #fff; border-color: #666;"
             onmouseover="this.style.borderColor='#fff'; this.style.color='#fff';"
@@ -90,6 +91,7 @@
             onclick="openTerminal('{{ host.id }}', '{{ host.alias }}')">
             <i class="fas fa-terminal"></i> >_
         </button>
+        {% endif %}
     </div>
 
     <!-- Script for handling terminal modal (if not already global) -->

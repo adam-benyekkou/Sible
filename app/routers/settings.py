@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Request, Response, Form, File, UploadFile, Depends
 from app.templates import templates
-from app.templates import templates
 from app.core.config import get_settings
-from app.dependencies import get_settings_service, get_playbook_service, get_notification_service, get_db
+from app.dependencies import get_settings_service, get_playbook_service, get_notification_service, get_db, requires_role
 from app.services import SettingsService, PlaybookService, NotificationService, InventoryService
 from app.utils.htmx import trigger_toast
-from app.core.security import get_password_hash
-from app.models import PlaybookConfig
+from app.core.hashing import get_password_hash
+from app.models import PlaybookConfig, User
 import shutil
 from sqlmodel import Session, select
 import json
@@ -37,7 +36,8 @@ async def get_settings_root(request: Request):
 @router.get("/settings/general")
 async def get_settings_general(
     request: Request,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     settings = service.get_settings()
     context = {"settings": settings}
@@ -50,7 +50,8 @@ async def get_settings_general(
 @router.get("/settings/secrets")
 async def get_settings_secrets(
     request: Request,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     env_vars = service.get_env_vars()
     context = {"env_vars": env_vars}
@@ -61,7 +62,10 @@ async def get_settings_secrets(
     return await render_settings_page(request, "secrets", context)
 
 @router.get("/settings/inventory")
-async def get_settings_inventory(request: Request):
+async def get_settings_inventory(
+    request: Request,
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
     content = InventoryService.get_inventory_content()
     context = {"content": content}
 
@@ -70,12 +74,44 @@ async def get_settings_inventory(request: Request):
 
     return await render_settings_page(request, "inventory", context)
 
+@router.get("/settings/users")
+async def get_settings_users(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role("admin"))
+):
+    # Security: Only admins can access
+    users = db.exec(select(User)).all()
+    context = {"users": users}
+
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/settings_users.html", {"request": request, **context})
+
+    return await render_settings_page(request, "users", context)
+
+@router.get("/settings/users/{user_id}/edit")
+async def get_user_edit_form(
+    request: Request,
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role("admin"))
+):
+    user = db.get(User, user_id)
+    if not user:
+        return Response("User not found", status_code=404)
+        
+    return templates.TemplateResponse("partials/user_edit_form.html", {
+        "request": request, 
+        "user": user
+    })
+
 @router.get("/settings/retention")
 async def get_settings_retention(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     playbook_service: PlaybookService = Depends(get_playbook_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
 ):
     settings = service.get_settings()
     
@@ -120,7 +156,8 @@ async def get_settings_retention(
 @router.get("/settings/notifications")
 async def get_settings_notifications(
     request: Request,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     settings = service.get_settings()
     context = {"settings": settings}
@@ -139,7 +176,8 @@ async def save_settings_general(
     auth_password: str = Form(None),
     logo: UploadFile = File(None),
     favicon: UploadFile = File(None),
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     update_data = {
         "app_name": app_name,
@@ -174,7 +212,8 @@ async def save_settings_general(
 @router.get("/settings/secrets")
 async def get_settings_secrets(
     request: Request,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     env_vars = service.get_env_vars()
     return templates.TemplateResponse("partials/settings_secrets.html", {
@@ -188,7 +227,8 @@ async def create_env_var(
     key: str = Form(...), 
     value: str = Form(...), 
     is_secret: str = Form(None),
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     service.create_env_var(key, value, is_secret == "on")
     response = Response(status_code=200)
@@ -199,7 +239,8 @@ async def create_env_var(
 @router.delete("/settings/secrets/{env_id}")
 async def delete_env_var(
     env_id: int,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     key = service.delete_env_var(env_id)
     if key:
@@ -212,7 +253,8 @@ async def delete_env_var(
 async def get_settings_secrets_edit(
     request: Request, 
     env_id: int,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     env_var = service.get_env_var(env_id)
     if not env_var:
@@ -229,7 +271,8 @@ async def update_env_var(
     key: str = Form(...), 
     value: str = Form(""), 
     is_secret: str = Form(None),
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     env_var = service.update_env_var(env_id, key, value, is_secret == "on")
     if not env_var:
@@ -245,7 +288,8 @@ async def update_env_var(
 @router.get("/partials/settings/secrets/list")
 async def get_secrets_list(
     request: Request,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     env_vars = service.get_env_vars()
     return templates.TemplateResponse("partials/secrets_list.html", {
@@ -253,16 +297,13 @@ async def get_secrets_list(
         "env_vars": env_vars
     })
 
-@router.get("/settings/inventory")
-async def get_settings_inventory(request: Request):
-    content = InventoryService.get_inventory_content()
-    return templates.TemplateResponse("partials/settings_inventory.html", {
-        "request": request,
-        "content": content
-    })
+
 
 @router.post("/settings/inventory")
-async def save_settings_inventory(request: Request):
+async def save_settings_inventory(
+    request: Request,
+    current_user: User = Depends(requires_role(["admin"]))
+):
     form = await request.form()
     content = form.get("content")
     if content is None:
@@ -281,7 +322,10 @@ async def save_settings_inventory(request: Request):
     return response
 
 @router.post("/settings/inventory/ping")
-async def ping_inventory(request: Request):
+async def ping_inventory(
+    request: Request,
+    current_user: User = Depends(requires_role(["admin"]))
+):
     output = await InventoryService.ping_all()
     return f'<pre class="log-output" style="max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 4px;">{output}</pre>'
 
@@ -290,7 +334,8 @@ async def get_settings_retention_tab(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     playbook_service: PlaybookService = Depends(get_playbook_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
 ):
     settings = service.get_settings()
     
@@ -332,7 +377,8 @@ async def get_settings_retention_tab(
 async def save_retention_settings(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     form = await request.form()
     global_retention = form.get("global_retention")
@@ -375,7 +421,8 @@ async def save_retention_settings(
 @router.get("/settings/notifications")
 async def get_settings_notifications(
     request: Request,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     settings = service.get_settings()
     return templates.TemplateResponse("partials/settings_notifications.html", {
@@ -386,7 +433,8 @@ async def get_settings_notifications(
 @router.post("/settings/notifications")
 async def save_notification_settings(
     request: Request,
-    service: SettingsService = Depends(get_settings_service)
+    service: SettingsService = Depends(get_settings_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     form = await request.form()
     apprise_url = form.get("apprise_url")
@@ -406,7 +454,8 @@ async def save_notification_settings(
 @router.post("/settings/test-notification")
 async def test_notification(
     request: Request,
-    service: NotificationService = Depends(get_notification_service)
+    service: NotificationService = Depends(get_notification_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     try:
         service.send_notification("This is a test notification from Sible!", title="Sible Test")

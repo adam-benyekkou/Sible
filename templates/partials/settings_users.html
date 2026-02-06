@@ -1,0 +1,101 @@
+<div class="container" x-data="{ showCreateModal: false, showEditModal: false }">
+    <header class="flex justify-between items-center mb-4">
+        <div>
+            <h4>User Management</h4>
+            <p class="color-muted">Manage sible users and their roles.</p>
+        </div>
+        <button class="primary" @click="showCreateModal = true">
+            <i class="fas fa-plus"></i> Create User
+        </button>
+    </header>
+
+    <div class="overflow-auto">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td class="font-bold">{{ user.username }}</td>
+                    <td>
+                        <span class="badge {{ 'primary' if user.role == 'admin' else 'secondary' }}">
+                            {{ user.role }}
+                        </span>
+                    </td>
+                    <td class="flex gap-2">
+                        <button class="outline secondary sm" hx-get="/settings/users/{{ user.id }}/edit"
+                            hx-target="#edit-user-form-container" @click="showEditModal = true">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+
+                        {% if user.username != 'admin' and user.username != request.state.user.username %}
+                        <button class="outline danger sm" hx-delete="/api/users/{{ user.id }}"
+                            hx-confirm="Are you sure you want to delete user {{ user.username }}?"
+                            hx-target="closest tr" hx-swap="outerHTML">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                        {% else %}
+                        <span class="color-muted text-sm my-auto">Protected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center p-5 color-muted">No users found?</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Create User Modal -->
+    <dialog :open="showCreateModal">
+        <article>
+            <header>
+                <a href="#close" aria-label="Close" class="close" @click="showCreateModal = false"></a>
+                <h5>Create New User</h5>
+            </header>
+            <form hx-post="/api/users" hx-swap="none"
+                hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                <label>
+                    Username
+                    <input type="text" name="username" required>
+                </label>
+                <label>
+                    Password
+                    <input type="password" name="password" required>
+                </label>
+                <label>
+                    Role
+                    <select name="role">
+                        <option value="watcher">Watcher (Read Only)</option>
+                        <option value="operator">Operator (Run Playbooks)</option>
+                        <option value="admin">Admin (Full Access)</option>
+                    </select>
+                </label>
+                <footer>
+                    <button type="button" class="secondary" @click="showCreateModal = false">Cancel</button>
+                    <button type="submit">Create User</button>
+                </footer>
+            </form>
+        </article>
+    </dialog>
+
+    <!-- Edit User Modal -->
+    <dialog :open="showEditModal">
+        <article>
+            <header>
+                <a href="#close" aria-label="Close" class="close" @click="showEditModal = false"></a>
+                <h5>Edit User</h5>
+            </header>
+            <div id="edit-user-form-container" aria-busy="true">
+                Loading...
+            </div>
+        </article>
+    </dialog>
+</div>

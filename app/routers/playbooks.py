@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Request, Response, Form, Depends
 from app.templates import templates
 from app.core.config import get_settings
-from app.dependencies import get_playbook_service, get_runner_service
+from app.dependencies import get_playbook_service, get_runner_service, requires_role
 from app.services import PlaybookService, RunnerService, LinterService
+from app.models import User
 from app.utils.htmx import trigger_toast
 import json
 
@@ -13,7 +14,8 @@ router = APIRouter()
 async def get_playbook_view(
     name: str, 
     request: Request, 
-    service: PlaybookService = Depends(get_playbook_service)
+    service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
     content = service.get_playbook_content(name)
     if content is None:
@@ -35,7 +37,8 @@ async def get_playbook_view(
 async def save_playbook(
     name: str, 
     request: Request, 
-    service: PlaybookService = Depends(get_playbook_service)
+    service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     form = await request.form()
     content = form.get("content")
@@ -57,7 +60,8 @@ async def save_playbook(
 @router.post("/playbooks")
 async def create_playbook(
     request: Request,
-    service: PlaybookService = Depends(get_playbook_service)
+    service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     name = request.headers.get("HX-Prompt")
     if not name:
@@ -84,7 +88,8 @@ async def create_playbook(
 @router.delete("/playbooks/{name:path}")
 async def delete_playbook(
     name: str,
-    service: PlaybookService = Depends(get_playbook_service)
+    service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     success = service.delete_playbook(name)
     if not success:
@@ -104,7 +109,11 @@ async def delete_playbook(
     return response
 
 @router.post("/run/{name:path}")
-async def run_playbook_endpoint(name: str, request: Request):
+async def run_playbook_endpoint(
+    name: str, 
+    request: Request,
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
     form = await request.form()
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
@@ -117,7 +126,11 @@ async def run_playbook_endpoint(name: str, request: Request):
     })
 
 @router.post("/check/{name:path}")
-async def check_playbook_endpoint(name: str, request: Request):
+async def check_playbook_endpoint(
+    name: str, 
+    request: Request,
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
     form = await request.form()
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
@@ -132,7 +145,8 @@ async def check_playbook_endpoint(name: str, request: Request):
 @router.post("/stop/{name:path}")
 async def stop_playbook_endpoint(
     name: str,
-    service: RunnerService = Depends(get_runner_service)
+    service: RunnerService = Depends(get_runner_service),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
 ):
     success = service.stop_playbook(name)
     if success:
@@ -144,7 +158,10 @@ async def stop_playbook_endpoint(
     return response
 
 @router.post("/lint")
-async def lint_playbook(request: Request):
+async def lint_playbook(
+    request: Request,
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
     form = await request.form()
     content = form.get("content")
     if not content: return []
@@ -153,7 +170,8 @@ async def lint_playbook(request: Request):
 async def install_requirements_endpoint(
     name: str,
     request: Request,
-    service: RunnerService = Depends(get_runner_service)
+    service: RunnerService = Depends(get_runner_service),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
 ):
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
@@ -169,7 +187,8 @@ async def install_requirements_endpoint(
 @router.post("/api/templates/use")
 async def use_template(
     request: Request,
-    service: PlaybookService = Depends(get_playbook_service)
+    service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     """
     Instantiates a template into a new playbook.
@@ -216,7 +235,8 @@ from app.schemas.playbook import CreatePlaybookRequest
 @router.post("/api/playbooks/create")
 async def create_playbook_api(
     payload: CreatePlaybookRequest,
-    service: PlaybookService = Depends(get_playbook_service)
+    service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin"]))
 ):
     """
     Creates a new playbook with optional folder and template.

@@ -7,10 +7,12 @@
             <h1>Global History</h1>
             <h2>Audit logs for all playbook executions</h2>
         </hgroup>
+        {% if request.state.user.role == 'admin' %}
         <button class="outline danger" hx-delete="/history/all"
             hx-confirm="Are you sure you want to delete ALL history logs? This cannot be undone." style="width: auto;">
             Delete All
         </button>
+        {% endif %}
     </header>
 
     <div style="overflow-x: auto;">
@@ -68,12 +70,14 @@
                                 hx-get="/history/run/{{ run.id }}" hx-target="body" hx-swap="beforeend">
                                 Logs
                             </button>
+                            {% if request.state.user.role == 'admin' %}
                             <button class="outline danger" style="padding: 5px 10px; font-size: 0.8rem; width: auto;"
                                 hx-delete="/history/run/{{ run.id }}"
                                 hx-confirm="Are you sure you want to delete this log permanently?"
                                 hx-target="#run-row-{{ run.id }}" hx-swap="outerHTML">
                                 Delete
                             </button>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>

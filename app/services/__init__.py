@@ -5,3 +5,4 @@ from .settings import SettingsService, InventoryService
 from .notification import NotificationService
 from .scheduler import SchedulerService
 from .linter import LinterService
+from .auth import AuthService

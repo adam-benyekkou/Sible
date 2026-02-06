@@ -161,14 +161,18 @@
             <h4>{{ name }}</h4>
         </div>
         <div class="actions">
-            <!-- Edit (Toggle) -->
+            <!-- Edit (Toggle) - Admin Only -->
+            {% if request.state.user and request.state.user.role == 'admin' %}
             <button class="contrast" x-show="!isEditing" @click="isEditing = true; window.startEditing()">
                 Edit
             </button>
             <button class="contrast" x-show="isEditing" @click="isEditing = false; window.discardEditing()">
                 Discard
             </button>
+            {% endif %}
 
+            <!-- Check/Run/Schedule - Admin & Operator -->
+            {% if request.state.user and request.state.user.role in ['admin', 'operator'] %}
             <!-- Check (Dry Run) -->
             <button class="contrast" @click="launchMode = 'check'; showLaunchModal = true" title="Dry Run (Check Mode)">
                 Check
@@ -178,22 +182,29 @@
             <button class="primary" @click="launchMode = 'run'; showLaunchModal = true">
                 Run Playbook
             </button>
+            {% endif %}
 
-            <!-- Save -->
+            <!-- Save - Admin Only -->
+            {% if request.state.user and request.state.user.role == 'admin' %}
             <button class="contrast" @click="saveFile(); isEditing = false; window.setEditorReadOnly(true)">
                 Save
             </button>
+            {% endif %}
 
-            <!-- Schedule (Modal Trigger) -->
+            <!-- Schedule (Modal Trigger) - Admin & Operator -->
+            {% if request.state.user and request.state.user.role == 'admin' %}
             <button class="contrast" @click="showScheduleModal = true">
                 Schedule
             </button>
+            {% endif %}
 
-            <!-- History -->
+            <!-- History - All -->
             <button class="contrast" hx-get="/history/{{ name | safe }}" hx-target="body" hx-swap="beforeend">
                 History
             </button>
 
+            <!-- Install Roles - Admin Only -->
+            {% if request.state.user and request.state.user.role == 'admin' %}
             <button class="contrast" hx-post="/playbooks/{{ name | safe }}/install-requirements"
                 hx-target="#terminal-container" hx-swap="innerHTML"
                 title="Install Ansible Galaxy dependencies (requires requirements.yml)">
@@ -206,6 +217,7 @@
                 hx-target="#main-content">
                 Delete
             </button>
+            {% endif %}
         </div>
     </header>
 

@@ -18,6 +18,7 @@
         </span>
     </td>
     <td>
+        {% if request.state.user.role == 'admin' %}
         <button class="outline secondary" hx-get="/partials/queue/row/{{ job.id }}/edit"
             hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML">
             Edit
@@ -27,5 +28,6 @@
             hx-swap="outerHTML">
             Delete
         </button>
+        {% endif %}
     </td>
 </tr>

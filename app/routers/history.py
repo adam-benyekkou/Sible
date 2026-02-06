@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request, Response, Depends
 from app.templates import templates
 from app.core.config import get_settings
-from app.dependencies import get_history_service
+from app.dependencies import get_history_service, requires_role
+from app.models import User
 from app.services import HistoryService
 from app.utils.htmx import trigger_toast
 
@@ -11,14 +12,16 @@ router = APIRouter()
 @router.get("/history")
 async def get_history_page(
     request: Request,
-    service: HistoryService = Depends(get_history_service)
+    service: HistoryService = Depends(get_history_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
     runs = service.get_recent_runs()
     return templates.TemplateResponse("history.html", {"request": request, "runs": runs, "active_tab": "history"})
 
 @router.delete("/history/all")
 async def delete_all_history(
-    service: HistoryService = Depends(get_history_service)
+    service: HistoryService = Depends(get_history_service),
+    current_user: User = Depends(requires_role("admin"))
 ):
     service.delete_all_runs()
     response = Response(status_code=200)
@@ -28,7 +31,8 @@ async def delete_all_history(
 @router.delete("/history/run/{run_id}")
 async def delete_run(
     run_id: int,
-    service: HistoryService = Depends(get_history_service)
+    service: HistoryService = Depends(get_history_service),
+    current_user: User = Depends(requires_role("admin"))
 ):
     success = service.delete_run(run_id)
     if success:
@@ -39,7 +43,8 @@ async def delete_run(
 async def get_run_details(
     run_id: int, 
     request: Request,
-    service: HistoryService = Depends(get_history_service)
+    service: HistoryService = Depends(get_history_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
     run = service.get_run(run_id)
     if not run: return Response("Run not found", status_code=404)
@@ -49,7 +54,8 @@ async def get_run_details(
 async def get_playbook_history(
     name: str,
     request: Request,
-    service: HistoryService = Depends(get_history_service)
+    service: HistoryService = Depends(get_history_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
     runs = service.get_playbook_runs(name)
     return templates.TemplateResponse("partials/history_list_modal.html", {
@@ -61,7 +67,8 @@ async def get_playbook_history(
 @router.delete("/history/playbook/{name:path}/all")
 async def delete_playbook_history(
     name: str,
-    service: HistoryService = Depends(get_history_service)
+    service: HistoryService = Depends(get_history_service),
+    current_user: User = Depends(requires_role("admin"))
 ):
     service.delete_playbook_runs(name)
     response = Response(status_code=200)

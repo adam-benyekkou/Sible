@@ -13,6 +13,7 @@
         {% endif %}
     </td>
     <td style="text-align: right;">
+        {% if request.state.user.role == 'admin' %}
         <button class="outline secondary" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 0.5rem;"
             @click="editHost({{ host.id }}, '{{ host.alias }}', '{{ host.hostname }}', '{{ host.ssh_user }}', {{ host.ssh_port }}, '{{ host.group_name }}', '{{ host.ssh_key_path or '' }}', '{{ host.ssh_key_secret or '' }}', '{{ host.ssh_password_secret or '' }}')">
             <i class="fas fa-edit"></i>
@@ -21,6 +22,7 @@
             hx-delete="/api/inventory/hosts/{{ host.id }}" hx-confirm="Delete host {{ host.alias }}?">
             <i class="fas fa-trash"></i>
         </button>
+        {% endif %}
     </td>
 </tr>
 {% endfor %}

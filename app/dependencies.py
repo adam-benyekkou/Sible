@@ -23,3 +23,9 @@ def get_settings_service(db: Session = Depends(get_db)) -> SettingsService:
 def get_notification_service(db: Session = Depends(get_db)) -> NotificationService:
     return NotificationService(db)
 
+
+from app.core.security import get_current_user, RoleChecker
+
+def requires_role(role: str | list[str]):
+    roles = role if isinstance(role, list) else [role]
+    return RoleChecker(roles)
