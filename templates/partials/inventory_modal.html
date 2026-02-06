@@ -1,0 +1,73 @@
+<dialog id="inventory-modal">
+    <article style="min-width: 500px;">
+        <header>
+            <button aria-label="Close" rel="prev" @click="closeModal()"></button>
+            <h3 x-text="isEditing ? 'Edit Server' : 'Add Server'"></h3>
+        </header>
+
+        <form :hx-post="isEditing ? '' : '/api/inventory/hosts'"
+            :hx-put="isEditing ? '/api/inventory/hosts/' + editingId : ''" hx-trigger="submit"
+            hx-on::after-request="if(event.detail.successful) closeModal()">
+
+            <label>
+                Alias
+                <input type="text" name="alias" x-model="formData.alias" required
+                    placeholder="e.g. Web Server Production">
+            </label>
+
+            <div class="grid">
+                <label>
+                    Hostname / IP
+                    <input type="text" name="hostname" x-model="formData.hostname" required placeholder="192.168.1.10">
+                </label>
+                <label>
+                    Port
+                    <input type="number" name="ssh_port" x-model="formData.ssh_port" value="22" required>
+                </label>
+            </div>
+
+            <div class="grid">
+                <label>
+                    SSH User
+                    <input type="text" name="ssh_user" x-model="formData.ssh_user" value="root" required>
+                </label>
+                <label>
+                    Group
+                    <input type="text" name="group_name" x-model="formData.group_name" placeholder="all">
+                </label>
+            </div>
+
+            <div class="grid">
+                <label>
+                    SSH Password (Secret)
+                    <select name="ssh_password_secret" x-model="formData.ssh_password_secret">
+                        <option value="">-- None --</option>
+                        <template x-for="secret in secrets" :key="secret.key">
+                            <option :value="secret.key" x-text="secret.key"></option>
+                        </template>
+                    </select>
+                </label>
+                <label>
+                    SSH Key (Secret)
+                    <select name="ssh_key_secret" x-model="formData.ssh_key_secret">
+                        <option value="">-- None / Manual Path --</option>
+                        <template x-for="secret in secrets" :key="secret.key">
+                            <option :value="secret.key" x-text="secret.key"></option>
+                        </template>
+                    </select>
+                </label>
+            </div>
+
+            <label x-show="!formData.ssh_key_secret && formData.ssh_key_secret !== undefined">
+                Manual Key Path
+                <input type="text" name="ssh_key_path" x-model="formData.ssh_key_path"
+                    placeholder="/path/to/private/key">
+            </label>
+
+            <footer style="text-align: right;">
+                <button type="button" class="secondary" @click="closeModal()">Cancel</button>
+                <button type="submit" x-text="isEditing ? 'Save Changes' : 'Add Server'"></button>
+            </footer>
+        </form>
+    </article>
+</dialog>

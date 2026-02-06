@@ -1,0 +1,217 @@
+from sqlmodel import Session, select
+from pathlib import Path
+from app.models import Host, EnvVar
+import shutil
+import asyncio
+import asyncio
+import sys
+import os
+import logging
+import uuid
+
+logger = logging.getLogger("uvicorn.error")
+
+class InventoryService:
+    INVENTORY_FILE = Path("inventory.ini")
+    
+    @staticmethod
+    def get_inventory_content() -> str:
+        if not InventoryService.INVENTORY_FILE.exists():
+            InventoryService.INVENTORY_FILE.write_text("[all]\nlocalhost ansible_connection=local\n", encoding="utf-8")
+        return InventoryService.INVENTORY_FILE.read_text(encoding="utf-8")
+
+    @staticmethod
+    def save_inventory_content(content: str) -> bool:
+        try:
+            InventoryService.INVENTORY_FILE.write_text(content, encoding="utf-8")
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def sync_db_to_ini(db: Session) -> bool:
+        """
+        Reads all Host records from DB and generates inventory.ini.
+        Overwrites the existing file.
+        """
+        try:
+            hosts = db.exec(select(Host)).all()
+            lines = []
+            
+            # Group by group_name
+            groups = {}
+            for host in hosts:
+                g = host.group_name or "all"
+                if g not in groups:
+                    groups[g] = []
+                groups[g].append(host)
+            
+            # Write 'all' group first (or loose hosts) if any, though Ansible structure usually varies
+            # For simplicity, we'll write [group_name] blocks
+            
+            for group, group_hosts in groups.items():
+                lines.append(f"[{group}]")
+                for h in group_hosts:
+                    line = f"{h.alias} ansible_host={h.hostname} ansible_user={h.ssh_user} ansible_port={h.ssh_port}"
+                    
+                    if h.ssh_key_path:
+                        line += f" ansible_ssh_private_key_file={h.ssh_key_path}"
+                    elif h.ssh_key_secret:
+                        line += f" # Sible:ssh_key_secret={h.ssh_key_secret}"
+                        
+                    if h.ssh_password_secret:
+                        line += f" # Sible:ssh_password_secret={h.ssh_password_secret}"
+                    
+                    lines.append(line)
+                lines.append("") # Empty line between groups
+
+            content = "\n".join(lines)
+            InventoryService.save_inventory_content(content)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to sync inventory: {e}")
+            return False
+
+    @staticmethod
+    async def ping_all() -> str:
+        if not InventoryService.INVENTORY_FILE.exists(): return "No inventory file found."
+        ansible_bin = shutil.which("ansible")
+        if not ansible_bin and sys.platform == "win32":
+             wsl_bin = shutil.which("wsl")
+             if wsl_bin:
+                abs_p = InventoryService.INVENTORY_FILE.resolve()
+                drive = abs_p.drive.strip(':').lower()
+                parts = list(abs_p.parts[1:])
+                wsl_path = f"/mnt/{drive}/" + "/".join(parts)
+                cmd = [wsl_bin, "bash", "-c", f"ansible all -m ping -i '{wsl_path}'"]
+             else: return "Ansible not found. If using Windows, please run Sible inside WSL or install Ansible locally."
+        elif not ansible_bin: return "Ansible not found. Please install it to use ping."
+        else: cmd = ["ansible", "all", "-m", "ping", "-i", str(InventoryService.INVENTORY_FILE)]
+        try:
+            process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, env=os.environ.copy())
+            stdout, _ = await process.communicate()
+        except Exception as e: return f"Error running ping: {str(e)}"
+
+    @staticmethod
+    async def verify_connection(hostname: str, user: str, port: int, key_path: str = None) -> bool:
+        """
+        Verifies connection to a specific host using ad-hoc Ansible ping.
+        Uses a temporary inventory list format: 'hostname ansible_user=... ansible_port=...'
+        """
+        ansible_bin = shutil.which("ansible")
+        if not ansible_bin: 
+            # Fallback for dev windows env without ansible
+            if sys.platform == "win32": return True 
+            return False
+
+        # Construct ad-hoc inventory line
+        # Format: host ansible_user=u ansible_port=p ...
+        # We pass this as -i 'host_alias,' to treat as list
+        
+        # Actually easier: use -i 'hostname,' and pass variables as -e
+        # But we need to define user/port for that host.
+        # Best approach: -i 'hostname, ansible_user=u ansible_port=p' is not valid.
+        # Valid: -i 'hostname,' -u user --private-key ... 
+        
+        # Let's construct the inventory string
+        inv_content = f"{hostname} ansible_host={hostname} ansible_user={user} ansible_port={port}"
+        if key_path:
+            inv_content += f" ansible_ssh_private_key_file={key_path}"
+        
+        # Write temp inventory file
+        temp_inv = Path(f"temp_verify_inventory_{uuid.uuid4()}.ini")
+        try:
+            temp_inv.write_text(inv_content + "\n", encoding="utf-8")
+            
+            cmd = ["ansible", "all", "-m", "ping", "-i", str(temp_inv)]
+            
+            process = await asyncio.create_subprocess_exec(
+                *cmd, 
+                stdout=asyncio.subprocess.PIPE, 
+                stderr=asyncio.subprocess.PIPE, 
+                env=os.environ.copy()
+            )
+            stdout, stderr = await process.communicate()
+            return process.returncode == 0
+        except Exception as e:
+            logger.error(f"Validation failed: {e}")
+            return False
+        finally:
+            if temp_inv.exists():
+                temp_inv.unlink()
+
+    @staticmethod
+    def import_ini_to_db(db: Session, content: str = None) -> bool:
+        """
+        Parses inventory.ini content and repopulates the Host table.
+        This allows the text editor to be the source of truth.
+        """
+        try:
+            if content is None:
+                content = InventoryService.get_inventory_content()
+            
+            # Simple INI Parser tailored for Ansible format
+            current_group = "all"
+            
+            # Remove all existing hosts? YES, to ensure sync.
+            db.exec(Host.__table__.delete())
+            
+            lines = content.split('\n')
+            for line in lines:
+                line = line.strip()
+                if not line or line.startswith(';') or (line.startswith('#') and 'Sible:' not in line):
+                    continue
+                
+                if line.startswith('[') and line.endswith(']'):
+                    current_group = line[1:-1]
+                    continue
+                
+                parts = line.split()
+                if not parts: continue
+                
+                alias = parts[0]
+                hostname = alias # Default
+                ssh_user = "root"
+                ssh_port = 22
+                ssh_key_path = None
+                ssh_key_secret = None
+                ssh_password_secret = None
+                
+                for part in parts[1:]:
+                    if '=' in part:
+                        k, v = part.split('=', 1)
+                        if k == 'ansible_host': hostname = v
+                        elif k == 'ansible_user': ssh_user = v
+                        elif k == 'ansible_port': ssh_port = int(v) if v.isdigit() else 22
+                        elif k == 'ansible_ssh_private_key_file': ssh_key_path = v
+                
+                # Check for Sible comments
+                if '#' in line:
+                    comment = line.split('#', 1)[1]
+                    if 'Sible:' in comment:
+                        if 'ssh_key_secret=' in comment:
+                            try: ssh_key_secret = comment.split('ssh_key_secret=')[1].split()[0]
+                            except: pass
+                        if 'ssh_password_secret=' in comment:
+                            try: ssh_password_secret = comment.split('ssh_password_secret=')[1].split()[0]
+                            except: pass
+
+                host = Host(
+                    alias=alias,
+                    hostname=hostname,
+                    ssh_user=ssh_user,
+                    ssh_port=ssh_port,
+                    ssh_key_path=ssh_key_path,
+                    ssh_key_secret=ssh_key_secret,
+                    ssh_password_secret=ssh_password_secret,
+                    group_name=current_group
+                )
+                db.add(host)
+            
+            db.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to import INI: {e}")
+            db.rollback()
+            return False
+

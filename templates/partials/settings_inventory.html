@@ -1,13 +1,68 @@
-<div class="settings-panel">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3>Inventory Management</h3>
-        <button class="secondary" hx-post="/settings/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
-            hx-indicator="#ping-loading">
-            Ping All Hosts
-        </button>
+<div class="settings-panel" x-data="{ 
+    isEditing: false, 
+    editingId: null, 
+    viewMode: 'table', // table or raw
+    secrets: [],
+    formData: { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_password_secret: '', ssh_key_path: '' },
+    init() {
+        this.fetchSecrets();
+    },
+    fetchSecrets() {
+        fetch('/api/inventory/secrets').then(r => r.json()).then(data => this.secrets = data);
+    },
+    openModal() { 
+        this.isEditing = false; 
+        this.resetForm();
+        this.fetchSecrets();
+        document.getElementById('inventory-modal').showModal(); 
+    },
+    closeModal() { 
+        document.getElementById('inventory-modal').close(); 
+        this.resetForm();
+    },
+    editHost(id, alias, hostname, user, port, group, keyPath, keySecret, passSecret) {
+        this.isEditing = true;
+        this.editingId = id;
+        this.formData = { 
+            alias: alias, 
+            hostname: hostname, 
+            ssh_user: user, 
+            ssh_port: port, 
+            group_name: group,
+            ssh_key_path: keyPath || '',
+            ssh_key_secret: keySecret || '',
+            ssh_password_secret: passSecret || ''
+        };
+        this.fetchSecrets();
+        document.getElementById('inventory-modal').showModal();
+    },
+    resetForm() {
+        this.formData = { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_password_secret: '', ssh_key_path: '' };
+    }
+}">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+            <h3>Inventory Management</h3>
+            <p class="color-muted font-sm" style="margin-bottom: 0;">Manage your managed servers.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <div role="group">
+                <button :class="viewMode === 'table' ? 'primary' : 'outline'" @click="viewMode = 'table'">Table</button>
+                <button :class="viewMode === 'raw' ? 'primary' : 'outline'" @click="viewMode = 'raw'">Raw File</button>
+            </div>
+
+            <button class="secondary" hx-post="/settings/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
+                hx-indicator="#ping-loading">
+                <i class="fas fa-network-wired"></i> Ping All
+            </button>
+
+            <template x-if="viewMode === 'table'">
+                <button class="primary" @click="openModal()">
+                    <i class="fas fa-plus"></i> Add Server
+                </button>
+            </template>
+        </div>
     </div>
-    <p class="color-muted font-sm">Manage your Ansible inventory file (<code>inventory.ini</code>). These hosts will be
-        available to all playbooks.</p>
     <hr>
 
     <div id="ping-loading" class="htmx-indicator" style="margin-bottom: 1rem;">
@@ -15,16 +70,45 @@
     </div>
     <div id="ping-result" style="margin-bottom: 1.5rem;"></div>
 
-    <form hx-post="/settings/inventory" hx-swap="none">
-        <label>
-            <strong>inventory.ini</strong>
-            <textarea name="content"
-                style="font-family: 'Fira Code', 'Cascadia Code', monospace; height: 400px; background: #0d1117; color: #e6edf3; padding: 1.5rem; border: 1px solid #30363d; border-radius: 8px; line-height: 1.6; resize: vertical;"
-                spellcheck="false">{{ content }}</textarea>
-        </label>
+    <!-- Table View -->
+    <div x-show="viewMode === 'table'">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th>Alias</th>
+                    <th>Hostname / IP</th>
+                    <th>User / Port</th>
+                    <th>Group</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody hx-get="/api/inventory/hosts" hx-trigger="load, inventory-refresh from:body">
+                <!-- Loaded via HTMX -->
+                <tr>
+                    <td colspan="5" aria-busy="true">Loading inventory...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-        <div style="margin-top: 2rem; text-align: right;">
-            <button type="submit" class="primary" style="width: auto;">Save Inventory</button>
-        </div>
-    </form>
+    <!-- Raw View -->
+    <div x-show="viewMode === 'raw'">
+        <form hx-post="/settings/inventory" hx-swap="none"
+            hx-on::after-request="if(event.detail.successful) htmx.ajax('POST', '/api/inventory/import', {swap:'none'})">
+
+            <textarea name="content"
+                style="font-family: monospace; height: 400px; background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; padding: 1rem;">{{ content }}</textarea>
+
+            <div style="text-align: right; margin-top: 1rem;">
+                <p class="font-sm color-muted" style="display: inline-block; margin-right: 1rem;">
+                    Saving will overwrite the database configuration.
+                </p>
+                <button type="submit">Save & Import Raw File</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Include Modal -->
+    {% include 'partials/inventory_modal.html' %}
+
 </div>

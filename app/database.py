@@ -7,5 +7,5 @@ engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
 
 def create_db_and_tables():
     # Import models here to ensure they are registered with SQLModel metadata
-    from app.models import JobRun, AppSettings, PlaybookConfig, EnvVar
+    from app.models import JobRun, AppSettings, PlaybookConfig, EnvVar, Host
     SQLModel.metadata.create_all(engine)

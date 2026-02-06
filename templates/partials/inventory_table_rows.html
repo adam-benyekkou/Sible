@@ -1,0 +1,34 @@
+{% for host in hosts %}
+<tr>
+    <td>{{ host.alias }}</td>
+    <td><code style="font-size: 0.9em;">{{ host.hostname }}</code></td>
+    <td>{{ host.ssh_user }}<span style="color: #666;">@{{ host.ssh_port }}</span></td>
+    <td>
+        {% if host.group_name != 'all' %}
+        <span style="background: #238636; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">{{
+            host.group_name }}</span>
+        {% else %}
+        <span
+            style="background: #30363d; color: #8b949e; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">All</span>
+        {% endif %}
+    </td>
+    <td style="text-align: right;">
+        <button class="outline secondary" style="padding: 4px 8px; font-size: 0.8rem; margin-right: 0.5rem;"
+            @click="editHost({{ host.id }}, '{{ host.alias }}', '{{ host.hostname }}', '{{ host.ssh_user }}', {{ host.ssh_port }}, '{{ host.group_name }}', '{{ host.ssh_key_path or '' }}', '{{ host.ssh_key_secret or '' }}', '{{ host.ssh_password_secret or '' }}')">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="outline danger" style="padding: 4px 8px; font-size: 0.8rem;"
+            hx-delete="/api/inventory/hosts/{{ host.id }}" hx-confirm="Delete host {{ host.alias }}?">
+            <i class="fas fa-trash"></i>
+        </button>
+    </td>
+</tr>
+{% endfor %}
+{% if not hosts %}
+<tr>
+    <td colspan="5" style="text-align: center; color: #8b949e; padding: 2rem;">
+        <i class="fas fa-server" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+        No hosts found. Add one to get started.
+    </td>
+</tr>
+{% endif %}
