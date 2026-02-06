@@ -1,9 +1,10 @@
 <div class="sidebar-btn-container">
-    <button class="btn-new" hx-post="/playbooks" hx-prompt="Enter new playbook name (e.g., install-nginx):"
-        hx-swap="none">
+    <button class="btn-new" @click="$dispatch('open-new-playbook-modal')">
         + New Playbook
     </button>
 </div>
+
+
 
 {% macro render_tree(items) %}
 {% for item in items %}

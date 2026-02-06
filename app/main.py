@@ -21,7 +21,7 @@ from app.database import engine
 from sqlmodel import Session
 
 # Import Routers
-from app.routers import playbooks, history, settings as settings_router, websocket, scheduler as scheduler_router, core, inventory as inventory_router, ssh as ssh_router
+from app.routers import playbooks, history, settings as settings_router, websocket, scheduler as scheduler_router, core, inventory as inventory_router, ssh as ssh_router, templates as templates_router
 
 
 
@@ -76,3 +76,4 @@ app.include_router(websocket.router)
 app.include_router(scheduler_router.router)
 app.include_router(inventory_router.router)
 app.include_router(ssh_router.router)
+app.include_router(templates_router.router)

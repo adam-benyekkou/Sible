@@ -78,3 +78,51 @@ class TemplateService:
         except Exception as e:
             logger.error(f"Failed to parse metadata for {path}: {e}")
         return metadata
+
+    @staticmethod
+    def save_template(name_id: str, content: str) -> bool:
+        """
+        Creates or updates a template file.
+        """
+        try:
+             # Basic validation
+            if ".." in name_id or name_id.startswith("/"):
+                raise ValueError("Invalid filename")
+            
+            # Ensure extension
+            if not name_id.endswith(('.yml', '.yaml')):
+                name_id += '.yml'
+                
+            safe_path = (TemplateService.BLUEPRINT_DIR / name_id).resolve()
+            
+            # Ensure it's within the blueprint dir
+            if not str(safe_path).startswith(str(TemplateService.BLUEPRINT_DIR.resolve())):
+                 raise ValueError("Path traversal attempt")
+            
+            # Ensure parent directories exist (if subfolders used)
+            safe_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(safe_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            return True
+        except Exception as e:
+            logger.error(f"Error saving template {name_id}: {e}")
+            return False
+
+    @staticmethod
+    def delete_template(name_id: str) -> bool:
+        """
+        Deletes a template file.
+        """
+        try:
+            safe_path = (TemplateService.BLUEPRINT_DIR / name_id).resolve()
+            if not str(safe_path).startswith(str(TemplateService.BLUEPRINT_DIR.resolve())):
+                return False
+            
+            if safe_path.exists() and safe_path.is_file():
+                safe_path.unlink()
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"Error deleting template {name_id}: {e}")
+            return False

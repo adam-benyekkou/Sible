@@ -1,0 +1,15 @@
+# Title: Copy File
+# Description: Copies a file from controller to remote host.
+# Category: File Management
+# Author: Sible Team
+
+- name: Copy file
+  hosts: all
+  tasks:
+    - name: Copy file
+      copy:
+        src: /path/to/local/file
+        dest: /path/to/remote/file
+        owner: root
+        group: root
+        mode: '0644'

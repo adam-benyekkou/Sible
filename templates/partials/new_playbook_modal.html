@@ -3,30 +3,65 @@
     templates: [], 
     selectedTemplate: '',
     filename: '',
+    folder: '',
+    error: '',
+    loading: false,
     async loadTemplates() {
-        const res = await fetch('/api/templates');
-        this.templates = await res.json();
+        try {
+            const res = await fetch('/api/templates');
+            if (res.ok) {
+                this.templates = await res.json();
+            }
+        } catch(e) { console.error(e); }
     },
     async create() {
         if (!this.filename) return;
-        
-        let url = '/playbook';
-        let headers = {
-            'HX-Prompt': this.filename
-        };
-        
-        if (this.selectedTemplate) {
-            url = `/api/templates/use?path=${this.selectedTemplate}`;
-            // If using template, logic is slightly different, dealt by backend redirect
-        } else {
-            // Standard create
-        }
+        this.loading = true;
+        this.error = '';
 
-        // Ideally we use HTMX here, but for dynamic endpoint construction easier to use fetch or standard form.
-        // Let's use standard HTMX via a hidden form or simply trigger the hx-post manually.
-        
-        // Re-using the existing hx-post=/playbook logic is tricky if we want to support templates.
-        // Let's make the form submit to a new handler or use the 'use_template' endpoint directly.
+        try {
+            const res = await fetch('/api/playbooks/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: this.filename,
+                    folder: this.folder,
+                    template_id: this.selectedTemplate || null
+                })
+            });
+
+            if (res.ok) {
+                // HTMX Redirect handled by simple window location or 
+                // if the response contains HX-Redirect, htmx usually handles it if driven by htmx.
+                // But here we are using fetch.
+                const redirect = res.headers.get('HX-Redirect');
+                if (redirect) {
+                    // Use HTMX to swap content if possible, or simple reload
+                    htmx.ajax('GET', redirect, '#main-content');
+                     // Also trigger sidebar refresh
+                    document.body.dispatchEvent(new Event('sidebar-refresh'));
+                    this.open = false;
+                    this.filename = '';
+                    this.folder = '';
+                    this.selectedTemplate = '';
+                } else {
+                    // Check triggers
+                    const trigger = res.headers.get('HX-Trigger');
+                    if (trigger) {
+                        const triggers = JSON.parse(trigger);
+                        if (triggers['show-toast']) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: triggers['show-toast'] }));
+                        }
+                    }
+                }
+            } else {
+                this.error = 'Failed to create playbook';
+            }
+        } catch(e) {
+            this.error = 'Network error';
+        } finally {
+            this.loading = false;
+        }
     }
 }" @open-new-playbook-modal.window="open = true; loadTemplates();" class="modal" :class="{ 'open': open }">
     <article>
@@ -35,19 +70,21 @@
             <h3>Create New Playbook</h3>
         </header>
 
-        <form hx-post="/api/templates/use" hx-target="#main-content" hx-swap="outerHTML">
-            <!-- If no template selected, we might want standard create. 
-                 But the current /playbook endpoint expects HX-Prompt header. 
-                 Let's unify or handle via Alpine x-if. -->
-
+        <form @submit.prevent="create">
             <label>
-                Playbook Name
-                <input type="text" name="filename" x-model="filename" placeholder="e.g. webserver.yaml" required>
+                Folder (Optional)
+                <input type="text" x-model="folder" placeholder="e.g. webservers/nginx"
+                    helper="Creates parent directories if needed">
             </label>
 
             <label>
-                Start from Blueprint (Optional)
-                <select name="path" x-model="selectedTemplate"
+                Playbook Name
+                <input type="text" x-model="filename" placeholder="e.g. install.yaml" required>
+            </label>
+
+            <label>
+                Template (Optional)
+                <select x-model="selectedTemplate"
                     @change="if(selectedTemplate && !filename) { filename = selectedTemplate.split('/').pop().replace('.yaml', '_new.yaml'); }">
                     <option value="">-- Blank Playbook --</option>
                     <template x-for="t in templates" :key="t.id">
@@ -58,17 +95,11 @@
                     class="color-muted"></small>
             </label>
 
+            <div x-show="error" class="color-danger mb-2" x-text="error"></div>
+
             <footer>
                 <button type="button" class="secondary" @click="open = false">Cancel</button>
-
-                <!-- Different buttons based on mode -->
-                <button type="submit" x-show="selectedTemplate">Create from Blueprint</button>
-
-                <button type="button" x-show="!selectedTemplate"
-                    @click="$el.setAttribute('hx-post', '/playbooks'); $el.setAttribute('hx-headers', JSON.stringify({'HX-Prompt': filename})); htmx.process($el); htmx.trigger($el, 'click'); open = false;">
-                    Create Blank
-                </button>
-                <!-- Hidden button for the manual HTMX trigger above -->
+                <button type="submit" :aria-busy="loading">Create Playbook</button>
             </footer>
         </form>
     </article>

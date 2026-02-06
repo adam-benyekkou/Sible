@@ -163,18 +163,8 @@ async def install_requirements_endpoint(
 
 # Template Library Endpoints
 
-@router.get("/api/templates")
-async def list_templates():
-    from app.services.template import TemplateService
-    return TemplateService.list_templates()
+# api/templates CRUD is handled in app.routers.templates
 
-@router.get("/api/templates/{name_id:path}")
-async def get_template_content(name_id: str):
-    from app.services.template import TemplateService
-    content = TemplateService.get_template_content(name_id)
-    if content is None:
-        return Response(status_code=404)
-    return {"content": content}
 
 @router.post("/api/templates/use")
 async def use_template(
@@ -216,4 +206,72 @@ async def use_template(
     response = Response(status_code=200)
     response.headers["HX-Redirect"] = f"/playbooks/{new_filename}"
     trigger_toast(response, f"Created from {name_clean}", "success")
+    return response
+
+from pydantic import BaseModel
+from typing import Optional
+
+class CreatePlaybookRequest(BaseModel):
+    name: str
+    folder: Optional[str] = None
+    template_id: Optional[str] = None
+
+@router.post("/api/playbooks/create")
+async def create_playbook_api(
+    payload: CreatePlaybookRequest,
+    service: PlaybookService = Depends(get_playbook_service)
+):
+    """
+    Creates a new playbook with optional folder and template.
+    """
+    import os
+    
+    # Construct path
+    folder = payload.folder.strip("/\\") if payload.folder else ""
+    filename = payload.name
+    if not filename.endswith((".yaml", ".yml")):
+        filename += ".yaml"
+        
+    full_path = f"{folder}/{filename}" if folder else filename
+    
+    # Check if exists
+    # validate_path checks existence via _validate_path but checking existence is explicitly done in create_playbook
+    # We should let service handle creation, but service.create_playbook returns False if exists.
+    
+    content = None
+    if payload.template_id:
+        from app.services.template import TemplateService
+        content = TemplateService.get_template_content(payload.template_id)
+        if not content:
+            response = Response(status_code=200)
+            trigger_toast(response, "Template not found", "error")
+            return response
+
+    if content:
+        # Create with content
+        # service.create_playbook writes default content. 
+        # We can try to use save_playbook_content directly, but we want to ensure we don't overwrite if exists.
+        # But save_playbook_content doesn't check "if exists return false".
+        # Let's rely on create_playbook first to ensure file creation (and checks) then overwrite?
+        # Or better: check existence first explicitly.
+        
+        # Taking a shortcut: create_playbook returns False if exists.
+        if not service.create_playbook(full_path):
+             response = Response(status_code=200)
+             trigger_toast(response, "File already exists or invalid path", "error")
+             return response
+             
+        # Overwrite with template content
+        service.save_playbook_content(full_path, content)
+    else:
+        # Create blank
+        if not service.create_playbook(full_path):
+             response = Response(status_code=200)
+             trigger_toast(response, "File already exists or invalid path", "error")
+             return response
+
+    response = Response(status_code=200)
+    # HX-Redirect to the new file
+    response.headers["HX-Redirect"] = f"/playbooks/{full_path}"
+    trigger_toast(response, f"Created {full_path}", "success")
     return response

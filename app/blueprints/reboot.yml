@@ -1,0 +1,17 @@
+# Title: System Reboot
+# Description: Reboots the server and waits for it to return.
+# Category: Maintenance
+# Author: Sible Team
+
+- name: Reboot
+  hosts: all
+  become: yes
+  tasks:
+    - name: Reboot host
+      reboot:
+        msg: "Reboot initiated by Sible"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: whoami

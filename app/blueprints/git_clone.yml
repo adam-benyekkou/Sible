@@ -1,0 +1,24 @@
+# Title: Git Clone
+# Description: Clones a git repository.
+# Category: Development
+# Author: Sible Team
+
+- name: Git Clone
+  hosts: all
+  vars:
+    repo_url: "https://github.com/user/repo.git"
+    dest_path: "/opt/repo"
+
+  tasks:
+    - name: Install git
+      apt:
+        name: git
+        state: present
+      become: yes
+
+    - name: Clone repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ dest_path }}"
+        version: main
+        force: yes

@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container" x-data="templatesManager()">
+    <header class="flex justify-between items-center mb-4">
+        <div>
+            <h2>Template Library</h2>
+            <p class="color-muted">Manage reusable playbooks templates.</p>
+        </div>
+        <button class="primary" @click="openNewTemplateModal()">
+            <i class="fas fa-plus"></i> New Template
+        </button>
+    </header>
+
+    <div class="overflow-auto">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>File</th>
+                    <th>Category</th>
+                    <th>Author</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="template in templates" :key="template.id">
+                    <tr>
+                        <td class="font-bold" x-text="template.title"></td>
+                        <td class="color-muted text-sm" x-text="template.id"></td>
+                        <td><span class="badge secondary" x-text="template.category || 'General'"></span></td>
+                        <td class="color-muted text-sm" x-text="template.author || 'Unknown'"></td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button class="outline secondary sm" @click="editTemplate(template)"
+                                    data-tooltip="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="outline danger sm" @click="deleteTemplate(template)"
+                                    data-tooltip="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </template>
+                <tr x-show="templates.length === 0">
+                    <td colspan="5" class="text-center p-5 color-muted">
+                        No templates found. Create one to get started!
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% include "partials/template_editor_modal.html" %}
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('templatesManager', () => ({
+            templates: [],
+
+            init() {
+                this.fetchTemplates();
+                // Listen for save events to refresh
+                window.addEventListener('template-saved', () => this.fetchTemplates());
+            },
+
+            async fetchTemplates() {
+                try {
+                    const res = await fetch('/api/templates');
+                    if (res.ok) {
+                        this.templates = await res.json();
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch templates", e);
+                }
+            },
+
+            openNewTemplateModal() {
+                window.dispatchEvent(new CustomEvent('open-template-editor', { detail: { mode: 'create' } }));
+            },
+
+            editTemplate(template) {
+                window.dispatchEvent(new CustomEvent('open-template-editor', { detail: { mode: 'edit', template: template } }));
+            },
+
+            async deleteTemplate(template) {
+                if (!confirm(`Delete template "${template.title}"?`)) return;
+
+                try {
+                    const res = await fetch(`/api/templates/${template.id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Template deleted', level: 'success' } }));
+                        this.fetchTemplates();
+                    } else {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Failed to delete', level: 'error' } }));
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }));
+    });
+</script>
+{% endblock %}

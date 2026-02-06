@@ -1,0 +1,183 @@
+<div x-data="templateEditor()" @open-template-editor.window="open($event.detail)" class="template-modal"
+    :class="{ 'open': isOpen }">
+    <article style="min-width: 800px; max-height: 90vh; overflow-y: auto;">
+        <header>
+            <button aria-label="Close" rel="prev" @click="close()"></button>
+            <h5 x-text="mode === 'create' ? 'New Template' : 'Edit Template'"></h5>
+        </header>
+
+        <form @submit.prevent="save()">
+            <div class="grid">
+                <label>
+                    <small>Title</small>
+                    <input type="text" x-model="title" required placeholder="e.g. Update System">
+                </label>
+                <label>
+                    <small>Filename</small>
+                    <input type="text" x-model="filename" required :disabled="mode === 'edit'"
+                        pattern="^[a-zA-Z0-9_\-\./]+\.ya?ml$">
+                </label>
+            </div>
+
+            <div class="mb-3">
+                <label><small>Content (YAML)</small></label>
+                <div id="template-editor" style="height: 400px; width: 100%; border: 1px solid #333;"></div>
+            </div>
+
+            <footer>
+                <button type="button" class="secondary" @click="close()">Cancel</button>
+                <button type="submit" aria-busy="isSaving" class="primary">Save</button>
+            </footer>
+        </form>
+    </article>
+
+    <!-- Backdrop -->
+    <div class="template-modal-backdrop" @click="close()"></div>
+</div>
+
+<style>
+    .template-modal {
+        display: none;
+    }
+
+    .template-modal.open {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .template-modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+</style>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('templateEditor', () => ({
+            isOpen: false,
+            mode: 'create', // create | edit
+            filename: '',
+            title: '',
+            editor: null,
+            isSaving: false,
+
+            open(detail) {
+                this.mode = detail.mode;
+                this.isOpen = true;
+                this.isSaving = false;
+
+                this.$nextTick(() => {
+                    if (!this.editor) {
+                        this.editor = ace.edit("template-editor");
+                        this.editor.setTheme("ace/theme/tomorrow_night_eighties");
+                        this.editor.session.setMode("ace/mode/yaml");
+                        this.editor.setOptions({
+                            fontSize: "14px",
+                            showPrintMargin: false,
+                        });
+                    }
+
+                    if (this.mode === 'edit') {
+                        this.filename = detail.template.id;
+                        this.title = detail.template.title;
+                        this.loadContent(detail.template.id);
+                    } else {
+                        this.filename = '';
+                        this.title = 'New Template';
+                        this.editor.setValue("# Title: New Template\n# Description: ...\n\n- hosts: all\n  tasks:\n    - name: Hello World\n      debug:\n        msg: 'Hello'", -1);
+                    }
+                });
+            },
+
+            async loadContent(id) {
+                try {
+                    this.editor.setValue("Loading...", -1);
+                    this.editor.setReadOnly(true);
+
+                    const res = await fetch(`/api/templates/${id}/content`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.editor.setValue(data.content, -1);
+
+                        // Try to extract title if not set (or sync it)
+                        const lines = data.content.split('\n');
+                        const titleLine = lines.find(l => l.startsWith('# Title:'));
+                        if (titleLine) {
+                            this.title = titleLine.replace('# Title:', '').trim();
+                        }
+                    } else {
+                        this.editor.setValue("# Error loading content", -1);
+                    }
+                } catch (e) {
+                    this.editor.setValue("# Error loading content", -1);
+                } finally {
+                    this.editor.setReadOnly(false);
+                }
+            },
+
+            close() {
+                this.isOpen = false;
+            },
+
+            async save() {
+                this.isSaving = true;
+                let content = this.editor.getValue();
+
+                // Inject/Update Title in content
+                if (this.title) {
+                    const lines = content.split('\n');
+                    let titleFound = false;
+                    const newLines = lines.map(line => {
+                        if (line.startsWith('# Title:')) {
+                            titleFound = true;
+                            return `# Title: ${this.title}`;
+                        }
+                        return line;
+                    });
+
+                    if (!titleFound) {
+                        newLines.unshift(`# Title: ${this.title}`);
+                    }
+                    content = newLines.join('\n');
+                }
+
+                try {
+                    const url = '/api/templates' + (this.mode === 'edit' ? `/${this.filename}` : '');
+                    const method = this.mode === 'edit' ? 'PUT' : 'POST';
+
+                    const res = await fetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: this.filename, content: content })
+                    });
+
+                    if (res.ok) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Template saved', level: 'success' } }));
+                        window.dispatchEvent(new CustomEvent('template-saved'));
+                        this.close();
+                    } else {
+                        const err = await res.json();
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: err.detail || 'Save failed', level: 'error' } }));
+                    }
+                } catch (e) {
+                    console.error(e);
+                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Network error', level: 'error' } }));
+                } finally {
+                    this.isSaving = false;
+                }
+            }
+        }));
+    });
+</script>
