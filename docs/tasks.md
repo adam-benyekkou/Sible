@@ -306,15 +306,16 @@ Goal: Automate the distribution so people can `docker run` it.
 Goal: Elevate the project from a "basic tool" to a "SaaS-grade" application with polish and care.
 
 - [x] **Onboarding (First Launch)**
+  - [x] Auto-create `demo-playbook.yml` on first run.
+  - [x] Seed `localhost` inventory if empty.
 - [x] **"Empty State" Design**
+  - [x] "Infrastructure is Quiet" dashboard state.
+  - [x] "No playbooks yet" sidebar state.
 - [x] **Mobile Responsiveness**
+  - [x] Hamburger menu and backdrop.
+  - [x] Responsive layout for settings and editor.
 - [x] **Branding & Footer**
-  - [ ] Problem: Fresh stalls display an empty dashboard.
-  - [ ] Solution: On first startup, auto-create a `demo-playbook.yml` (e.g., ping) and populate the inventory with `localhost` the PC not the docker container localhost.
-- [ ] **"Empty State" Design**
-  - [ ] Problem: A dashboard with no playbooks looks broken.
-  - [ ] Solution: Add aesthetic "Empty State" messages: "No playbooks here. Create one or use a template!" with a clean SVG illustration.
- Add version `v1.0.0` to the sidebar footer.
+  - [x] Add version `v1.0.0` to sidebar footer.
 
 ## Phase 16: The Open Source Pack (Essentials)
 
