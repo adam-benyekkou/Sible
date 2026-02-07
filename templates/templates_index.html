@@ -36,13 +36,14 @@
                         <td class="color-muted text-sm" x-text="template.id"></td>
                         <td><span class="badge secondary" x-text="template.category || 'General'"></span></td>
                         <td class="color-muted text-sm" x-text="template.author || 'Unknown'"></td>
-                        <td>
-                            <div class="flex gap-2" x-show="window.currentUserRole === 'admin'">
-                                <button class="btn-icon" @click="editTemplate(template)" data-tooltip="Edit">
+                        <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
+                            <div class="flex gap-2" x-show="window.currentUserRole === 'admin'"
+                                style="display: contents;">
+                                <button class="btn-icon" @click="editTemplate(template)" title="Edit">
                                     <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
                                 </button>
                                 <button class="btn-icon" style="color: var(--sible-error);"
-                                    @click="deleteTemplate(template)" data-tooltip="Delete">
+                                    @click="deleteTemplate(template)" title="Delete">
                                     <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                                 </button>
                             </div>

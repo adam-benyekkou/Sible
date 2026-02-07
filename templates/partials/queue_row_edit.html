@@ -13,13 +13,13 @@
         {{ job.next_run_human or 'Paused' }}
     </td>
     <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
-        <button class="btn-icon" style="color: var(--sible-success); border-color: var(--sible-success);"
-            hx-put="/schedule/{{ job.id }}" hx-include="closest tr" hx-target="#job-row-{{ job.id }}"
+        <button type="button" class="btn-icon" style="color: var(--sible-success); border-color: var(--sible-success);"
+            hx-put="/schedule/{{ job.id }}" hx-include="#job-row-{{ job.id }}" hx-target="#job-row-{{ job.id }}"
             hx-swap="outerHTML" title="Save">
             <i data-lucide="check" style="width: 14px; height: 14px;"></i>
         </button>
-        <button class="btn-icon" hx-get="/partials/queue/row/{{ job.id }}" hx-target="#job-row-{{ job.id }}"
-            hx-swap="outerHTML" title="Cancel">
+        <button type="button" class="btn-icon" hx-get="/partials/queue/row/{{ job.id }}"
+            hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML" title="Cancel">
             <i data-lucide="x" style="width: 14px; height: 14px;"></i>
         </button>
     </td>

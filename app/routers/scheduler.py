@@ -47,18 +47,34 @@ async def delete_schedule(
 async def update_schedule(
     job_id: str, 
     request: Request, 
-    cron: str = Form(...),
+    cron: str = Form(default=None),
     current_user: object = Depends(requires_role(["admin"]))
 ):
-    success = SchedulerService.update_job(job_id, cron)
-    if not success:
+    if cron is None:
         response = Response(status_code=200)
-        trigger_toast(response, "Failed: Invalid Cron", "error")
+        trigger_toast(response, "Failed: Missing form data", "error")
         return response
-    job = SchedulerService.get_job_info(job_id)
-    response = templates.TemplateResponse("partials/queue_row.html", {"request": request, "job": job})
-    trigger_toast(response, "Schedule updated", "success")
-    return response
+
+    try:
+        success = SchedulerService.update_job(job_id, cron)
+        if not success:
+            response = Response(status_code=200)
+            trigger_toast(response, "Failed: Invalid Cron", "error")
+            return response
+            
+        job = SchedulerService.get_job_info(job_id)
+        if not job:
+             response = Response(status_code=200)
+             trigger_toast(response, "Job not found after update", "error")
+             return response
+             
+        response = templates.TemplateResponse("partials/queue_row.html", {"request": request, "job": job})
+        trigger_toast(response, "Schedule updated", "success")
+        return response
+    except Exception as e:
+        response = Response(status_code=200)
+        trigger_toast(response, f"Error: {str(e)}", "error")
+        return response
 
 @router.get("/partials/queue/row/{job_id}")
 async def get_job_row(
