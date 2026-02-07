@@ -228,11 +228,11 @@ async def create_env_var(
     request: Request, 
     key: str = Form(...), 
     value: str = Form(...), 
-    is_secret: str = Form(None),
+    is_secret: str = Form(None), # Deprecated, always True
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
 ):
-    service.create_env_var(key, value, is_secret == "on")
+    service.create_env_var(key, value, True)
     response = Response(status_code=200)
     trigger_toast(response, f"Variable '{key}' added", "success")
     response.headers["HX-Trigger-After"] = "secrets-refresh"
@@ -272,11 +272,11 @@ async def update_env_var(
     env_id: int, 
     key: str = Form(...), 
     value: str = Form(""), 
-    is_secret: str = Form(None),
+    is_secret: str = Form(None), # Deprecated, always True
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
 ):
-    env_var = service.update_env_var(env_id, key, value, is_secret == "on")
+    env_var = service.update_env_var(env_id, key, value, True)
     if not env_var:
         return Response("Secret not found", status_code=404)
     

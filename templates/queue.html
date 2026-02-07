@@ -1,35 +1,36 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="h-100 p-3">
-    <div class="container-fluid">
+<div class="container">
+    <header class="mb-4">
         <hgroup>
             <h2>Scheduled Jobs</h2>
-            <p>Manage automation and recurring tasks</p>
+            <p class="color-muted">Manage automation and recurring tasks</p>
         </hgroup>
+    </header>
 
-        <div class="overflow-auto">
-            <table class="striped">
-                <thead>
-                    <tr>
-                        <th>Playbook</th>
-                        <th>Schedule (Cron)</th>
-                        <th>Next Run</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for job in jobs %}
-                    {% include "partials/queue_row.html" %}
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center color-muted">
-                            No active schedules. Go to a playbook to add one.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="overflow-auto">
+        <table class="striped" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Playbook</th>
+                    <th>Schedule (Cron)</th>
+                    <th>Next Run</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                {% include "partials/queue_row.html" %}
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center color-muted">
+                        No active schedules. Go to a playbook to add one.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    {% endblock %}
+</div>
+{% endblock %}

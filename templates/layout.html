@@ -31,7 +31,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/css/style.css?v=4">
+    <link rel="stylesheet" href="/static/css/style.css?v=9">
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -190,6 +190,46 @@
         // Re-run on HTMX swaps
         document.body.addEventListener('htmx:afterSwap', function (evt) {
             lucide.createIcons();
+        });
+
+        // Sidebar Active State Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            function updateSidebarActiveState() {
+                const currentPath = window.location.pathname;
+                document.querySelectorAll('.playbook-item').forEach(item => {
+                    const hxGet = item.getAttribute('hx-get');
+                    // Check if current path matches the item's path
+                    // Handle potential prefix issues or just exact match
+                    if (hxGet && (currentPath === hxGet || currentPath.endsWith(hxGet))) {
+                        item.classList.add('active');
+                        // Expand parent details if nested
+                        let parent = item.parentElement;
+                        while (parent) {
+                            if (parent.tagName === 'DETAILS') {
+                                parent.open = true;
+                            }
+                            parent = parent.parentElement;
+                        }
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            // Update on load
+            updateSidebarActiveState();
+
+            // Update on click
+            document.body.addEventListener('click', (e) => {
+                const item = e.target.closest('.playbook-item');
+                if (item) {
+                    document.querySelectorAll('.playbook-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                }
+            });
+
+            // Update on history change (back/forward)
+            window.addEventListener('popstate', updateSidebarActiveState);
         });
     </script>
 </body>

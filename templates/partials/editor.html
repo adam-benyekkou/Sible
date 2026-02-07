@@ -26,11 +26,12 @@
 }">
     <style>
         /* Fix Ace Editor Alignment */
+        /* Fix Ace Editor Alignment */
         .ace_editor,
         .ace_editor * {
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Source Code Pro', monospace !important;
+            font-family: 'Geist Mono', 'SF Mono', 'Monaco', 'Menlo', monospace !important;
             font-size: 14px !important;
-            line-height: 24px !important;
+            line-height: 1.6 !important;
         }
 
         /* Ensure gutter is visible but keep original colors */
@@ -78,7 +79,10 @@
                         swap: 'none'
                     });
                     showScheduleModal = false;
-                ">Save Schedule</button>
+                ">
+                    <i data-lucide="calendar-check" style="width: 14px; height: 14px; margin-right: 6px;"></i> Save
+                    Schedule
+                </button>
             </footer>
         </article>
     </dialog>
@@ -131,16 +135,20 @@
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                         <strong>Extra Variables</strong>
                         <button type="button" class="outline" style="padding: 2px 8px; font-size: 0.8rem;"
-                            @click="addExtraVar()">+ Add Var</button>
+                            @click="addExtraVar()">
+                            <i data-lucide="plus" style="width: 12px; height: 12px; margin-right: 4px;"></i> Add Var
+                        </button>
                     </div>
 
                     <template x-for="(v, index) in launchParams.extraVars" :key="index">
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
                             <input type="text" x-model="v.key" placeholder="Key" style="margin-bottom: 0;">
                             <input type="text" x-model="v.value" placeholder="Value" style="margin-bottom: 0;">
-                            <button type="button" class="secondary outline"
-                                style="padding: 4px 10px; border-color: #ff4444; color: #ff4444;"
-                                @click="removeExtraVar(index)">×</button>
+                            <button type="button" class="secondary outline btn-icon"
+                                style="padding: 4px; border-color: #ff4444; color: #ff4444;"
+                                @click="removeExtraVar(index)">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
                         </div>
                     </template>
                     <div x-show="launchParams.extraVars.length === 0"
@@ -151,7 +159,13 @@
 
                 <footer style="margin-top: 2rem;">
                     <button type="button" class="secondary" @click="showLaunchModal = false">Cancel</button>
-                    <button type="submit" x-text="launchMode === 'check' ? 'Run Check' : 'Launch'"></button>
+                    <button type="submit">
+                        <i data-lucide="check-circle" style="width: 14px; height: 14px; margin-right: 6px;"
+                            x-show="launchMode === 'check'"></i>
+                        <i data-lucide="rocket" style="width: 14px; height: 14px; margin-right: 6px;"
+                            x-show="launchMode === 'run'"></i>
+                        <span x-text="launchMode === 'check' ? 'Run Check' : 'Launch'"></span>
+                    </button>
                 </footer>
             </form>
         </article>
@@ -228,14 +242,14 @@
 
     <div class="content-area">
         <!-- Editor Pane -->
-        <div class="editor-pane">
+        <div class="editor-pane code-editor-wrapper" style="border: none; box-shadow: none;">
             <div id="editor"></div>
         </div>
 
         <!-- Terminal Pane -->
         <div class="terminal-pane">
-            <div id="terminal-container">
-                <div class="waiting-text">Waiting for execution...</div>
+            <div id="terminal-container" style="background-color: #ffffff; color: #000000;">
+                <div class="waiting-text" style="color: #666;">Waiting for execution...</div>
             </div>
         </div>
     </div>

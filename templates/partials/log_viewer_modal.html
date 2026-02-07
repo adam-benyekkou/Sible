@@ -7,12 +7,8 @@
         </header>
 
         <pre
-            style="max-height: 60vh; overflow-y: auto; background-color: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 4px;">
+            style="max-height: 60vh; overflow-y: auto; background-color: #ffffff; color: var(--ds-gray-1000); padding: 1rem; border-radius: 4px; font-family: 'Geist Mono', monospace; font-size: 13px; border: 1px solid var(--ds-gray-200);">
 {{ run.log_output | safe }}
         </pre>
-
-        <footer>
-            <button class="secondary" onclick="this.closest('dialog').remove()">Close</button>
-        </footer>
     </article>
 </dialog>

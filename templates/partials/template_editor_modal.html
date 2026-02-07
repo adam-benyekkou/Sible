@@ -1,9 +1,11 @@
 <div x-data="templateEditor()" @open-template-editor.window="open($event.detail)" class="template-modal"
     :class="{ 'open': isOpen }">
     <article style="min-width: 800px; max-height: 90vh; overflow-y: auto;">
-        <header>
-            <button aria-label="Close" rel="prev" @click="close()"></button>
-            <h5 x-text="mode === 'create' ? 'New Template' : 'Edit Template'"></h5>
+        <header
+            style="position: relative; display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+            <h5 x-text="mode === 'create' ? 'New Template' : 'Edit Template'" style="margin: 0;"></h5>
+            <button type="button" aria-label="Close" @click="close()"
+                style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ds-gray-600); line-height: 1; padding: 0;">&times;</button>
         </header>
 
         <form @submit.prevent="save()">
@@ -12,21 +14,29 @@
                     <small>Title</small>
                     <input type="text" x-model="title" required placeholder="e.g. Update System">
                 </label>
-                <label>
-                    <small>Filename</small>
-                    <input type="text" x-model="filename" required :disabled="mode === 'edit'"
-                        pattern="^[a-zA-Z0-9_\-\./]+\.ya?ml$">
-                </label>
+                <div class="grid">
+                    <label>
+                        <small>Author</small>
+                        <input type="text" x-model="author" placeholder="e.g. Sible Team">
+                    </label>
+                    <label>
+                        <small>Category</small>
+                        <input type="text" x-model="category" placeholder="e.g. System">
+                    </label>
+                </div>
             </div>
 
             <div class="mb-3">
                 <label><small>Content (YAML)</small></label>
-                <div id="template-editor" style="height: 400px; width: 100%; border: 1px solid #333;"></div>
+                <div class="code-editor-wrapper" style="height: 400px;">
+                    <div id="template-editor" style="height: 100%; width: 100%;"></div>
+                </div>
             </div>
 
-            <footer>
-                <button type="button" class="secondary" @click="close()">Cancel</button>
-                <button type="submit" aria-busy="isSaving" class="primary">Save</button>
+            <footer
+                style="text-align: right; display: flex; justify-content: flex-end; margin-top: 1rem; border-top: none;">
+                <button type="submit" aria-busy="isSaving" class="primary"
+                    style="width: auto; min-width: 100px;">Save</button>
             </footer>
         </form>
     </article>
@@ -70,6 +80,8 @@
             mode: 'create', // create | edit
             filename: '',
             title: '',
+            author: '',
+            category: '',
             editor: null,
             isSaving: false,
 
@@ -81,7 +93,7 @@
                 this.$nextTick(() => {
                     if (!this.editor) {
                         this.editor = ace.edit("template-editor");
-                        this.editor.setTheme("ace/theme/tomorrow_night_eighties");
+                        this.editor.setTheme("ace/theme/chrome");
                         this.editor.session.setMode("ace/mode/yaml");
                         this.editor.setOptions({
                             fontSize: "14px",
@@ -92,11 +104,15 @@
                     if (this.mode === 'edit') {
                         this.filename = detail.template.id;
                         this.title = detail.template.title;
+                        this.author = detail.template.author || '';
+                        this.category = detail.template.category || '';
                         this.loadContent(detail.template.id);
                     } else {
                         this.filename = '';
                         this.title = 'New Template';
-                        this.editor.setValue("# Title: New Template\n# Description: ...\n\n- hosts: all\n  tasks:\n    - name: Hello World\n      debug:\n        msg: 'Hello'", -1);
+                        this.author = '';
+                        this.category = '';
+                        this.editor.setValue("# Title: New Template\n# Author: ...\n# Category: ...\n\n- hosts: all\n  tasks:\n    - name: Hello World\n      debug:\n        msg: 'Hello'", -1);
                     }
                 });
             },
@@ -111,12 +127,16 @@
                         const data = await res.json();
                         this.editor.setValue(data.content, -1);
 
-                        // Try to extract title if not set (or sync it)
+                        // Try to extract metadata if not set (or sync it)
                         const lines = data.content.split('\n');
                         const titleLine = lines.find(l => l.startsWith('# Title:'));
-                        if (titleLine) {
-                            this.title = titleLine.replace('# Title:', '').trim();
-                        }
+                        const authorLine = lines.find(l => l.startsWith('# Author:'));
+                        const categoryLine = lines.find(l => l.startsWith('# Category:'));
+
+                        if (titleLine) this.title = titleLine.replace('# Title:', '').trim();
+                        if (authorLine) this.author = authorLine.replace('# Author:', '').trim();
+                        if (categoryLine) this.category = categoryLine.replace('# Category:', '').trim();
+
                     } else {
                         this.editor.setValue("# Error loading content", -1);
                     }
@@ -135,23 +155,44 @@
                 this.isSaving = true;
                 let content = this.editor.getValue();
 
-                // Inject/Update Title in content
-                if (this.title) {
-                    const lines = content.split('\n');
-                    let titleFound = false;
-                    const newLines = lines.map(line => {
-                        if (line.startsWith('# Title:')) {
-                            titleFound = true;
-                            return `# Title: ${this.title}`;
+                // Auto-generate filename if creating
+                if (this.mode === 'create' && !this.filename) {
+                    const slug = this.title.toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '_')
+                        .replace(/^_+|_+$/g, '');
+                    this.filename = slug + '.yml';
+                }
+
+                // Inject/Update Metadata in content
+                const metadata = {
+                    'Title': this.title,
+                    'Author': this.author,
+                    'Category': this.category
+                };
+
+                let lines = content.split('\n');
+                let newLines = [...lines];
+
+                for (const [key, value] of Object.entries(metadata)) {
+                    if (!value) continue;
+
+                    let found = false;
+                    newLines = newLines.map(line => {
+                        if (line.startsWith(`# ${key}:`)) {
+                            found = true;
+                            return `# ${key}: ${value}`;
                         }
                         return line;
                     });
 
-                    if (!titleFound) {
-                        newLines.unshift(`# Title: ${this.title}`);
+                    if (!found) {
+                        // Find where to insert - try to keep them grouped at top
+                        // Ideally after other metadata or at the very top
+                        // Simple approach: prepend reverse order effectively
+                        newLines.unshift(`# ${key}: ${value}`);
                     }
-                    content = newLines.join('\n');
                 }
+                content = newLines.join('\n');
 
                 try {
                     const url = '/api/templates' + (this.mode === 'edit' ? `/${this.filename}` : '');

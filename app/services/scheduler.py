@@ -4,12 +4,11 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.services.runner import RunnerService
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 import math
 from app.core.database import engine
-from sqlmodel import Session, select, desc
-from app.models import JobRun, PlaybookConfig
-from app.services.inventory import InventoryService
+from sqlmodel import Session
+from app.services.runner import RunnerService
 
 logger = logging.getLogger(__name__)
 
@@ -19,14 +18,6 @@ jobstores = {
 }
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)
-
-async def refresh_inventory_status():
-    """
-    Periodic task to refresh all host statuses.
-    """
-    logger.info("Scheduler: Refreshing inventory statuses...")
-    with Session(engine) as session:
-        await InventoryService.refresh_all_statuses(session)
 
 async def execute_playbook_job(playbook_name: str, **kwargs):
     """
@@ -40,77 +31,20 @@ async def execute_playbook_job(playbook_name: str, **kwargs):
     status = "SUCCESS" if result['success'] else "FAILED"
     logger.info(f"Scheduler: Job {playbook_name} finished with status {status}. RC: {result['rc']}")
 
-def cleanup_logs():
-    """
-    Deletes logs older than retention policy.
-    """
-    logger.info("Starting log cleanup...")
-    with Session(engine) as session:
-        # Get Global Settings
-        from app.models import AppSettings
-        settings = session.get(AppSettings, 1)
-        global_days = settings.global_retention_days if settings else 30
-        global_max_runs = settings.global_max_runs if settings else 50
-        
-        # Get all playbooks executed
-        statement = select(JobRun.playbook).distinct()
-        playbooks = session.exec(statement).all()
-        
-        deleted_count = 0
-        
-        for playbook in playbooks:
-            # Check for override
-            pb_conf = session.get(PlaybookConfig, playbook)
-            days = pb_conf.retention_days if pb_conf else global_days
-            max_runs = pb_conf.max_runs if pb_conf and pb_conf.max_runs is not None else global_max_runs
-            
-            # 1. Delete by Time
-            cutoff_date = datetime.utcnow() - timedelta(days=days)
-            delete_stmt = select(JobRun).where(JobRun.playbook == playbook).where(JobRun.start_time < cutoff_date)
-            runs_to_delete = session.exec(delete_stmt).all()
-            
-            for run in runs_to_delete:
-                session.delete(run)
-                deleted_count += 1
-            
-            # 2. Delete by Count (Keep latest N)
-            # Fetch IDs of the latest N runs
-            keep_stmt = select(JobRun.id).where(JobRun.playbook == playbook).order_by(desc(JobRun.start_time)).limit(max_runs)
-            keep_ids = session.exec(keep_stmt).all()
-            
-            if keep_ids:
-                # Delete anything NOT in keep_ids for this playbook
-                delete_count_stmt = select(JobRun).where(JobRun.playbook == playbook).where(JobRun.id.not_in(keep_ids))
-                runs_overflow = session.exec(delete_count_stmt).all()
-                
-                for run in runs_overflow:
-                    session.delete(run)
-                    deleted_count += 1
-                
-        session.commit()
-    logger.info(f"Cleanup finished. Deleted {deleted_count} logs.")
-
 class SchedulerService:
     @staticmethod
     def start():
         if not scheduler.running:
             scheduler.start()
-            if not scheduler.get_job("cleanup_logs"):
-                scheduler.add_job(
-                    cleanup_logs,
-                    IntervalTrigger(days=1),
-                    id="cleanup_logs",
-                    name="Cleanup Old Logs",
-                    replace_existing=True
-                )
-            if not scheduler.get_job("refresh_inventory_status"):
-                scheduler.add_job(
-                    refresh_inventory_status,
-                    IntervalTrigger(minutes=2),
-                    id="refresh_inventory_status",
-                    name="Refresh Inventory Status",
-                    replace_existing=True
-                )
+            # Cleanup legacy jobs if they exist
+            try:
+                for job_id in ["cleanup_logs", "refresh_inventory_status"]:
+                    if scheduler.get_job(job_id):
+                        scheduler.remove_job(job_id)
+                        logger.info(f"Scheduler: Removed legacy job {job_id}")
+            except Exception as e:
+                logger.warning(f"Scheduler: Failed to cleanup legacy jobs: {e}")
+                
             logger.info("Scheduler started.")
 
     @staticmethod

@@ -19,26 +19,27 @@
         <script>
             window.currentUserRole = "{{ request.state.user.role if request.state.user else 'watcher' }}";
         </script>
-        <table class="striped">
+        <table class="striped" style="width: 100%;">
             <thead>
                 <tr>
                     <th>Title</th>
-                    <th>File</th>
                     <th>Category</th>
                     <th>Author</th>
-                    <th>Actions</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <template x-for="template in templates" :key="template.id">
                     <tr>
-                        <td class="font-bold" x-text="template.title"></td>
-                        <td class="color-muted text-sm" x-text="template.id"></td>
-                        <td><span class="badge secondary" x-text="template.category || 'General'"></span></td>
-                        <td class="color-muted text-sm" x-text="template.author || 'Unknown'"></td>
-                        <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
+                        <td>
+                            <strong x-text="template.title"></strong>
+                            <div class="color-muted font-sm" x-text="template.description"></div>
+                        </td>
+                        <td><span class="tag" x-text="template.category || 'Uncategorized'"></span></td>
+                        <td x-text="template.author || 'Unknown'"></td>
+                        <td style="text-align: right;">
                             <div class="flex gap-2" x-show="window.currentUserRole === 'admin'"
-                                style="display: contents;">
+                                style="display: flex; justify-content: flex-end; gap: 4px;">
                                 <button class="btn-icon" @click="editTemplate(template)" title="Edit">
                                     <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
                                 </button>
@@ -51,7 +52,7 @@
                     </tr>
                 </template>
                 <tr x-show="templates.length === 0">
-                    <td colspan="5" class="text-center p-5 color-muted">
+                    <td colspan="4" class="text-center p-5 color-muted">
                         No templates found. Create one to get started!
                     </td>
                 </tr>
@@ -79,6 +80,9 @@
                     const res = await fetch('/api/templates');
                     if (res.ok) {
                         this.templates = await res.json();
+                        this.$nextTick(() => {
+                            lucide.createIcons();
+                        });
                     }
                 } catch (e) {
                     console.error("Failed to fetch templates", e);

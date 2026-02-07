@@ -1,8 +1,9 @@
 <dialog id="inventory-modal">
     <article style="min-width: 500px;">
-        <header>
-            <button aria-label="Close" rel="prev" @click="closeModal()"></button>
-            <h3 x-text="isEditing ? 'Edit Server' : 'Add Server'"></h3>
+        <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+            <h5 x-text="isEditing ? 'Edit Server' : 'Add Server'" style="margin: 0;"></h5>
+            <button type="button" aria-label="Close" @click="closeModal()"
+                style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ds-gray-600); line-height: 1; padding: 0;">&times;</button>
         </header>
 
         <form :hx-post="isEditing ? '' : '/api/inventory/hosts'"
@@ -10,36 +11,36 @@
             hx-on::after-request="if(event.detail.successful) closeModal()">
 
             <label>
-                Alias
+                <small>Alias</small>
                 <input type="text" name="alias" x-model="formData.alias" required
                     placeholder="e.g. Web Server Production">
             </label>
 
             <div class="grid">
                 <label>
-                    Hostname / IP
+                    <small>Hostname / IP</small>
                     <input type="text" name="hostname" x-model="formData.hostname" required placeholder="192.168.1.10">
                 </label>
                 <label>
-                    Port
+                    <small>Port</small>
                     <input type="number" name="ssh_port" x-model="formData.ssh_port" value="22" required>
                 </label>
             </div>
 
             <div class="grid">
                 <label>
-                    SSH User
+                    <small>SSH User</small>
                     <input type="text" name="ssh_user" x-model="formData.ssh_user" value="root" required>
                 </label>
                 <label>
-                    Group
+                    <small>Group</small>
                     <input type="text" name="group_name" x-model="formData.group_name" placeholder="all">
                 </label>
             </div>
 
             <div class="grid">
                 <label>
-                    SSH Password (Secret)
+                    <small>SSH Password (Secret)</small>
                     <select name="ssh_password_secret" x-model="formData.ssh_password_secret">
                         <option value="">-- None --</option>
                         <template x-for="secret in secrets" :key="secret.key">
@@ -48,7 +49,7 @@
                     </select>
                 </label>
                 <label>
-                    SSH Key (Secret)
+                    <small>SSH Key (Secret)</small>
                     <select name="ssh_key_secret" x-model="formData.ssh_key_secret">
                         <option value="">-- None / Manual Path --</option>
                         <template x-for="secret in secrets" :key="secret.key">
@@ -59,14 +60,16 @@
             </div>
 
             <label x-show="!formData.ssh_key_secret && formData.ssh_key_secret !== undefined">
-                Manual Key Path
+                <small>Manual Key Path</small>
                 <input type="text" name="ssh_key_path" x-model="formData.ssh_key_path"
                     placeholder="/path/to/private/key">
             </label>
 
-            <footer style="text-align: right;">
-                <button type="button" class="secondary" @click="closeModal()">Cancel</button>
-                <button type="submit" x-text="isEditing ? 'Save Changes' : 'Add Server'"></button>
+            <footer
+                style="text-align: right; display: flex; justify-content: flex-end; margin-top: 1rem; border-top: none;">
+                <button type="button" class="secondary" @click="closeModal()"
+                    style="width: auto; margin-right: 0.5rem;">Cancel</button>
+                <button type="submit" x-text="isEditing ? 'Save Changes' : 'Add Server'" style="width: auto;"></button>
             </footer>
         </form>
     </article>

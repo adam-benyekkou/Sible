@@ -21,13 +21,6 @@
                 Retention Policies
             </a>
 
-            {% if request.state.user.role == 'admin' %}
-            <a href="/settings/notifications"
-                class="settings-nav-item {{ 'active' if active_tab == 'notifications' else '' }}">
-                Notifications
-            </a>
-            {% endif %}
-
             <a href="/settings/inventory" class="settings-nav-item {{ 'active' if active_tab == 'inventory' else '' }}">
                 Inventory
             </a>
@@ -36,14 +29,18 @@
             <a href="/settings/secrets" class="settings-nav-item {{ 'active' if active_tab == 'secrets' else '' }}">
                 Secrets
             </a>
-            {% endif %}
 
-            {% if request.state.user and request.state.user.role == 'admin' %}
-            <a href="/settings/users" class="settings-nav-item {{ 'active' if active_tab == 'users' else '' }}">
-                Users
-            </a>
             <a href="/settings/gitops" class="settings-nav-item {{ 'active' if active_tab == 'gitops' else '' }}">
                 GitOps
+            </a>
+
+            <a href="/settings/notifications"
+                class="settings-nav-item {{ 'active' if active_tab == 'notifications' else '' }}">
+                Notifications
+            </a>
+
+            <a href="/settings/users" class="settings-nav-item {{ 'active' if active_tab == 'users' else '' }}">
+                Users
             </a>
             {% endif %}
 
