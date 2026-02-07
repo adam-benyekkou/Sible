@@ -4,8 +4,8 @@
     </td>
     <td>
         <!-- Input for Cron -->
-        <input type="text" name="cron" value="{{ job.cron }}" placeholder="* * * * *"
-            style="margin-bottom: 0; padding: 0.25rem;" hx-put="/schedule/{{ job.id }}" hx-include="closest tr"
+        <input type="text" id="cron-input-{{ job.id }}" name="cron" value="{{ job.cron }}" placeholder="* * * * *"
+            style="margin-bottom: 0; padding: 0.25rem;" hx-put="/schedule/{{ job.id }}"
             hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML" aria-label="Cron Expression">
     </td>
     <td>
@@ -14,7 +14,7 @@
     </td>
     <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
         <button type="button" class="btn-icon" style="color: var(--sible-success); border-color: var(--sible-success);"
-            hx-put="/schedule/{{ job.id }}" hx-include="#job-row-{{ job.id }}" hx-target="#job-row-{{ job.id }}"
+            hx-put="/schedule/{{ job.id }}" hx-include="#cron-input-{{ job.id }}" hx-target="#job-row-{{ job.id }}"
             hx-swap="outerHTML" title="Save">
             <i data-lucide="check" style="width: 14px; height: 14px;"></i>
         </button>

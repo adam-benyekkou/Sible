@@ -51,20 +51,20 @@ async def update_schedule(
     current_user: object = Depends(requires_role(["admin"]))
 ):
     if cron is None:
-        response = Response(status_code=200)
+        response = Response(status_code=204)
         trigger_toast(response, "Failed: Missing form data", "error")
         return response
 
     try:
         success = SchedulerService.update_job(job_id, cron)
         if not success:
-            response = Response(status_code=200)
+            response = Response(status_code=204)
             trigger_toast(response, "Failed: Invalid Cron", "error")
             return response
             
         job = SchedulerService.get_job_info(job_id)
         if not job:
-             response = Response(status_code=200)
+             response = Response(status_code=204)
              trigger_toast(response, "Job not found after update", "error")
              return response
              
@@ -72,7 +72,7 @@ async def update_schedule(
         trigger_toast(response, "Schedule updated", "success")
         return response
     except Exception as e:
-        response = Response(status_code=200)
+        response = Response(status_code=204)
         trigger_toast(response, f"Error: {str(e)}", "error")
         return response
 
