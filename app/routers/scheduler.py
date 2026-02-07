@@ -69,3 +69,13 @@ async def get_job_row(
     job = SchedulerService.get_job_info(job_id)
     if not job: return Response("")
     return templates.TemplateResponse("partials/queue_row.html", {"request": request, "job": job})
+
+@router.get("/partials/queue/row/{job_id}/edit")
+async def get_job_row_edit(
+    job_id: str, 
+    request: Request,
+    current_user: User = Depends(requires_role(["admin"]))
+):
+    job = SchedulerService.get_job_info(job_id)
+    if not job: return Response(status_code=404)
+    return templates.TemplateResponse("partials/queue_row_edit.html", {"request": request, "job": job})
