@@ -268,22 +268,22 @@ Goal: Add a live terminal to access servers directly from Sible.
   - [x] Implement WebSocket-based SSH proxy using `asyncssh`.
   - [x] Handle terminal resizing and interactive input.
 
-## Phase 13: GitOps Lite (The Sync)
+## Phase 13: GitOps Lite (The Sync) [x]
 
 Goal: Bridge the gap between Infrastructure as Code (IaC) and your UI.
 
-- [ ] **GitService Implementation (`app/services/git_service.py`)**:
-  - [ ] Create a method `pull_playbooks()` that executes `git pull origin main` in the playbooks directory.
-  - [ ] Add error handling to detect if the directory isn't a Git repo yet and return a specific error.
-  - [ ] **The "SSH Challenge"**: Ensure the Docker container has the host's `~/.ssh/known_hosts` and keys mounted so it can talk to GitHub/GitLab without interactive prompts.
+- [x] **GitService Implementation (`app/services/git.py`)**:
+  - [x] Create a method `pull_playbooks()` that executes `git pull origin main` in the playbooks directory.
+  - [x] Add error handling to detect if the directory isn't a Git repo yet and return a specific error.
+  - [x] **The "SSH Challenge"**: Ensure the Docker container has the host's `~/.ssh/known_hosts` and keys mounted so it can talk to GitHub/GitLab without interactive prompts.
 
-- [ ] **The Sync API**:
-  - [ ] `POST /api/git/sync`: Triggers the pull and returns a list of changed files (using `git diff --name-only`).
+- [x] **The Sync API**:
+  - [x] `POST /api/git/sync`: Triggers the pull and returns a list of changed files (using `git diff --name-only`).
 
-- [ ] **UI Integration**:
-  - [ ] Add a "Sync" button in the Sidebar header (Cloud icon).
-  - [ ] Add a "Last Synced" timestamp in the footer or sidebar.
-  - [ ] Trigger a Sidebar refresh (HTMX) after a successful pull to show new files.
+- [x] **UI Integration**:
+  - [x] Add a "Sync" button in the Sidebar header (Cloud icon).
+  - [x] Add a "Last Synced" timestamp in the footer or sidebar.
+  - [x] Trigger a Sidebar refresh (HTMX) after a successful pull to show new files.
 
 ## Phase 14: Release Engineering (The Launch)
 

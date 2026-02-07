@@ -23,7 +23,7 @@ from app.core.database import engine
 from sqlmodel import Session, select
 
 # Import Routers
-from app.routers import playbooks, history, settings as settings_router, websocket, scheduler as scheduler_router, core, inventory as inventory_router, ssh as ssh_router, templates as templates_router, auth as auth_router, users as users_router
+from app.routers import playbooks, history, settings as settings_router, websocket, scheduler as scheduler_router, core, inventory as inventory_router, ssh as ssh_router, templates as templates_router, auth as auth_router, users as users_router, git as git_router
 
 
 
@@ -112,3 +112,4 @@ app.include_router(ssh_router.router)
 app.include_router(templates_router.router)
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
+app.include_router(git_router.router)
