@@ -4,6 +4,7 @@ from app.core.config import get_settings
 from app.services import SchedulerService
 from app.dependencies import get_db, requires_role
 from app.models import User
+from app.utils.htmx import trigger_toast
 
 settings = get_settings()
 router = APIRouter()
@@ -50,13 +51,20 @@ async def update_schedule(
     cron: str = Form(default=None),
     current_user: object = Depends(requires_role(["admin"]))
 ):
+    import logging
+    logger = logging.getLogger("uvicorn.error")
+    logger.info(f"Update schedule request for {job_id}. Cron: '{cron}'")
+
     if cron is None:
+        logger.error(f"Cron is None for job {job_id}")
         response = Response(status_code=204)
         trigger_toast(response, "Failed: Missing form data", "error")
         return response
 
     try:
         success = SchedulerService.update_job(job_id, cron)
+        logger.info(f"Update job result for {job_id}: {success}")
+        
         if not success:
             response = Response(status_code=204)
             trigger_toast(response, "Failed: Invalid Cron", "error")
@@ -64,6 +72,7 @@ async def update_schedule(
             
         job = SchedulerService.get_job_info(job_id)
         if not job:
+             logger.error(f"Job {job_id} not found after update")
              response = Response(status_code=204)
              trigger_toast(response, "Job not found after update", "error")
              return response
@@ -72,6 +81,7 @@ async def update_schedule(
         trigger_toast(response, "Schedule updated", "success")
         return response
     except Exception as e:
+        logger.error(f"Exception updating job {job_id}: {e}")
         response = Response(status_code=204)
         trigger_toast(response, f"Error: {str(e)}", "error")
         return response
