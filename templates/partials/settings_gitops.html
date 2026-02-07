@@ -36,9 +36,10 @@
                 <label for="git_ssh_key" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
                     SSH Private Key (Optional)
                 </label>
-                <textarea id="git_ssh_key" name="git_ssh_key" rows="8"
-                    placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--ds-gray-300); border-radius: 4px; font-family: monospace; font-size: 0.85rem;">{{ settings.git_ssh_key or '' }}</textarea>
+                <input type="password" id="git_ssh_key" name="git_ssh_key"
+                    placeholder="Paste Private Key (starts with -----BEGIN...)" value="{{ settings.git_ssh_key or '' }}"
+                    autocomplete="off"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--ds-gray-300); border-radius: 4px; font-family: monospace; font-size: 0.85rem;">
                 <p style="font-size: 0.8rem; color: var(--ds-gray-500); margin-top: 0.25rem;">
                     Required if using an SSH URL or a private HTTPS repository. This key is stored securely.
                 </p>

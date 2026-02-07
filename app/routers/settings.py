@@ -467,7 +467,7 @@ async def test_notification(
         response = Response(status_code=200)
         trigger_toast(response, f"Failed to send: {str(e)}", "error")
     return response
-@router.get("/gitops", response_class=HTMLResponse)
+@router.get("/settings/gitops", response_class=HTMLResponse)
 async def settings_gitops_page(
     request: Request, 
     user: dict = Depends(get_current_user),
@@ -475,7 +475,12 @@ async def settings_gitops_page(
 ):
     requires_role("admin")(user)
     settings = service.get_settings()
-    return await render_settings_page(request, "gitops", {"settings": settings})
+    # Mask the key for display
+    display_settings = {
+        "git_repository_url": settings.git_repository_url,
+        "git_ssh_key": "********" if settings.git_ssh_key else ""
+    }
+    return await render_settings_page(request, "gitops", {"settings": display_settings})
 
 @router.post("/api/settings/gitops")
 async def update_gitops_settings(
@@ -487,15 +492,17 @@ async def update_gitops_settings(
 ):
     requires_role("admin")(user)
     
-    # Clean up key line endings if present
-    if git_ssh_key:
+    update_data = {
+        "git_repository_url": git_repository_url
+    }
+
+    # Only update key if it's provided and not the mask
+    if git_ssh_key and git_ssh_key != "********":
         git_ssh_key = git_ssh_key.replace("\r\n", "\n").strip()
+        update_data["git_ssh_key"] = git_ssh_key
         
     try:
-        settings_service.update_settings({
-            "git_repository_url": git_repository_url,
-            "git_ssh_key": git_ssh_key
-        })
+        settings_service.update_settings(update_data)
         
         return trigger_toast(Response(), "GitOps configuration saved.", "success")
     except Exception as e:
