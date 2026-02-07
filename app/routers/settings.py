@@ -63,18 +63,7 @@ async def get_settings_secrets(
 
     return await render_settings_page(request, "secrets", context)
 
-@router.get("/settings/inventory")
-async def get_settings_inventory(
-    request: Request,
-    current_user: User = Depends(requires_role(["admin", "operator"]))
-):
-    content = InventoryService.get_inventory_content()
-    context = {"content": content}
 
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse("partials/settings_inventory.html", {"request": request, **context})
-
-    return await render_settings_page(request, "inventory", context)
 
 @router.get("/settings/users")
 async def get_settings_users(
@@ -301,35 +290,7 @@ async def get_secrets_list(
 
 
 
-@router.post("/settings/inventory")
-async def save_settings_inventory(
-    request: Request,
-    current_user: User = Depends(requires_role(["admin"]))
-):
-    form = await request.form()
-    content = form.get("content")
-    if content is None:
-        response = Response(status_code=200)
-        trigger_toast(response, "Missing content", "error")
-        return response
-    
-    success = InventoryService.save_inventory_content(content)
-    if not success:
-        response = Response(status_code=200)
-        trigger_toast(response, "Failed to save inventory", "error")
-        return response
-    
-    response = Response(status_code=200)
-    trigger_toast(response, "Inventory saved", "success")
-    return response
 
-@router.post("/settings/inventory/ping")
-async def ping_inventory(
-    request: Request,
-    current_user: User = Depends(requires_role(["admin"]))
-):
-    output = await InventoryService.ping_all()
-    return f'<pre class="log-output" style="max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 4px;">{output}</pre>'
 
 @router.get("/settings/retention_tab")
 async def get_settings_retention_tab(

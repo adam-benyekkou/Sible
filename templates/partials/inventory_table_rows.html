@@ -13,6 +13,26 @@
             style="background: var(--ds-gray-100); color: var(--ds-gray-600); border: 1px solid var(--ds-gray-200); padding: 2px 8px; border-radius: 99px; font-size: 0.75rem;">All</span>
         {% endif %}
     </td>
+    <td>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            {% if host.status == 'online' %}
+            <span
+                style="width: 8px; height: 8px; background: var(--sible-success); border-radius: 50%; display: inline-block;"></span>
+            <span style="font-size: 0.85rem; color: var(--ds-gray-900);">Online</span>
+            {% if host.latency %}
+            <span style="font-size: 0.75rem; color: var(--ds-gray-500);">({{ host.latency|round(1) }}ms)</span>
+            {% endif %}
+            {% elif host.status == 'offline' %}
+            <span
+                style="width: 8px; height: 8px; background: var(--sible-error); border-radius: 50%; display: inline-block;"></span>
+            <span style="font-size: 0.85rem; color: var(--ds-gray-900);">Offline</span>
+            {% else %}
+            <span
+                style="width: 8px; height: 8px; background: var(--ds-gray-400); border-radius: 50%; display: inline-block;"></span>
+            <span style="font-size: 0.85rem; color: var(--ds-gray-600);">Unknown</span>
+            {% endif %}
+        </div>
+    </td>
     <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
         {% if request.state.user.role == 'admin' %}
         <button class="btn-icon" title="Edit Host"
@@ -29,7 +49,7 @@
 {% endfor %}
 {% if not hosts %}
 <tr>
-    <td colspan="5" style="text-align: center; color: var(--ds-gray-600); padding: 4rem 2rem;">
+    <td colspan="6" style="text-align: center; color: var(--ds-gray-600); padding: 4rem 2rem;">
         <i data-lucide="server-off"
             style="width: 32px; height: 32px; margin-bottom: 1rem; stroke-width: 1.5px; opacity: 0.5;"></i>
         <div style="font-weight: 500; margin-bottom: 0.5rem;">No hosts found</div>

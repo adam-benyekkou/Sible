@@ -66,9 +66,9 @@
                     </td>
                     <td>
                         <div style="display: flex; gap: 10px;">
-                            <button class="outline secondary" style="padding: 5px 10px; font-size: 0.8rem; width: auto;"
-                                hx-get="/history/run/{{ run.id }}" hx-target="body" hx-swap="beforeend">
-                                Logs
+                            <button type="button" class="btn-icon" title="View Logs" hx-get="/history/run/{{ run.id }}"
+                                hx-target="body" hx-swap="beforeend">
+                                <i data-lucide="file-text"></i>
                             </button>
                             {% if request.state.user.role == 'admin' %}
                             <button class="btn-icon" style="color: var(--sible-error);"

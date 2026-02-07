@@ -21,9 +21,7 @@
                 Retention Policies
             </a>
 
-            <a href="/settings/inventory" class="settings-nav-item {{ 'active' if active_tab == 'inventory' else '' }}">
-                Inventory
-            </a>
+
 
             {% if request.state.user.role == 'admin' %}
             <a href="/settings/secrets" class="settings-nav-item {{ 'active' if active_tab == 'secrets' else '' }}">
@@ -58,8 +56,7 @@
         {% include "partials/settings_retention.html" %}
         {% elif active_tab == 'notifications' %}
         {% include "partials/settings_notifications.html" %}
-        {% elif active_tab == 'inventory' %}
-        {% include "partials/settings_inventory.html" %}
+
         {% elif active_tab == 'secrets' %}
         {% include "partials/settings_secrets.html" %}
         {% elif active_tab == 'users' %}

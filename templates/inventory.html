@@ -1,4 +1,7 @@
-<div class="settings-panel" x-data="{ 
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 24px;" x-data="{ 
     isEditing: false, 
     editingId: null, 
     viewMode: 'table', // table or raw
@@ -40,12 +43,12 @@
         this.formData = { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_password_secret: '', ssh_key_path: '' };
     }
 }">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
-            <h3>Inventory Management</h3>
-            <p class="color-muted font-sm" style="margin-bottom: 0;">Manage your managed servers.</p>
+            <h1>Inventory</h1>
+            <p class="color-muted font-sm" style="margin-bottom: 0;">Manage your managed servers and groups.</p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div style="display: flex; gap: 8px;">
             <div role="group">
                 <button :class="viewMode === 'table' ? 'primary' : 'secondary'"
                     @click="viewMode = 'table'">Table</button>
@@ -54,7 +57,7 @@
             </div>
 
             {% if request.state.user.role == 'admin' %}
-            <button class="secondary" hx-post="/settings/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
+            <button class="secondary" hx-post="/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
                 hx-indicator="#ping-loading">
                 <i data-lucide="network" style="width: 14px; height: 14px;"></i> Ping All
             </button>
@@ -67,7 +70,6 @@
             {% endif %}
         </div>
     </div>
-    <hr>
 
     <div id="ping-loading" class="htmx-indicator" style="margin-bottom: 1rem;">
         <span aria-busy="true">Pinging hosts...</span>
@@ -76,32 +78,36 @@
 
     <!-- Table View -->
     <div x-show="viewMode === 'table'">
-        <table class="striped">
-            <thead>
-                <tr>
-                    <th>Alias</th>
-                    <th>Hostname / IP</th>
-                    <th>User / Port</th>
-                    <th>Group</th>
-                    <th style="text-align: right;">Actions</th>
-                </tr>
-            </thead>
-            <tbody hx-get="/api/inventory/hosts" hx-trigger="load, inventory-refresh from:body">
-                <!-- Loaded via HTMX -->
-                <tr>
-                    <td colspan="5" aria-busy="true">Loading inventory...</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="card" style="overflow: hidden;">
+            <table class="striped" style="margin-bottom: 0;">
+                <thead>
+                    <tr>
+                        <th>Alias</th>
+                        <th>Hostname / IP</th>
+                        <th>User / Port</th>
+                        <th>Group</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody hx-get="/api/inventory/hosts" hx-trigger="load, inventory-refresh from:body">
+                    <!-- Loaded via HTMX -->
+                    <tr>
+                        <td colspan="6" style="padding: 24px; text-align: center; color: var(--ds-gray-600);">Loading
+                            inventory...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Raw View -->
     <div x-show="viewMode === 'raw'">
-        <form hx-post="/settings/inventory" hx-swap="none"
+        <form hx-post="/inventory/save" hx-swap="none"
             hx-on::after-request="if(event.detail.successful) htmx.ajax('POST', '/api/inventory/import', {swap:'none'})">
 
             <textarea name="content"
-                style="font-family: 'Geist Mono', monospace; height: 400px; background: #ffffff; color: #000000; border: 1px solid var(--ds-gray-200); padding: 1rem; border-radius: 6px;">{{ content }}</textarea>
+                style="font-family: 'Geist Mono', monospace; min-height: 500px; width: 100%; background: #ffffff; color: #000000; border: 1px solid var(--ds-gray-200); padding: 1rem; border-radius: 6px; resize: vertical;">{{ content }}</textarea>
 
             <div style="text-align: right; margin-top: 1rem;">
                 <p class="font-sm color-muted" style="display: inline-block; margin-right: 1rem;">
@@ -121,5 +127,5 @@
 
     <!-- Include Modal -->
     {% include 'partials/inventory_modal.html' %}
-
 </div>
+{% endblock %}

@@ -218,6 +218,11 @@ aside {
     flex-shrink: 0;
 }
 
+.sidebar-btn-container {
+    margin-bottom: 8px;
+    /* Matches list item spacing */
+}
+
 .sidebar-folder summary {
     list-style: none;
     /* Hide default arrow */

@@ -6,8 +6,71 @@ from app.models import Host, User
 from app.schemas.host import HostCreate, HostUpdate
 from app.services.inventory import InventoryService
 from app.utils.htmx import trigger_toast
+from fastapi.responses import HTMLResponse
 
 router = APIRouter()
+
+# --- Page Routes ---
+
+@router.get("/inventory")
+async def get_inventory_page(
+    request: Request,
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
+    content = InventoryService.get_inventory_content()
+    context = {"request": request, "content": content}
+    return templates.TemplateResponse("inventory.html", context)
+
+@router.post("/inventory/save")
+async def save_inventory_content(
+    request: Request,
+    current_user: User = Depends(requires_role(["admin"]))
+):
+    form = await request.form()
+    content = form.get("content")
+    if content is None:
+        response = Response(status_code=200)
+        trigger_toast(response, "Missing content", "error")
+        return response
+    
+    success = InventoryService.save_inventory_content(content)
+    if not success:
+        response = Response(status_code=200)
+        trigger_toast(response, "Failed to save inventory", "error")
+        return response
+    
+    # After saving raw content, we should also try to import it to DB to keep sync
+    # But the UI triggers 'inventory-refresh' via HTMX usually.
+    # The existing logic had a separate import call or client-side trigger.
+    # We'll follow the pattern: return success, and let client trigger import if needed 
+    # OR we can just do it here if checking the previous template logic:
+    # hx-on::after-request="if(event.detail.successful) htmx.ajax('POST', '/api/inventory/import', {swap:'none'})"
+    # So the client handles the secondary import call. We just return success here.
+    
+    response = Response(status_code=200)
+    trigger_toast(response, "Inventory saved", "success")
+    return response
+
+@router.post("/inventory/ping")
+async def ping_inventory(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin"]))
+):
+    # Perform status refresh (updates DB)
+    await InventoryService.refresh_all_statuses(db)
+    
+    # Also get the raw ansible ping output if we still want to show it?
+    # Actually, the user wants status column in inventory.
+    # We can still return the ansible ping output as a log for detail.
+    output = await InventoryService.ping_all()
+    
+    response = HTMLResponse(content=f'<pre class="log-output" style="max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 4px;">{output}</pre>')
+    trigger_toast(response, "Ping check complete", "success")
+    response.headers["HX-Trigger"] = "inventory-refresh"
+    return response
+
+# --- API Routes ---
 
 @router.get("/api/inventory/hosts")
 async def list_hosts(
