@@ -19,13 +19,12 @@
     </td>
     <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
         {% if request.state.user.role == 'admin' %}
-        <button class="btn-icon" hx-get="/partials/queue/row/{{ job.id }}/edit" hx-target="#job-row-{{ job.id }}"
+        <button class="btn-icon" hx-get="/partials/queue/row/{{ job.id }}/edit" hx-target="closest tr"
             hx-swap="outerHTML" title="Edit Schedule">
             <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
         </button>
         <button class="btn-icon" style="color: var(--sible-error);" hx-delete="/schedule/{{ job.id }}"
-            hx-confirm="Delete scheduled job?" hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML"
-            title="Delete Schedule">
+            hx-confirm="Delete scheduled job?" hx-target="closest tr" hx-swap="outerHTML" title="Delete Schedule">
             <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
         </button>
         {% endif %}
