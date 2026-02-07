@@ -19,6 +19,17 @@ jobstores = {
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)
 
+async def periodic_status_refresh():
+    """
+    Wrapper for periodic inventory status refresh with fresh session.
+    """
+    from app.services.inventory import InventoryService
+    from app.core.database import engine
+    logger.info("Scheduler: Running periodic inventory status refresh")
+    with Session(engine) as session:
+        await InventoryService.refresh_all_statuses(session)
+
+
 async def execute_playbook_job(playbook_name: str, **kwargs):
     """
     The function triggering the actual playbook execution.
@@ -36,16 +47,15 @@ class SchedulerService:
     def start():
         if not scheduler.running:
             scheduler.start()
-            # Cleanup legacy jobs if they exist
-            try:
-                for job_id in ["cleanup_logs", "refresh_inventory_status"]:
-                    if scheduler.get_job(job_id):
-                        scheduler.remove_job(job_id)
-                        logger.info(f"Scheduler: Removed legacy job {job_id}")
-            except Exception as e:
-                logger.warning(f"Scheduler: Failed to cleanup legacy jobs: {e}")
+            # Add Periodic Status Check (every 5 mins)
+            scheduler.add_job(
+                periodic_status_refresh,
+                IntervalTrigger(minutes=5),
+                id="refresh_inventory_status",
+                replace_existing=True
+            )
                 
-            logger.info("Scheduler started.")
+            logger.info("Scheduler started with periodic health checks.")
 
     @staticmethod
     def shutdown():
@@ -71,6 +81,8 @@ class SchedulerService:
     def list_jobs():
         jobs = []
         for job in scheduler.get_jobs():
+            if job.id == "refresh_inventory_status":
+                continue
             jobs.append({
                 "id": job.id,
                 "name": job.name,

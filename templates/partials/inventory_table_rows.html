@@ -1,6 +1,6 @@
 {% for host in hosts %}
 <tr>
-    <td>{{ host.alias }}</td>
+    <td style="font-weight: 600; color: var(--ds-gray-1000);">{{ host.alias }}</td>
     <td><code style="font-size: 0.9em;">{{ host.hostname }}</code></td>
     <td>{{ host.ssh_user }}<span style="color: #666;">@{{ host.ssh_port }}</span></td>
     <td>

@@ -5,10 +5,32 @@
     launchMode: 'run',
     cronExpression: '0 3 * * *',
     launchParams: {
-        limit: '',
+        limit: ['all'],
+        availableTargets: { hosts: [], groups: [], all: ['all'] },
+        showTargets: false,
         tags: '',
         verbosity: 0,
         extraVars: []
+    },
+    toggleTarget(t) {
+        if (t === 'all') {
+            this.launchParams.limit = ['all'];
+        } else {
+            // Remove 'all' if selecting specific
+            this.launchParams.limit = this.launchParams.limit.filter(x => x !== 'all');
+            if (this.launchParams.limit.includes(t)) {
+                this.launchParams.limit = this.launchParams.limit.filter(x => x !== t);
+            } else {
+                this.launchParams.limit.push(t);
+            }
+            if (this.launchParams.limit.length === 0) this.launchParams.limit = ['all'];
+        }
+    },
+    async fetchTargets() {
+        try {
+            const res = await fetch('/api/inventory/targets');
+            if (res.ok) this.launchParams.availableTargets = await res.json();
+        } catch(e) { console.log(e); }
     },
     addExtraVar() {
         this.launchParams.extraVars.push({ key: '', value: '' });
@@ -97,7 +119,7 @@
 
             <form @submit.prevent="
                 let vals = {
-                    limit: launchParams.limit,
+                    limit: Array.isArray(launchParams.limit) ? launchParams.limit.join(',') : launchParams.limit,
                     tags: launchParams.tags,
                     verbosity: launchParams.verbosity,
                     extra_vars: getExtraVarsJson()
@@ -110,10 +132,75 @@
                 showLaunchModal = false;
             ">
                 <div class="grid">
-                    <label>
-                        Limit Targets (Hosts)
-                        <input type="text" x-model="launchParams.limit" placeholder="e.g. prod, 10.0.0.5">
-                    </label>
+                    <div style="position: relative;">
+                        <label>Target Hosts / Groups</label>
+                        <div class="custom-select-trigger" @click="launchParams.showTargets = !launchParams.showTargets"
+                            :class="{ 'expanded': launchParams.showTargets }"
+                            style="cursor: pointer; padding: 10px; border: 1px solid var(--ds-gray-200); border-radius: 6px; background: var(--ds-background-100); display: flex; justify-content: space-between; align-items: center; min-height: 42px;">
+                            <span x-text="launchParams.limit.join(', ')"
+                                style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;"></span>
+                            <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+                        </div>
+
+                        <div x-show="launchParams.showTargets" x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            @click.away="launchParams.showTargets = false" class="custom-select-dropdown"
+                            style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: white; border: 1px solid var(--ds-gray-200); border-radius: 6px; margin-top: 4px; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+
+                            <style>
+                                .select-item:hover {
+                                    background: var(--ds-background-200) !important;
+                                }
+
+                                .select-item input[type="checkbox"] {
+                                    pointer-events: none;
+                                }
+                            </style>
+
+                            <div class="select-item" @click="toggleTarget('all')"
+                                style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;"
+                                :style="launchParams.limit.includes('all') ? 'background: var(--ds-blue-100); color: var(--ds-blue-700); font-weight: 500;' : ''">
+                                <input type="checkbox" :checked="launchParams.limit.includes('all')"
+                                    style="margin-bottom: 0;">
+                                <span>all</span>
+                            </div>
+
+                            <template x-if="launchParams.availableTargets.groups.length > 0">
+                                <div>
+                                    <div
+                                        style="padding: 4px 12px; font-size: 0.75rem; color: var(--ds-gray-500); font-weight: 600; text-transform: uppercase;">
+                                        Groups</div>
+                                    <template x-for="g in launchParams.availableTargets.groups" :key="g">
+                                        <div class="select-item" @click="toggleTarget(g)"
+                                            style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px;"
+                                            :style="launchParams.limit.includes(g) ? 'background: var(--ds-blue-100); color: var(--ds-blue-700);' : ''">
+                                            <input type="checkbox" :checked="launchParams.limit.includes(g)"
+                                                style="margin-bottom: 0;">
+                                            <span x-text="g"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <template x-if="launchParams.availableTargets.hosts.length > 0">
+                                <div>
+                                    <div
+                                        style="padding: 4px 12px; font-size: 0.75rem; color: var(--ds-gray-500); font-weight: 600; text-transform: uppercase;">
+                                        Hosts</div>
+                                    <template x-for="h in launchParams.availableTargets.hosts" :key="h.alias">
+                                        <div class="select-item" @click="toggleTarget(h.alias)"
+                                            style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px;"
+                                            :style="launchParams.limit.includes(h.alias) ? 'background: var(--ds-blue-100); color: var(--ds-blue-700);' : ''">
+                                            <input type="checkbox" :checked="launchParams.limit.includes(h.alias)"
+                                                style="margin-bottom: 0;">
+                                            <span x-text="h.alias"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
                     <label>
                         Tags
                         <input type="text" x-model="launchParams.tags" placeholder="e.g. deploy, !db">
@@ -190,13 +277,15 @@
             <!-- Check/Run/Schedule - Admin & Operator -->
             {% if request.state.user and request.state.user.role in ['admin', 'operator'] %}
             <!-- Check (Dry Run) -->
-            <button class="secondary" @click="launchMode = 'check'; showLaunchModal = true"
+            <button class="secondary"
+                @click="launchMode = 'check'; fetchTargets(); launchParams.showTargets = false; showLaunchModal = true"
                 title="Dry Run (Check Mode)">
                 <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> Check
             </button>
 
             <!-- Run -->
-            <button class="primary" @click="launchMode = 'run'; showLaunchModal = true">
+            <button class="primary"
+                @click="launchMode = 'run'; fetchTargets(); launchParams.showTargets = false; showLaunchModal = true">
                 <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run
             </button>
             {% endif %}

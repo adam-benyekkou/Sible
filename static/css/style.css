@@ -189,6 +189,25 @@ textarea {
     transition: border 0.15s ease;
 }
 
+/* File Inputs */
+input[type="file"]::file-selector-button {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-right: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #333;
+    border-color: #333;
+}
+
 input:focus,
 select:focus,
 textarea:focus {

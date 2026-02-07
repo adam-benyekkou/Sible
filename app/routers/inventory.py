@@ -106,13 +106,13 @@ async def create_host(
 
     try:
         new_host = Host(
-            alias=alias, 
+            alias=InventoryService.sanitize_ansible_name(alias), 
             hostname=hostname, 
             ssh_user=ssh_user, 
             ssh_port=ssh_port,
             ssh_key_secret=ssh_key_secret,
             ssh_password_secret=ssh_password_secret,
-            group_name=group_name
+            group_name=InventoryService.sanitize_ansible_name(group_name)
         )
         db.add(new_host)
         db.commit()
@@ -147,11 +147,11 @@ async def update_host(
     if not host:
         return Response(status_code=404)
         
-    if alias: host.alias = alias
+    if alias: host.alias = InventoryService.sanitize_ansible_name(alias)
     if hostname: host.hostname = hostname
     if ssh_user: host.ssh_user = ssh_user
     if ssh_port: host.ssh_port = ssh_port
-    if group_name: host.group_name = group_name
+    if group_name: host.group_name = InventoryService.sanitize_group_name(group_name)
     
     # Handle secrets
     form_data = await request.form()
@@ -214,6 +214,23 @@ async def get_inventory_secrets(
     secrets = db.exec(select(EnvVar)).all()
     # return simple list
     return [{"key": s.key, "is_secret": s.is_secret} for s in secrets]
+
+@router.get("/api/inventory/targets")
+async def get_inventory_targets(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
+    """
+    Returns a list of all hosts and groups for selection in the UI.
+    """
+    hosts = db.exec(select(Host)).all()
+    groups = sorted(list(set(h.group_name for h in hosts if h.group_name)))
+    
+    return {
+        "hosts": [{"alias": h.alias, "hostname": h.hostname, "group": h.group_name} for h in hosts],
+        "groups": groups,
+        "all": ["all"]
+    }
 
 @router.get("/host/{host_id}/card")
 async def get_host_card(

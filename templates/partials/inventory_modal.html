@@ -6,9 +6,8 @@
                 style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ds-gray-600); line-height: 1; padding: 0;">&times;</button>
         </header>
 
-        <form :hx-post="isEditing ? '' : '/api/inventory/hosts'"
-            :hx-put="isEditing ? '/api/inventory/hosts/' + editingId : ''" hx-trigger="submit"
-            hx-on::after-request="if(event.detail.successful) closeModal()">
+        <form id="inventory-form" hx-trigger="submit" hx-swap="none"
+            hx-on:htmx:after-request="if(event.detail.successful) { document.getElementById('inventory-modal').close(); htmx.trigger('body', 'inventory-refresh'); }">
 
             <label>
                 <small>Alias</small>
@@ -59,7 +58,7 @@
                 </label>
             </div>
 
-            <label x-show="!formData.ssh_key_secret && formData.ssh_key_secret !== undefined">
+            <label x-show="!formData.ssh_key_secret">
                 <small>Manual Key Path</small>
                 <input type="text" name="ssh_key_path" x-model="formData.ssh_key_path"
                     placeholder="/path/to/private/key">
@@ -67,8 +66,6 @@
 
             <footer
                 style="text-align: right; display: flex; justify-content: flex-end; margin-top: 1rem; border-top: none;">
-                <button type="button" class="secondary" @click="closeModal()"
-                    style="width: auto; margin-right: 0.5rem;">Cancel</button>
                 <button type="submit" x-text="isEditing ? 'Save Changes' : 'Add Server'" style="width: auto;"></button>
             </footer>
         </form>

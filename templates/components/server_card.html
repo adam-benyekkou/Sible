@@ -3,37 +3,46 @@
     onmouseover="this.style.borderColor='#666'" onmouseout="this.style.borderColor='var(--ds-gray-200)'"
     hx-get="/api/inventory/host/{{ host.id }}/card" hx-trigger="every 60s" hx-swap="outerHTML">
 
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
         <div>
             <h4 style="margin: 0; font-size: 1rem; color: var(--ds-gray-1000); font-weight: 600;">{{ host.alias }}</h4>
             <code
                 style="font-size: 0.8rem; color: var(--ds-gray-600); background: transparent; padding: 0;">{{ host.hostname }}</code>
         </div>
 
-        <!-- Status Dot Top-Right -->
-        <div>
-            <span class="status-dot {{ 'success' if host.status == 'online' else 'offline' }}"></span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="status-dot {{ host.status if host.status in ['online', 'offline'] else '' }}"
+                style="width: 8px; height: 8px;"></span>
+            <span
+                style="font-size: 0.75rem; text-transform: capitalize; font-weight: 500; color: {{ 'var(--sible-success)' if host.status == 'online' else 'var(--sible-error)' if host.status == 'offline' else 'var(--ds-gray-600)' }};">
+                {{ host.status|default('unknown') }}
+            </span>
         </div>
     </div>
 
     <div
-        style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--ds-gray-600);">
+        style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--ds-gray-600); margin-top: 0.5rem;">
         <span style="display: flex; align-items: center; gap: 6px;">
             <i data-lucide="user" style="width: 14px; height: 14px;"></i> {{ host.ssh_user }}
         </span>
         {% if host.latency %}
         <span style="display: flex; align-items: center; gap: 6px;">
-            <i data-lucide="zap" style="width: 14px; height: 14px;"></i> {{ host.latency }}ms
+            <i data-lucide="zap" style="width: 14px; height: 14px;"></i> {{ host.latency|round(1) }}ms
         </span>
         {% endif %}
     </div>
 
     <!-- Actions (Terminal) -->
     <div
-        style="margin-top: 1.5rem; text-align: right; border-top: 1px solid var(--ds-gray-200); padding-top: 1rem; display: flex; justify-content: flex-end;">
+        style="margin-top: 1rem; border-top: 1px solid var(--ds-gray-200); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <span
+            style="background: var(--ds-gray-100); color: var(--ds-gray-600); border: 1px solid var(--ds-gray-200); padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 500; width: fit-content;">
+            {{ host.group_name }}
+        </span>
+
         {% if request.state.user.role == 'admin' %}
         <button class="btn-icon" title="Open Terminal" onclick="openTerminal('{{ host.id }}', '{{ host.alias }}')">
-            <i data-lucide="terminal"></i>
+            <i data-lucide="terminal" style="width: 16px; height: 16px;"></i>
         </button>
         {% endif %}
     </div>

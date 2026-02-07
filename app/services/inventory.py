@@ -3,7 +3,6 @@ from pathlib import Path
 from app.models import Host, EnvVar
 import shutil
 import asyncio
-import asyncio
 import sys
 import os
 import logging
@@ -14,6 +13,17 @@ logger = logging.getLogger("uvicorn.error")
 
 class InventoryService:
     INVENTORY_FILE = Path("inventory.ini")
+    
+    @staticmethod
+    def sanitize_ansible_name(name: str) -> str:
+        """
+        Sanitizes names (groups or aliases) for Ansible compatibility (no spaces).
+        """
+        if not name: return ""
+        # Ansible names: [a-zA-Z0-9_-]
+        # We replace spaces with underscores and strip
+        return name.strip().replace(" ", "_")
+
     
     @staticmethod
     def get_inventory_content() -> str:
@@ -51,9 +61,11 @@ class InventoryService:
             # For simplicity, we'll write [group_name] blocks
             
             for group, group_hosts in groups.items():
-                lines.append(f"[{group}]")
+                sanitized_group = InventoryService.sanitize_ansible_name(group or "all")
+                lines.append(f"[{sanitized_group}]")
                 for h in group_hosts:
-                    line = f"{h.alias} ansible_host={h.hostname} ansible_user={h.ssh_user} ansible_port={h.ssh_port}"
+                    sanitized_alias = InventoryService.sanitize_ansible_name(h.alias)
+                    line = f"{sanitized_alias} ansible_host={h.hostname} ansible_user={h.ssh_user} ansible_port={h.ssh_port}"
                     
                     if h.ssh_key_path:
                         line += f" ansible_ssh_private_key_file={h.ssh_key_path}"
@@ -91,55 +103,17 @@ class InventoryService:
         try:
             process = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT, env=os.environ.copy())
             stdout, _ = await process.communicate()
+            return stdout.decode() if stdout else "No output from ansible."
         except Exception as e: return f"Error running ping: {str(e)}"
 
     @staticmethod
     async def verify_connection(hostname: str, user: str, port: int, key_path: str = None) -> bool:
         """
-        Verifies connection to a specific host using ad-hoc Ansible ping.
-        Uses a temporary inventory list format: 'hostname ansible_user=... ansible_port=...'
+        Verifies connection to a specific host using a simple TCP port check.
         """
-        ansible_bin = shutil.which("ansible")
-        if not ansible_bin: 
-            # Fallback for dev windows env without ansible
-            if sys.platform == "win32": return True 
-            return False
+        is_online, _ = await check_ssh(hostname, port, timeout=3.0)
+        return is_online
 
-        # Construct ad-hoc inventory line
-        # Format: host ansible_user=u ansible_port=p ...
-        # We pass this as -i 'host_alias,' to treat as list
-        
-        # Actually easier: use -i 'hostname,' and pass variables as -e
-        # But we need to define user/port for that host.
-        # Best approach: -i 'hostname, ansible_user=u ansible_port=p' is not valid.
-        # Valid: -i 'hostname,' -u user --private-key ... 
-        
-        # Let's construct the inventory string
-        inv_content = f"{hostname} ansible_host={hostname} ansible_user={user} ansible_port={port}"
-        if key_path:
-            inv_content += f" ansible_ssh_private_key_file={key_path}"
-        
-        # Write temp inventory file
-        temp_inv = Path(f"temp_verify_inventory_{uuid.uuid4()}.ini")
-        try:
-            temp_inv.write_text(inv_content + "\n", encoding="utf-8")
-            
-            cmd = ["ansible", "all", "-m", "ping", "-i", str(temp_inv)]
-            
-            process = await asyncio.create_subprocess_exec(
-                *cmd, 
-                stdout=asyncio.subprocess.PIPE, 
-                stderr=asyncio.subprocess.PIPE, 
-                env=os.environ.copy()
-            )
-            stdout, stderr = await process.communicate()
-            return process.returncode == 0
-        except Exception as e:
-            logger.error(f"Validation failed: {e}")
-            return False
-        finally:
-            if temp_inv.exists():
-                temp_inv.unlink()
 
     @staticmethod
     def import_ini_to_db(db: Session, content: str = None) -> bool:
@@ -164,13 +138,13 @@ class InventoryService:
                     continue
                 
                 if line.startswith('[') and line.endswith(']'):
-                    current_group = line[1:-1]
+                    current_group = InventoryService.sanitize_ansible_name(line[1:-1])
                     continue
                 
                 parts = line.split()
                 if not parts: continue
                 
-                alias = parts[0]
+                alias = InventoryService.sanitize_ansible_name(parts[0])
                 hostname = alias # Default
                 ssh_user = "root"
                 ssh_port = 22
@@ -220,22 +194,28 @@ class InventoryService:
     async def refresh_all_statuses(db: Session):
         """
         Iterates through all hosts and updates their status/latency.
+        Batch commit at the end for efficiency.
         """
         hosts = db.exec(select(Host)).all()
-        tasks = []
-        for host in hosts:
-            tasks.append(InventoryService._check_and_update_host(db, host))
-        await asyncio.gather(*tasks)
+        
+        async def check_host(h):
+            is_online, latency = await check_ssh(h.hostname, h.ssh_port)
+            return h.id, is_online, latency
 
-    @staticmethod
-    async def _check_and_update_host(db: Session, host: Host):
-        is_online, latency = await check_ssh(host.hostname, host.ssh_port)
-        host.status = "online" if is_online else "offline"
-        host.latency = latency
-        db.add(host)
+        tasks = [check_host(h) for h in hosts]
+        results = await asyncio.gather(*tasks)
+        
+        # Apply results and commit once
+        for host_id, is_online, latency in results:
+            h = next((x for x in hosts if x.id == host_id), None)
+            if h:
+                h.status = "online" if is_online else "offline"
+                h.latency = latency
+                db.add(h)
+        
         try:
             db.commit()
         except Exception as e:
-            logger.error(f"Failed to update host status for {host.hostname}: {e}")
+            logger.error(f"Failed to commit inventory status refresh: {e}")
             db.rollback()
 

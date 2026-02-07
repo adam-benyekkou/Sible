@@ -17,7 +17,16 @@
         this.isEditing = false; 
         this.resetForm();
         this.fetchSecrets();
-        document.getElementById('inventory-modal').showModal(); 
+        
+        this.$nextTick(() => {
+            const form = document.getElementById('inventory-form');
+            if (form) {
+                form.removeAttribute('hx-put');
+                form.setAttribute('hx-post', '/api/inventory/hosts');
+                htmx.process(form);
+            }
+            document.getElementById('inventory-modal').showModal(); 
+        });
     },
     closeModal() { 
         document.getElementById('inventory-modal').close(); 
@@ -37,7 +46,16 @@
             ssh_password_secret: passSecret || ''
         };
         this.fetchSecrets();
-        document.getElementById('inventory-modal').showModal();
+        
+        this.$nextTick(() => {
+            const form = document.getElementById('inventory-form');
+            if (form) {
+                form.removeAttribute('hx-post');
+                form.setAttribute('hx-put', `/api/inventory/hosts/${id}`);
+                htmx.process(form);
+            }
+            document.getElementById('inventory-modal').showModal();
+        });
     },
     resetForm() {
         this.formData = { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_password_secret: '', ssh_key_path: '' };
@@ -58,12 +76,12 @@
 
             {% if request.state.user.role == 'admin' %}
             <button class="secondary" hx-post="/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
-                hx-indicator="#ping-loading">
+                hx-indicator="#ping-loading" style="white-space: nowrap;">
                 <i data-lucide="network" style="width: 14px; height: 14px;"></i> Ping All
             </button>
 
             <template x-if="viewMode === 'table'">
-                <button class="primary" @click="openModal()">
+                <button class="primary" @click="openModal()" style="white-space: nowrap;">
                     <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add Server
                 </button>
             </template>

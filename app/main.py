@@ -53,8 +53,6 @@ async def lifespan(app: FastAPI):
         seed_onboarding_data(session, PlaybookService(session))
 
     SchedulerService.start()
-
-    SchedulerService.start()
     
     yield
     # Shutdown

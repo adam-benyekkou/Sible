@@ -5,6 +5,7 @@
     <!-- Health Header -->
     <div x-data="{ stats: { online: 0, total: 0, uptime_percentage: 0 } }"
         x-init="fetch('/api/dashboard/stats').then(res => res.json()).then(data => stats = data)"
+        @inventory-refresh.window="fetch('/api/dashboard/stats').then(res => res.json()).then(data => stats = data)"
         style="margin-bottom: 2rem; background: #ffffff; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--ds-gray-200); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -44,7 +45,7 @@
             <p style="margin: 0.5rem 0 1.5rem 0; font-size: 0.95rem; max-width: 400px;">
                 You haven't added any servers yet. Configure your inventory to start automating.
             </p>
-            <button onclick="window.location.href='/settings/inventory'" class="primary">
+            <button onclick="window.location.href='/inventory'" class="primary">
                 <i data-lucide="plus-circle" style="width: 14px; height: 14px; margin-right: 6px;"></i> Add Your First
                 Server
             </button>
@@ -52,11 +53,5 @@
         {% endfor %}
     </div>
 
-    <!-- Quick Actions -->
-    <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center;">
-        <button class="secondary" onclick="window.location.href='/settings/inventory'">
-            <i data-lucide="settings" style="width: 14px; height: 14px;"></i> Manage Inventory
-        </button>
-    </div>
 </div>
 {% endblock %}
