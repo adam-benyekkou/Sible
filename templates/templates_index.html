@@ -9,7 +9,7 @@
         </div>
         {% if request.state.user and request.state.user.role == 'admin' %}
         <button class="primary" @click="openNewTemplateModal()">
-            <i class="fas fa-plus"></i> New Template
+            <i data-lucide="plus" style="width: 14px; height: 14px;"></i> New Template
         </button>
         {% endif %}
     </header>
@@ -38,13 +38,12 @@
                         <td class="color-muted text-sm" x-text="template.author || 'Unknown'"></td>
                         <td>
                             <div class="flex gap-2" x-show="window.currentUserRole === 'admin'">
-                                <button class="outline secondary sm" @click="editTemplate(template)"
-                                    data-tooltip="Edit">
-                                    <i class="fas fa-edit"></i>
+                                <button class="btn-icon" @click="editTemplate(template)" data-tooltip="Edit">
+                                    <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
                                 </button>
-                                <button class="outline danger sm" @click="deleteTemplate(template)"
-                                    data-tooltip="Delete">
-                                    <i class="fas fa-trash"></i>
+                                <button class="btn-icon" style="color: var(--sible-error);"
+                                    @click="deleteTemplate(template)" data-tooltip="Delete">
+                                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                                 </button>
                             </div>
                         </td>

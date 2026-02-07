@@ -31,9 +31,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/css/style.css?v=3">
+    <link rel="stylesheet" href="/static/css/style.css?v=4">
 
-
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body x-data="{ currentTab: 'editor', sidebarOpen: false }">
@@ -183,6 +184,14 @@
     {% include "partials/new_playbook_modal.html" %}
     {% include "partials/ssh_terminal_modal.html" %}
     {% include "partials/toast.html" %}
+    {% include "partials/toast.html" %}
+    <script>
+        lucide.createIcons();
+        // Re-run on HTMX swaps
+        document.body.addEventListener('htmx:afterSwap', function (evt) {
+            lucide.createIcons();
+        });
+    </script>
 </body>
 
 </html>

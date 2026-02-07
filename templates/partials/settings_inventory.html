@@ -47,19 +47,21 @@
         </div>
         <div style="display: flex; gap: 0.5rem;">
             <div role="group">
-                <button :class="viewMode === 'table' ? 'primary' : 'outline'" @click="viewMode = 'table'">Table</button>
-                <button :class="viewMode === 'raw' ? 'primary' : 'outline'" @click="viewMode = 'raw'">Raw File</button>
+                <button :class="viewMode === 'table' ? 'primary' : 'secondary'"
+                    @click="viewMode = 'table'">Table</button>
+                <button :class="viewMode === 'raw' ? 'primary' : 'secondary'" @click="viewMode = 'raw'">Raw
+                    File</button>
             </div>
 
             {% if request.state.user.role == 'admin' %}
             <button class="secondary" hx-post="/settings/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
                 hx-indicator="#ping-loading">
-                <i class="fas fa-network-wired"></i> Ping All
+                <i data-lucide="network" style="width: 14px; height: 14px;"></i> Ping All
             </button>
 
             <template x-if="viewMode === 'table'">
                 <button class="primary" @click="openModal()">
-                    <i class="fas fa-plus"></i> Add Server
+                    <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add Server
                 </button>
             </template>
             {% endif %}
@@ -99,14 +101,14 @@
             hx-on::after-request="if(event.detail.successful) htmx.ajax('POST', '/api/inventory/import', {swap:'none'})">
 
             <textarea name="content"
-                style="font-family: monospace; height: 400px; background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; padding: 1rem;">{{ content }}</textarea>
+                style="font-family: 'Geist Mono', monospace; height: 400px; background: #ffffff; color: #000000; border: 1px solid var(--ds-gray-200); padding: 1rem; border-radius: 6px;">{{ content }}</textarea>
 
             <div style="text-align: right; margin-top: 1rem;">
                 <p class="font-sm color-muted" style="display: inline-block; margin-right: 1rem;">
                     Saving will overwrite the database configuration.
                 </p>
                 {% if request.state.user.role == 'admin' %}
-                <button type="submit">Save & Import Raw File</button>
+                <button type="submit" class="primary">Save & Import Raw File</button>
                 {% else %}
                 <button type="button" disabled>Read Only (Watcher)</button>
                 {% endif %}

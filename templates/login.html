@@ -7,22 +7,24 @@
     <title>Login - {{ app_name }}</title>
     <!-- Pico.css -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css?v=4">
     <style>
-        body>main {
+        body {
             display: flex;
             flex-direction: column;
             justify-content: center;
             min-height: 100vh;
             padding: 1rem;
-            background-color: #f8f9fa;
+            background-color: var(--ds-background-200);
         }
 
         article {
-            padding: 2rem;
+            padding: 2.5rem;
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             background: white;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--ds-gray-200);
             max-width: 400px;
             width: 100%;
             margin: 0 auto;
@@ -34,7 +36,7 @@
         }
 
         .logo-container img {
-            max-width: 150px;
+            max-width: 120px;
             margin-bottom: 1rem;
         }
     </style>
@@ -45,14 +47,14 @@
         <article>
             <div class="logo-container">
                 <img src="/static/img/logo.png" alt="Sible Logo">
-                <h3>Welcome to Sible</h3>
-                <p>Please sign in to continue</p>
+                <h3 style="font-weight: 600;">Welcome to Sible</h3>
+                <p class="color-muted">Please sign in to continue</p>
             </div>
 
             <form method="POST" action="/api/auth/login">
                 {% if error %}
                 <div
-                    style="background-color: #fee2e2; color: #991b1b; padding: 0.75rem; border-radius: 0.375rem; margin-bottom: 1rem; font-size: 0.875rem;">
+                    style="background-color: #fee2e2; color: #991b1b; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.875rem;">
                     {{ error }}
                 </div>
                 {% endif %}
@@ -69,7 +71,7 @@
                         autocomplete="current-password">
                 </label>
 
-                <button type="submit" class="contrast" style="width: 100%; margin-top: 1rem;">Sign In</button>
+                <button type="submit" class="primary" style="width: 100%; margin-top: 1rem;">Sign In</button>
             </form>
         </article>
     </main>

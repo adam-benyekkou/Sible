@@ -1,108 +1,45 @@
 <div class="server-card"
-    style="background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 1rem; color: #fff; position: relative; transition: transform 0.2s;"
-    onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'"
+    style="padding: 1.5rem; position: relative; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);"
+    onmouseover="this.style.borderColor='#666'" onmouseout="this.style.borderColor='var(--ds-gray-200)'"
     hx-get="/api/inventory/host/{{ host.id }}/card" hx-trigger="every 60s" hx-swap="outerHTML">
 
-    <style>
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-
-        .status-online {
-            background-color: #238636;
-            box-shadow: 0 0 0 rgba(35, 134, 54, 0.4);
-            animation: pulse-green 2s infinite;
-        }
-
-        .status-offline {
-            background-color: #da3633;
-            box-shadow: 0 0 0 rgba(218, 54, 51, 0.4);
-            animation: pulse-red 2s infinite;
-        }
-
-        .text-online {
-            color: #238636;
-        }
-
-        .text-offline {
-            color: #da3633;
-        }
-
-        @keyframes pulse-green {
-            0% {
-                box-shadow: 0 0 0 0 rgba(35, 134, 54, 0.7);
-            }
-
-            70% {
-                box-shadow: 0 0 0 10px rgba(35, 134, 54, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(35, 134, 54, 0);
-            }
-        }
-
-        @keyframes pulse-red {
-            0% {
-                box-shadow: 0 0 0 0 rgba(218, 54, 51, 0.7);
-            }
-
-            70% {
-                box-shadow: 0 0 0 10px rgba(218, 54, 51, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(218, 54, 51, 0);
-            }
-        }
-    </style>
-
-    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
         <div>
-            <h4 style="margin: 0; font-size: 1.1rem; color: #fff;">{{ host.alias }}</h4>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--ds-gray-1000); font-weight: 600;">{{ host.alias }}</h4>
             <code
-                style="font-size: 0.85rem; color: #8b949e; background: transparent; padding: 0;">{{ host.hostname }}</code>
+                style="font-size: 0.8rem; color: var(--ds-gray-600); background: transparent; padding: 0;">{{ host.hostname }}</code>
         </div>
-        <div style="text-align: right;">
-            <span class="status-dot {{ 'status-online' if host.status == 'online' else 'status-offline' }}"></span>
-            <span style="font-size: 0.8rem;" class="{{ 'text-online' if host.status == 'online' else 'text-offline' }}">
-                {{ host.status|upper }}
-            </span>
+
+        <!-- Status Dot Top-Right -->
+        <div>
+            <span class="status-dot {{ 'success' if host.status == 'online' else 'offline' }}"></span>
         </div>
     </div>
 
     <div
-        style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #8b949e;">
-        <span><i class="fas fa-user-circle"></i> {{ host.ssh_user }}</span>
+        style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--ds-gray-600);">
+        <span style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="user" style="width: 14px; height: 14px;"></i> {{ host.ssh_user }}
+        </span>
         {% if host.latency %}
-        <span><i class="fas fa-bolt"></i> {{ host.latency }}ms</span>
+        <span style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="zap" style="width: 14px; height: 14px;"></i> {{ host.latency }}ms
+        </span>
         {% endif %}
     </div>
-    <div style="margin-top: 1rem; text-align: right;">
+
+    <!-- Actions (Terminal) -->
+    <div
+        style="margin-top: 1.5rem; text-align: right; border-top: 1px solid var(--ds-gray-200); padding-top: 1rem; display: flex; justify-content: flex-end;">
         {% if request.state.user.role == 'admin' %}
-        <button class="outline"
-            style="padding: 5px 10px; font-size: 0.8rem; width: auto; color: #fff; border-color: #666;"
-            onmouseover="this.style.borderColor='#fff'; this.style.color='#fff';"
-            onmouseout="this.style.borderColor='#666'; this.style.color='#8b949e';"
-            onclick="openTerminal('{{ host.id }}', '{{ host.alias }}')">
-            <i class="fas fa-terminal"></i> >_
+        <button class="btn-icon" title="Open Terminal" onclick="openTerminal('{{ host.id }}', '{{ host.alias }}')">
+            <i data-lucide="terminal"></i>
         </button>
         {% endif %}
     </div>
 
-    <!-- Script for handling terminal modal (if not already global) -->
     <script>
         function openTerminal(hostId, alias) {
-            // check if modal exists, if not, might need to load it. 
-            // ideally this function is defined globally in layout.html
-            // providing a simple alert as placeholder as requested
-            // alert('Connecting to ' + alias + ' (' + hostId + ')...');
-
-            // Dispatch event to open modal
             window.dispatchEvent(new CustomEvent('open-ssh-terminal', { detail: { hostId: hostId, alias: alias } }));
         }
     </script>

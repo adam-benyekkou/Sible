@@ -163,59 +163,64 @@
         <div class="actions">
             <!-- Edit (Toggle) - Admin Only -->
             {% if request.state.user and request.state.user.role == 'admin' %}
-            <button class="contrast" x-show="!isEditing" @click="isEditing = true; window.startEditing()">
-                Edit
+            <button class="secondary" x-show="!isEditing" @click="isEditing = true; window.startEditing()"
+                title="Edit Playbook">
+                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Edit
             </button>
-            <button class="contrast" x-show="isEditing" @click="isEditing = false; window.discardEditing()">
-                Discard
+            <button class="secondary" x-show="isEditing" @click="isEditing = false; window.discardEditing()"
+                title="Discard Changes">
+                <i data-lucide="x" style="width: 14px; height: 14px;"></i> Discard
             </button>
             {% endif %}
 
             <!-- Check/Run/Schedule - Admin & Operator -->
             {% if request.state.user and request.state.user.role in ['admin', 'operator'] %}
             <!-- Check (Dry Run) -->
-            <button class="contrast" @click="launchMode = 'check'; showLaunchModal = true" title="Dry Run (Check Mode)">
-                Check
+            <button class="secondary" @click="launchMode = 'check'; showLaunchModal = true"
+                title="Dry Run (Check Mode)">
+                <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> Check
             </button>
 
             <!-- Run -->
             <button class="primary" @click="launchMode = 'run'; showLaunchModal = true">
-                Run Playbook
+                <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run
             </button>
             {% endif %}
 
             <!-- Save - Admin Only -->
             {% if request.state.user and request.state.user.role == 'admin' %}
-            <button class="contrast" @click="saveFile(); isEditing = false; window.setEditorReadOnly(true)">
-                Save
+            <button class="secondary" @click="saveFile(); isEditing = false; window.setEditorReadOnly(true)"
+                title="Save Changes">
+                <i data-lucide="save" style="width: 14px; height: 14px;"></i> Save
             </button>
             {% endif %}
 
             <!-- Schedule (Modal Trigger) - Admin & Operator -->
             {% if request.state.user and request.state.user.role == 'admin' %}
-            <button class="contrast" @click="showScheduleModal = true">
-                Schedule
+            <button class="btn-icon" @click="showScheduleModal = true" title="Schedule">
+                <i data-lucide="calendar"></i>
             </button>
             {% endif %}
 
             <!-- History - All -->
-            <button class="contrast" hx-get="/history/{{ name | safe }}" hx-target="body" hx-swap="beforeend">
-                History
+            <button class="btn-icon" hx-get="/history/{{ name | safe }}" hx-target="body" hx-swap="beforeend"
+                title="View History">
+                <i data-lucide="clock"></i>
             </button>
 
             <!-- Install Roles - Admin Only -->
             {% if request.state.user and request.state.user.role == 'admin' %}
-            <button class="contrast" hx-post="/playbooks/{{ name | safe }}/install-requirements"
-                hx-target="#terminal-container" hx-swap="innerHTML"
-                title="Install Ansible Galaxy dependencies (requires requirements.yml)">
-                Install Roles
+            <button class="btn-icon" hx-post="/playbooks/{{ name | safe }}/install-requirements"
+                hx-target="#terminal-container" hx-swap="innerHTML" title="Install Ansible Galaxy dependencies">
+                <i data-lucide="download"></i>
             </button>
 
             <!-- Delete Button -->
-            <button class="danger" hx-delete="/playbooks/{{ name | safe }}"
+            <button class="btn-icon" style="color: var(--sible-error); border-color: var(--ds-gray-200);"
+                hx-delete="/playbooks/{{ name | safe }}"
                 hx-confirm="Are you sure you want to delete {{ name }}? This cannot be undone."
-                hx-target="#main-content">
-                Delete
+                hx-target="#main-content" title="Delete Playbook">
+                <i data-lucide="trash-2"></i>
             </button>
             {% endif %}
         </div>
@@ -251,7 +256,7 @@
             // Wait for x-show / DOM paint
             setTimeout(function () {
                 var editor = ace.edit("editor");
-                editor.setTheme("ace/theme/tomorrow_night_eighties");
+                editor.setTheme("ace/theme/chrome");
                 editor.session.setMode("ace/mode/yaml");
 
                 // Default to Read Only

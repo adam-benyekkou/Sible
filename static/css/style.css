@@ -1,54 +1,51 @@
-/* SIBLE DESIGN SYSTEM (Vercel / Geist Aesthetic) */
+/* SIBLE DESIGN SYSTEM (Geist Light / Clear Aesthetic) */
 
 :root {
-    /* --- GLOBAL VARIABLES (Light Theme - Default) --- */
-    /* 1. The Geist Greyscale */
+    /* --- GLOBAL VARIABLES (Geist Light) --- */
+    /* 1. The Geist Canvas */
     --ds-background-100: #ffffff;
     --ds-background-200: #fafafa;
+    /* Sidebar, Subtler backgrounds */
     --ds-gray-100: #f5f5f5;
+    /* Hover states */
     --ds-gray-200: #eaeaea;
-    --ds-gray-alpha-400: rgba(0, 0, 0, 0.08);
+    /* Borders */
+    --ds-gray-alpha-400: rgba(0, 0, 0, 0.05);
+    /* Subtle shadows */
 
     /* 2. Text Colors */
     --ds-gray-1000: #000000;
+    /* Primary Text */
     --ds-gray-900: #171717;
+    /* Secondary Text */
     --ds-gray-600: #666666;
+    /* Muted Text */
 
-    /* 3. Sible Identity */
-    --sible-red: #E03E3E;
-    --sible-red-bg: #FFEEEE;
+    /* 3. Sible Identity (Status) */
+    --sible-success: #10b981;
+    /* Emerald Green */
+    --sible-error: #ee0000;
+    /* Deep Red */
+    --sible-warning: #f5a623;
 
     /* 4. Pico Overrides */
-    --pico-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --pico-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     --pico-background-color: var(--ds-background-100);
-    --pico-color: var(--ds-gray-900);
+    --pico-color: var(--ds-gray-1000);
     --pico-border-radius: 6px;
     --pico-form-element-border-color: var(--ds-gray-200);
     --pico-primary-background: var(--ds-gray-1000);
     --pico-primary-border: var(--ds-gray-1000);
     --pico-primary-hover-background: #333;
+    --pico-primary-inverse: #ffffff;
     --pico-muted-color: var(--ds-gray-600);
+    --pico-line-height: 1.5;
+    --pico-font-size: 100%;
 
     /* Layout Tokens */
     --sidebar-width: 250px;
-    --header-height: 50px;
-    --spacing-md: 1.5rem;
-}
-
-/* Dark Mode Support (Geist Dark) */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --ds-background-100: #000000;
-        --ds-background-200: #111111;
-        --ds-gray-100: #1a1a1a;
-        /* darker hover */
-        --ds-gray-200: #333333;
-        --ds-gray-1000: #ffffff;
-        --ds-gray-900: #ededed;
-        --ds-gray-600: #888888;
-
-        --pico-primary-hover-background: #ccc;
-    }
+    --header-height: 64px;
+    --spacing-md: 24px;
 }
 
 body {
@@ -57,11 +54,11 @@ body {
     overflow: hidden;
     margin: 0;
     padding: 0;
-    /* Full bleed layout */
     font-family: var(--pico-font-family);
     background-color: var(--ds-background-100);
     color: var(--pico-color);
     letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* Typography */
@@ -76,10 +73,133 @@ h6 {
     color: var(--ds-gray-1000);
 }
 
+/* Links */
+a {
+    color: var(--ds-gray-1000);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+a:hover {
+    color: #000;
+    text-decoration: none;
+}
+
+/* --- COMPONENTS --- */
+
+/* Buttons */
+button {
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: none;
+}
+
+/* Primary Button (Black Solid) */
+button.primary,
+button[type="submit"],
+.btn-new {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+}
+
+button.primary:hover,
+button[type="submit"]:hover,
+.btn-new:hover {
+    background: #333;
+    border-color: #333;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* Secondary Button (White with Border) */
+button.secondary,
+button.outline {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    color: #000000;
+}
+
+button.secondary:hover,
+button.outline:hover {
+    background: #fafafa;
+    border-color: #000;
+    color: #000;
+}
+
+/* Danger Button */
+button.danger {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    color: var(--sible-error);
+}
+
+button.danger:hover {
+    background: #fff5f5;
+    border-color: var(--sible-error);
+}
+
+/* Icon Button (Square) */
+button.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #eaeaea;
+    background: #ffffff;
+    color: var(--ds-gray-1000);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.btn-icon:hover {
+    background: #fafafa;
+    border-color: #000;
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+    background: #ffffff !important;
+    border: 1px solid #eaeaea !important;
+    color: #000000 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    transition: border 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #000 !important;
+    box-shadow: 0 0 0 1px #000 !important;
+}
+
+/* Cards & Containers */
+.card,
+.server-card {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    /* Subtle ring shadow */
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
 /* Sidebar */
 aside {
     width: var(--sidebar-width);
     background: var(--ds-background-200);
+    /* FAFAFA */
     border-right: 1px solid var(--ds-gray-200);
     display: flex;
     flex-direction: column;
@@ -87,121 +207,64 @@ aside {
     flex-shrink: 0;
 }
 
-aside hgroup {
-    margin-bottom: 2rem;
-}
-
-aside hgroup h3 {
-    margin: 0;
-    font-size: 1.1rem;
-}
-
-aside hgroup p {
+.sidebar-folder summary {
+    list-style: none;
+    /* Hide default arrow */
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.875rem;
     color: var(--ds-gray-600);
-    font-size: 0.85rem;
-    margin: 0;
+    /* Muted by default */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.15s, background 0.15s;
 }
 
-aside hr {
+.sidebar-folder summary:hover,
+.sidebar-folder[open]>summary {
+    color: var(--ds-gray-1000);
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.sidebar-folder summary::-webkit-details-marker {
     display: none;
 }
 
-/* Playbook Items */
 .playbook-item {
     display: flex;
+    /* Ensure flex for alignment */
     align-items: center;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--pico-border-radius);
+    /* Vertically align dot and text */
+    padding: 6px 12px;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    font-size: 0.875rem;
     color: var(--ds-gray-600);
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-    font-size: 0.9rem;
-    font-weight: 500;
-    margin-bottom: 2px;
+    text-decoration: none;
+    transition: all 0.15s;
+    gap: 8px;
+    /* Space between dot and text */
 }
 
 .playbook-item:hover {
-    background: var(--ds-gray-100);
     color: var(--ds-gray-1000);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .playbook-item.active {
-    background: var(--ds-gray-200);
-    color: var(--ds-gray-1000);
+    background: #ffffff;
+    color: #000000;
     font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* Slight lift for active item */
+    border: 1px solid #eaeaea;
 }
 
-/* Sidebar Hierarchy */
-.sidebar-folder {
-    margin-bottom: 2px;
-}
-
-.folder-title {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--pico-border-radius);
-    color: var(--ds-gray-900);
-    cursor: pointer;
-    transition: background 0.15s ease;
-    font-size: 0.9rem;
-    font-weight: 600;
-    list-style: none;
-    /* Remove default arrow */
-}
-
-.folder-title::-webkit-details-marker {
-    display: none;
-}
-
-.folder-title:hover {
-    background: var(--ds-gray-100);
-}
-
-.folder-icon {
-    margin-right: 8px;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    transition: transform 0.2s ease;
-}
-
-details[open]>summary .folder-icon {
-    transform: rotate(5deg);
-    /* subtle tilt */
-}
-
-/* Sidebar scroll fix if needed */
-.playbook-list {
-    overflow-y: auto;
-    max-height: calc(100vh - 250px);
-}
-
-.folder-content {
-    margin-left: 1rem;
-    padding-left: 0.5rem;
-    border-left: 1px solid var(--ds-gray-200);
-}
-
-/* Pill / Badge */
-.status-pill {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: transparent;
-    border: 1px solid var(--ds-gray-200);
-    color: var(--ds-gray-600);
-    margin-right: 8px;
-    font-family: 'JetBrains Mono', monospace;
-}
-
-.status-pill.active {
-    background: var(--ds-gray-1000);
-    color: var(--ds-background-100);
-    border-color: var(--ds-gray-1000);
-}
-
-/* Main Content */
+/* Content Area */
 main {
     flex-grow: 1;
     display: flex;
@@ -210,477 +273,216 @@ main {
     background: var(--ds-background-100);
 }
 
-/* Header */
 header.main-header {
     height: var(--header-height);
     border-bottom: 1px solid var(--ds-gray-200);
-    padding: 0 1.5rem;
+    padding: 0 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: rgba(255, 255, 255, 0.8);
-    /* Translucent */
     backdrop-filter: blur(8px);
 }
 
-@media (prefers-color-scheme: dark) {
-    header.main-header {
-        background: rgba(0, 0, 0, 0.8);
-    }
-}
-
-header.main-header h4 {
-    margin: 0;
-    font-size: 0.95rem;
-}
-
-/* Buttons */
-button.btn-new {
+/* Tables (Inventory) */
+table {
     width: 100%;
-    background: var(--ds-gray-1000);
-    color: var(--ds-background-100);
-    border: 1px solid var(--ds-gray-1000);
-    border-radius: var(--pico-border-radius);
-    padding: 0.5rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    margin-bottom: 1rem;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.12);
-    transition: all 0.2s ease;
+    border-collapse: collapse;
 }
 
-button.btn-new:hover {
-    background: var(--ds-gray-900);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
-}
-
-.actions button {
-    padding: 0.35rem 0.8rem;
-    font-size: 0.85rem;
-    border-radius: var(--pico-border-radius);
-    font-weight: 500;
-    cursor: pointer;
-    margin: 0;
-    background: transparent;
-    border: 1px solid var(--ds-gray-200);
-    color: var(--ds-gray-1000);
-    transition: all 0.15s ease;
-}
-
-.actions button:hover {
-    background: var(--ds-gray-100);
-}
-
-.actions button.primary {
-    background: var(--ds-gray-1000);
-    color: var(--ds-background-100);
-    border-color: var(--ds-gray-1000);
-}
-
-.actions button.primary:hover {
-    background: var(--ds-gray-900);
-    /* Slightly lighter/diff in dark mode */
-}
-
-.actions button.danger {
-    color: var(--sible-red);
-    border-color: var(--ds-gray-200);
-}
-
-.actions button.danger:hover {
-    background: var(--sible-red-bg);
-    border-color: var(--sible-red);
-}
-
-/* Tabs */
-.tabs {
-    display: flex;
-    padding: 0 1.5rem;
-    border-bottom: 1px solid var(--ds-gray-200);
-    background: var(--ds-background-200);
-    gap: 1.5rem;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    padding: 0.75rem 0;
-    font-size: 0.9rem;
+th {
+    text-align: left;
     color: var(--ds-gray-600);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ds-gray-200);
 }
 
-.tab-btn:hover {
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #fafafa;
+    /* Very subtle row separator */
     color: var(--ds-gray-1000);
+    font-size: 0.875rem;
 }
 
-.tab-btn.active {
-    color: var(--ds-gray-1000);
-    border-bottom: 2px solid var(--ds-gray-1000);
+tr:last-child td {
+    border-bottom: none;
 }
 
-/* Editor & Terminal */
-/* Split View Layout */
+tr.hover:hover td {
+    background: #fafafa;
+}
+
+/* Status Dots */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--ds-gray-200);
+    display: inline-block;
+}
+
+.status-dot.success,
+.status-dot.online {
+    background-color: var(--sible-success);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.status-dot.failed,
+.status-dot.offline {
+    background-color: var(--sible-error);
+}
+
+.status-dot.running {
+    background-color: #0070f3;
+    animation: pulse 1.5s infinite;
+}
+
+/* Editor & Terminal Layout */
 .content-area {
-    flex-grow: 1;
-    position: relative;
     display: flex;
-    /* Side by side */
+    gap: 16px;
+    padding: 16px;
+    height: 100%;
     overflow: hidden;
-    background: var(--ds-background-100);
-    padding: 1rem;
-    gap: 1rem;
 }
 
 .editor-pane {
     flex: 6;
-    /* 60% width */
-    position: relative;
-    border-radius: 12px;
     border: 1px solid var(--ds-gray-200);
+    border-radius: 8px;
     overflow: hidden;
+    position: relative;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
 }
 
 .terminal-pane {
     flex: 4;
-    /* 40% width */
+    border: 1px solid var(--ds-gray-200);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+    /* Terminal stays dark */
     display: flex;
     flex-direction: column;
-    min-width: 300px;
-    background: #000;
-    overflow: hidden;
-    /* Container overflow */
-    border-radius: 12px;
-    border: 1px solid #333;
-}
-
-#editor {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 #terminal-container {
-    padding: 1.5rem;
-    background-color: #000000;
-    /* Noir Absolu */
-    color: #a1a1aa;
-    /* Gris clair par défaut (Zinc-400) */
+    padding: 16px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.85rem;
-    line-height: 1.5;
-    height: 100%;
+    font-size: 13px;
+    color: #e5e5e5;
+    background-color: #000;
     overflow-y: auto;
-}
-
-/* --- LOG LEVELS (Geist/Ansible) --- */
-
-/* 🟢 SUCCESS / OK */
-.log-success {
-    color: #4ade80;
-    /* Green-400 */
-    font-weight: 600;
-}
-
-/* 🟡 CHANGED / WARNING */
-.log-changed,
-.log-warn {
-    color: #fbbf24;
-    /* Amber-400 */
-}
-
-/* 🔴 ERROR / FAILED */
-.log-error,
-.log-fatal {
-    color: #f87171;
-    /* Red-400 */
-}
-
-/* 🔵 META / HEADER */
-.log-meta {
-    color: #60a5fa;
-    /* Blue-400 */
-}
-
-/* 🟣 SKIPPED / DEBUG */
-.log-debug {
-    color: #c084fc;
-    /* Purple-400 */
-}
-
-/* Utils */
-.h-100 {
     height: 100%;
 }
 
-.flex-col {
-    display: flex;
-    flex-direction: column;
+/* Utilities */
+.w-100 {
+    width: 100%;
 }
 
-.flex-col-center {
+.text-right {
+    text-align: right;
+}
+
+.d-flex {
     display: flex;
-    flex-direction: column;
+}
+
+.align-center {
     align-items: center;
-    justify-content: center;
 }
 
-.text-center {
-    text-align: center;
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: 8px;
 }
 
 .color-muted {
     color: var(--ds-gray-600);
 }
 
-.spacer {
-    flex-grow: 1;
+.font-sm {
+    font-size: 0.875rem;
 }
 
-.mt-2 {
-    margin-top: 1.5rem;
-}
-
-.d-none {
-    display: none;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.sidebar-btn-container {
-    margin-bottom: 0;
-}
-
-.empty-state-message {
-    color: var(--ds-gray-600);
-    text-align: center;
-    font-size: 0.9rem;
-    padding: 2rem;
-    background: var(--ds-background-200);
-    border-radius: var(--pico-border-radius);
-    border: 1px dashed var(--ds-gray-200);
-}
-
-/* --- TOAST NOTIFICATIONS --- */
-
-#toast-container {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    pointer-events: none;
-    /* Let clicks pass through if empty */
-}
-
+/* Toast */
 .toast {
-    pointer-events: auto;
-    background: var(--ds-background-100);
-    border: 1px solid var(--ds-gray-200);
-    color: var(--ds-foreground);
-    padding: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid #eaeaea;
+    color: #000;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 250px;
-    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    transition: all 0.2s ease;
 }
 
-@keyframes slideIn {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.toast.toast-success {
-    border-left: 4px solid var(--ds-success);
-}
-
-.toast.toast-success .toast-icon {
-    color: var(--ds-success);
-}
-
-.toast.toast-error {
-    border-left: 4px solid var(--ds-danger);
-    background: #fff5f5;
-    /* Light red tint */
-}
-
-.toast-error .toast-icon {
-    color: var(--ds-danger);
-}
-
-.toast-message {
-    flex-grow: 1;
-}
-
-[data-theme="dark"] .toast.toast-error {
-    background: #2a1212;
-    /* Dark red tint */
-}
-
-/* --- STATUS INDICATORS --- */
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 8px;
-    background-color: var(--ds-gray-200);
-    /* Default / No Run */
-    display: inline-block;
-    flex-shrink: 0;
-}
-
-.status-dot.success {
-    background-color: #4ade80;
-    /* Green */
-}
-
-.status-dot.failed {
-    background-color: #f87171;
-    /* Red */
-}
-
-.status-dot.running {
-    background-color: #60a5fa;
-    /* Blue */
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-/* --- MOBILE RESPONSIVENESS (Phase 15) --- */
+/* Mobile Toggle Button */
 #mobile-toggle {
     display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 60;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: var(--ds-gray-1000);
+    cursor: pointer;
 }
 
+#mobile-toggle:hover {
+    background: #fafafa;
+    border-color: #000;
+}
+
+/* Mobile */
 @media (max-width: 900px) {
-
-    /* 1. Global Layout & Sidebar */
-    body>aside {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        z-index: 1050;
-        transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        box-shadow: 5px 0 20px rgba(0, 0, 0, 0.1);
-    }
-
-    body>aside.mobile-open {
-        transform: translateX(0);
-    }
-
-    /* Show Toggle Button */
     #mobile-toggle {
-        display: flex !important;
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        z-index: 1060;
-        background: var(--ds-gray-1000);
-        color: var(--ds-background-100);
-        border: none;
-        padding: 0.5rem;
-        border-radius: 6px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Container Padding */
-    .container {
-        padding: 1rem !important;
-        padding-top: 4rem !important;
-        /* Space for toggle */
-    }
-
-    /* 2. Settings Page Responsiveness */
-    .settings-container {
-        flex-direction: column;
-    }
-
-    .settings-container aside {
-        width: 100% !important;
-        border-right: none !important;
-        border-bottom: 1px solid var(--ds-gray-200);
-        flex-direction: row !important;
-        align-items: center;
-        overflow-x: auto;
-        padding: 0.5rem 1rem !important;
-        height: auto !important;
-        background: var(--ds-background-100) !important;
-    }
-
-    .settings-container aside>div:first-child {
-        display: none;
-    }
-
-    .settings-container aside nav {
         display: flex;
-        gap: 0.5rem;
-        padding: 0 !important;
-        width: 100%;
     }
 
-    .settings-nav-item {
-        white-space: nowrap;
-        margin-bottom: 0 !important;
-        font-size: 0.85rem !important;
-        padding: 0.5rem 0.75rem !important;
-        background: var(--ds-gray-100);
-    }
-
-    .settings-nav-item.active {
-        background: var(--ds-gray-1000);
-        color: var(--ds-background-100);
-    }
-
-    /* 3. Editor/Terminal Stacking */
     .content-area {
         flex-direction: column;
     }
 
-    .editor-pane,
-    .terminal-pane {
-        width: 100%;
-        flex: none;
-        height: 50vh;
+    aside {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+        box-shadow: 10px 0 20px rgba(0, 0, 0, 0.05);
+        /* Soft shadow for mobile drawer */
     }
+
+    aside.mobile-open {
+        transform: translateX(0);
+    }
+
+    /* Adjust main content padding/margin if needed when sidebar is hidden */
+    main {
+        padding-top: 4rem;
+        /* Space for the toggle button */
+    }
+}
+
+/* Lucide Icon adjustments */
+.lucide {
+    width: 16px;
+    height: 16px;
+    stroke-width: 1.5px;
+    /* Default stroke is currentColor, which will be black for primary, gray for muted */
 }

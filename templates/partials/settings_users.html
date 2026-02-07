@@ -5,7 +5,7 @@
             <p class="color-muted">Manage sible users and their roles.</p>
         </div>
         <button class="primary" @click="showCreateModal = true">
-            <i class="fas fa-plus"></i> Create User
+            <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Create User
         </button>
     </header>
 
@@ -15,7 +15,7 @@
                 <tr>
                     <th>Username</th>
                     <th>Role</th>
-                    <th>Actions</th>
+                    <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,20 +27,20 @@
                             {{ user.role }}
                         </span>
                     </td>
-                    <td class="flex gap-2">
-                        <button class="outline secondary sm" hx-get="/settings/users/{{ user.id }}/edit"
-                            hx-target="#edit-user-form-container" @click="showEditModal = true">
-                            <i class="fas fa-edit"></i> Edit
+                    <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
+                        <button class="btn-icon" hx-get="/settings/users/{{ user.id }}/edit"
+                            hx-target="#edit-user-form-container" @click="showEditModal = true" title="Edit">
+                            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
                         </button>
 
                         {% if user.username != 'admin' and user.username != request.state.user.username %}
-                        <button class="outline danger sm" hx-delete="/api/users/{{ user.id }}"
-                            hx-confirm="Are you sure you want to delete user {{ user.username }}?"
-                            hx-target="closest tr" hx-swap="outerHTML">
-                            <i class="fas fa-trash"></i> Delete
+                        <button class="btn-icon" style="color: var(--sible-error);" hx-delete="/api/users/{{ user.id }}"
+                            hx-confirm="Delete user {{ user.username }}?" hx-target="closest tr" hx-swap="outerHTML"
+                            title="Delete">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                         </button>
                         {% else %}
-                        <span class="color-muted text-sm my-auto">Protected</span>
+                        <span class="color-muted text-sm my-auto" style="padding: 0 8px;">Protected</span>
                         {% endif %}
                     </td>
                 </tr>
