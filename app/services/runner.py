@@ -207,6 +207,7 @@ class RunnerService:
  
         env = os.environ.copy()
         env.update(custom_env)
+        env["PYTHONUNBUFFERED"] = "1"
         
         try:
             process = await asyncio.create_subprocess_exec(

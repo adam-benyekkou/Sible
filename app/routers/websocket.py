@@ -28,7 +28,7 @@ async def stream_playbook_endpoint(
              pass
 
     async def event_generator():
-        yield "event: start\ndata: Connected\n\n"
+        yield "data: Connected\n\n"
         if mode == "galaxy":
              async for line in service.install_requirements(name):
                 yield f"data: {line}\n\n"
