@@ -1,0 +1,43 @@
+<div class="settings-content">
+    <header style="margin-bottom: 2rem;">
+        <h2 style="margin-bottom: 0.5rem;">GitOps Configuration</h2>
+        <p style="color: var(--ds-gray-600);">Connect Sible to a remote Git repository to synchronize your playbooks.
+        </p>
+    </header>
+
+    <form hx-post="/api/settings/gitops" hx-swap="none">
+        <article class="settings-card">
+            <div style="margin-bottom: 1.5rem;">
+                <label for="git_repository_url" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                    Repository URL
+                </label>
+                <input type="text" id="git_repository_url" name="git_repository_url"
+                    placeholder="https://github.com/username/repo.git or git@github.com:username/repo.git"
+                    value="{{ settings.git_repository_url or '' }}"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--ds-gray-300); or '' border-radius: 4px;">
+                <p style="font-size: 0.8rem; color: var(--ds-gray-500); margin-top: 0.25rem;">
+                    The HTTPS or SSH URL of your Git repository.
+                </p>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label for="git_ssh_key" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                    SSH Private Key (Optional)
+                </label>
+                <textarea id="git_ssh_key" name="git_ssh_key" rows="8"
+                    placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;...&#10;-----END OPENSSH PRIVATE KEY-----"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--ds-gray-300); border-radius: 4px; font-family: monospace; font-size: 0.85rem;">{{ settings.git_ssh_key or '' }}</textarea>
+                <p style="font-size: 0.8rem; color: var(--ds-gray-500); margin-top: 0.25rem;">
+                    Required if using an SSH URL or a private HTTPS repository. This key is stored securely.
+                </p>
+            </div>
+
+            <footer
+                style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--ds-gray-200);">
+                <button type="submit" class="btn-primary">
+                    Save Configuration
+                </button>
+            </footer>
+        </article>
+    </form>
+</div>

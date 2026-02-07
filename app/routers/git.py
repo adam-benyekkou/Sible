@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Response, HTTPException
-from app.services import GitService
+from fastapi import APIRouter, Response, HTTPException, Depends
+from app.services import GitService, SettingsService
+from app.dependencies import get_settings_service
 from app.core.config import get_settings
 from app.utils.htmx import trigger_toast
 import logging
@@ -9,13 +10,22 @@ router = APIRouter()
 settings = get_settings()
 
 @router.post("/sync")
-async def git_sync():
+async def git_sync(settings_service: SettingsService = Depends(get_settings_service)):
     """
     Triggers a git pull in the playbooks directory.
+    Uses configured GitOps settings if available.
     """
     response = Response(status_code=200)
     try:
-        success, message = GitService.pull_playbooks(settings.playbooks_dir)
+        app_settings = settings_service.get_settings()
+        repo_url = app_settings.git_repository_url
+        ssh_key = app_settings.git_ssh_key
+
+        success, message = GitService.pull_playbooks(
+            settings.playbooks_dir, 
+            repo_url=repo_url, 
+            ssh_key=ssh_key
+        )
         level = "success" if success else "error"
         logger.info(f"Git Sync: {message}")
         

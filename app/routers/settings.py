@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Request, Response, Form, File, UploadFile, Depends
+from fastapi.responses import HTMLResponse
+from typing import Optional
 from app.templates import templates
 from app.core.config import get_settings
-from app.dependencies import get_settings_service, get_playbook_service, get_notification_service, get_db, requires_role
+from app.dependencies import get_settings_service, get_playbook_service, get_notification_service, get_db, requires_role, get_current_user
 from app.services import SettingsService, PlaybookService, NotificationService, InventoryService
 from app.utils.htmx import trigger_toast
 from app.core.hashing import get_password_hash
@@ -465,3 +467,31 @@ async def test_notification(
         response = Response(status_code=200)
         trigger_toast(response, f"Failed to send: {str(e)}", "error")
     return response
+@router.get("/gitops", response_class=HTMLResponse)
+async def settings_gitops_page(request: Request, user: dict = Depends(get_current_user)):
+    requires_role("admin")(user)
+    return await render_settings_page(request, "gitops")
+
+@router.post("/api/settings/gitops")
+async def update_gitops_settings(
+    request: Request,
+    git_repository_url: Optional[str] = Form(None),
+    git_ssh_key: Optional[str] = Form(None),
+    user: dict = Depends(get_current_user),
+    settings_service: SettingsService = Depends(get_settings_service)
+):
+    requires_role("admin")(user)
+    
+    # Clean up key line endings if present
+    if git_ssh_key:
+        git_ssh_key = git_ssh_key.replace("\r\n", "\n").strip()
+        
+    try:
+        settings_service.update_settings({
+            "git_repository_url": git_repository_url,
+            "git_ssh_key": git_ssh_key
+        })
+        
+        return trigger_toast(Response(), "GitOps configuration saved.", "success")
+    except Exception as e:
+        return trigger_toast(Response(), f"Error saving settings: {e}", "error")

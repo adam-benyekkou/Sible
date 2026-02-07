@@ -23,6 +23,10 @@ class AppSettings(SQLModel, table=True):
     auth_username: str = Field(default="admin")
     auth_password: str = Field(default="admin")
 
+    # GitOps
+    git_repository_url: Optional[str] = Field(default=None)
+    git_ssh_key: Optional[str] = Field(default=None)
+
 class EnvVar(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     key: str = Field(index=True)

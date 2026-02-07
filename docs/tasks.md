@@ -284,6 +284,10 @@ Goal: Bridge the gap between Infrastructure as Code (IaC) and your UI.
   - [x] Add a "Sync" button in the Sidebar header (Cloud icon).
   - [x] Add a "Last Synced" timestamp in the footer or sidebar.
   - [x] Trigger a Sidebar refresh (HTMX) after a successful pull to show new files.
+  - [x] **GitOps Settings Panel**:
+    - [x] Added `GitOps` tab in Settings.
+    - [x] Form to edit Repository URL and SSH Key.
+    - [x] Secure storage in DB (AppConfig).
 
 ## Phase 14: Release Engineering (The Launch)
 

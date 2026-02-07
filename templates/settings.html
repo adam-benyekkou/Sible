@@ -42,6 +42,9 @@
             <a href="/settings/users" class="settings-nav-item {{ 'active' if active_tab == 'users' else '' }}">
                 Users
             </a>
+            <a href="/settings/gitops" class="settings-nav-item {{ 'active' if active_tab == 'gitops' else '' }}">
+                GitOps
+            </a>
             {% endif %}
 
             <a href="/" class="settings-nav-item" style="margin-top: auto; border-top: 1px solid var(--ds-gray-200);">
@@ -64,6 +67,9 @@
         {% include "partials/settings_secrets.html" %}
         {% elif active_tab == 'users' %}
         {% include "partials/settings_users.html" %}
+        {% elif active_tab == 'gitops' %}
+        {% include "partials/settings_gitops.html" %}
+        {% endif %}
         {% endif %}
     </main>
 </div>
