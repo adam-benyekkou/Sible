@@ -1,8 +1,20 @@
 <div class="settings-content">
-    <header style="margin-bottom: 2rem;">
-        <h2 style="margin-bottom: 0.5rem;">GitOps Configuration</h2>
-        <p style="color: var(--ds-gray-600);">Connect Sible to a remote Git repository to synchronize your playbooks.
-        </p>
+    <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin-bottom: 0.5rem;">GitOps Configuration</h2>
+            <p style="color: var(--ds-gray-600);">Connect Sible to a remote Git repository to synchronize your
+                playbooks.</p>
+        </div>
+        <button hx-post="/api/git/sync" hx-swap="none" aria-label="Sync Git" class="btn-secondary"
+            style="display: flex; gap: 8px; align-items: center; padding: 0.5rem 1rem; cursor: pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Sync Now
+        </button>
     </header>
 
     <form hx-post="/api/settings/gitops" hx-swap="none">
@@ -14,7 +26,7 @@
                 <input type="text" id="git_repository_url" name="git_repository_url"
                     placeholder="https://github.com/username/repo.git or git@github.com:username/repo.git"
                     value="{{ settings.git_repository_url or '' }}"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--ds-gray-300); or '' border-radius: 4px;">
+                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--ds-gray-300); border-radius: 4px;">
                 <p style="font-size: 0.8rem; color: var(--ds-gray-500); margin-top: 0.25rem;">
                     The HTTPS or SSH URL of your Git repository.
                 </p>

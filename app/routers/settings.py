@@ -468,9 +468,14 @@ async def test_notification(
         trigger_toast(response, f"Failed to send: {str(e)}", "error")
     return response
 @router.get("/gitops", response_class=HTMLResponse)
-async def settings_gitops_page(request: Request, user: dict = Depends(get_current_user)):
+async def settings_gitops_page(
+    request: Request, 
+    user: dict = Depends(get_current_user),
+    service: SettingsService = Depends(get_settings_service)
+):
     requires_role("admin")(user)
-    return await render_settings_page(request, "gitops")
+    settings = service.get_settings()
+    return await render_settings_page(request, "gitops", {"settings": settings})
 
 @router.post("/api/settings/gitops")
 async def update_gitops_settings(

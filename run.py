@@ -19,7 +19,8 @@ def main():
         host="0.0.0.0", 
         port=8000, 
         reload=True,
-        log_level="info"
+        log_level="info",
+        loop="asyncio"
     )
 
 if __name__ == "__main__":
