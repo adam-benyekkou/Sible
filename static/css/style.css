@@ -582,3 +582,105 @@ button.btn-new:hover {
         opacity: 1;
     }
 }
+
+/* --- MOBILE RESPONSIVENESS (Phase 15) --- */
+#mobile-toggle {
+    display: none;
+}
+
+@media (max-width: 900px) {
+
+    /* 1. Global Layout & Sidebar */
+    body>aside {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 5px 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    body>aside.mobile-open {
+        transform: translateX(0);
+    }
+
+    /* Show Toggle Button */
+    #mobile-toggle {
+        display: flex !important;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1060;
+        background: var(--ds-gray-1000);
+        color: var(--ds-background-100);
+        border: none;
+        padding: 0.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Container Padding */
+    .container {
+        padding: 1rem !important;
+        padding-top: 4rem !important;
+        /* Space for toggle */
+    }
+
+    /* 2. Settings Page Responsiveness */
+    .settings-container {
+        flex-direction: column;
+    }
+
+    .settings-container aside {
+        width: 100% !important;
+        border-right: none !important;
+        border-bottom: 1px solid var(--ds-gray-200);
+        flex-direction: row !important;
+        align-items: center;
+        overflow-x: auto;
+        padding: 0.5rem 1rem !important;
+        height: auto !important;
+        background: var(--ds-background-100) !important;
+    }
+
+    .settings-container aside>div:first-child {
+        display: none;
+    }
+
+    .settings-container aside nav {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0 !important;
+        width: 100%;
+    }
+
+    .settings-nav-item {
+        white-space: nowrap;
+        margin-bottom: 0 !important;
+        font-size: 0.85rem !important;
+        padding: 0.5rem 0.75rem !important;
+        background: var(--ds-gray-100);
+    }
+
+    .settings-nav-item.active {
+        background: var(--ds-gray-1000);
+        color: var(--ds-background-100);
+    }
+
+    /* 3. Editor/Terminal Stacking */
+    .content-area {
+        flex-direction: column;
+    }
+
+    .editor-pane,
+    .terminal-pane {
+        width: 100%;
+        flex: none;
+        height: 50vh;
+    }
+}

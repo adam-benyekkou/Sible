@@ -16,8 +16,9 @@ import traceback
 from app.core.config import get_settings
 from app.core.database import create_db_and_tables
 from app.core.security import check_auth
-from app.services import RunnerService, SchedulerService, SettingsService, AuthService
+from app.services import RunnerService, SchedulerService, SettingsService, AuthService, PlaybookService
 from app.models import User
+from app.core.onboarding import seed_onboarding_data
 from app.core.database import engine
 from sqlmodel import Session, select
 
@@ -47,6 +48,11 @@ async def lifespan(app: FastAPI):
             if not admin_exists:
                  print("Creating default admin user...")
                  auth_service.create_user("admin", "admin", "admin")
+        
+        # Seed Onboarding Data
+        seed_onboarding_data(session, PlaybookService(session))
+
+    SchedulerService.start()
 
     SchedulerService.start()
     
