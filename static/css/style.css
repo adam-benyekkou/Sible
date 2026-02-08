@@ -4,7 +4,7 @@
     /* --- GLOBAL VARIABLES (Geist Light) --- */
     /* 1. The Geist Canvas */
     --ds-background-100: #ffffff;
-    --ds-background-200: #f7f7f8;
+    --ds-background-200: #fafafa;
     /* Sidebar, Subtler backgrounds */
     --ds-gray-100: #f5f5f5;
     /* Hover states */
@@ -59,7 +59,7 @@ body {
     font-family: var(--pico-font-family);
     background-color: var(--ds-background-100);
     color: var(--pico-color);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -114,6 +114,7 @@ button {
     justify-content: center;
     gap: 8px;
     box-shadow: none;
+    letter-spacing: -0.02em;
 }
 
 /* Primary Button (Black Solid) */
@@ -246,20 +247,77 @@ textarea:focus {
     background: #ffffff;
     border: 1px solid #eaeaea;
     border-radius: 8px;
-    /* Subtle ring shadow */
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.04);
+    box-shadow: none;
 }
 
 /* Sidebar */
 aside {
     width: var(--sidebar-width);
-    background: var(--ds-background-200);
-    /* FAFAFA */
-    border-right: 1px solid var(--ds-gray-200);
+    background: #fafafa;
+    border-right: 1px solid #eaeaea;
     display: flex;
     flex-direction: column;
     padding: var(--spacing-md);
     flex-shrink: 0;
+}
+
+/* Sidebar Folder - Force Black on Open/Focus */
+details>summary {
+    list-style: none;
+    outline: none;
+    cursor: pointer;
+    color: var(--ds-gray-600);
+    transition: color 0.15s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 6px 0;
+    user-select: none;
+}
+
+details[open]>summary,
+details>summary:focus,
+details>summary:active,
+details>summary:hover,
+.folder-title:hover {
+    color: var(--ds-gray-1000) !important;
+    outline: none !important;
+}
+
+details>summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Nav Items (Vertical List) */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    color: #666666;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 2px;
+    border-left: 2px solid transparent;
+    transition: all 0.15s ease;
+    border-radius: 0;
+}
+
+.nav-item:hover {
+    color: #000000;
+    background: #fafafa;
+    /* Subtle background on hover only */
+}
+
+.nav-item.active {
+    color: #000000;
+    border-left-color: #000000;
+    background: transparent;
+}
+
+.nav-item i {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2px;
 }
 
 .sidebar-btn-container {

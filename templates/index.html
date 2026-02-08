@@ -6,7 +6,7 @@
     <div x-data="{ stats: { online: 0, total: 0, uptime_percentage: 0 } }"
         x-init="fetch('/api/dashboard/stats').then(res => res.json()).then(data => stats = data)"
         @inventory-refresh.window="fetch('/api/dashboard/stats').then(res => res.json()).then(data => stats = data)"
-        style="margin-bottom: 2rem; background: #ffffff; padding: 1.5rem; border-radius: 8px; border: 1px solid var(--ds-gray-200); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        style="margin-bottom: 2rem; background: #ffffff; padding: 1.5rem; border-radius: 8px; border: 1px solid #eaeaea;">
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <div>
@@ -24,9 +24,9 @@
         </div>
 
         <!-- Minimalist Progress Bar -->
-        <div style="height: 6px; background: var(--ds-gray-200); border-radius: 3px; overflow: hidden;">
+        <div style="height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden;">
             <div
-                :style="'width: ' + stats.uptime_percentage + '%; background: var(--sible-success); height: 100%; transition: width 0.5s ease-out;'">
+                :style="'width: ' + stats.uptime_percentage + '%; background: #10B981; height: 100%; transition: width 0.5s ease-out;'">
             </div>
         </div>
     </div>

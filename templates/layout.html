@@ -56,44 +56,53 @@
 
     <!-- Sidebar -->
     <aside :class="{ 'mobile-open': sidebarOpen }">
-        <hgroup style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <hgroup
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0 12px;">
             <a href="/" hx-target="#main-content" hx-push-url="true"
                 style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 12px;">
                 <img src="{{ get_settings().logo_path or '/static/img/logo.png' }}" alt="Logo"
-                    style="max-height: 40px; width: auto;">
+                    style="max-height: 32px; width: auto;">
                 <div>
-                    <h3 style="margin: 0; font-size: 1.25rem;">{{ app_name()|default('Sible') }}</h3>
-                    <p style="margin: 0; font-size: 0.75rem; color: var(--ds-gray-600); line-height: 1.2;">Playbook
-                        Manager</p>
+                    <h3 style="margin: 0; font-size: 1.1rem; letter-spacing: -0.02em;">{{ app_name()|default('Sible') }}
+                    </h3>
                 </div>
             </a>
 
 
         </hgroup>
         <hr>
-        <nav>
-            <ul>
-                <li><a href="/" role="button" class="secondary outline w-100">Dashboard</a></li>
-                <li><a href="/inventory" role="button" class="secondary outline w-100">Inventory</a></li>
-                <li><a href="/templates" role="button" class="secondary outline w-100">Templates</a></li>
-                <li><a href="/schedules" role="button" class="secondary outline w-100">Schedules</a></li>
-                <li>
-                    <a href="/history" role="button" class="secondary outline w-100">
-                        History
-                    </a>
-                </li>
-                <li>
-                    {% if request.state.user.role in ['operator', 'watcher'] %}
-                    <a href="/settings/retention" role="button" class="secondary outline w-100">
-                        Settings
-                    </a>
-                    {% else %}
-                    <a href="/settings/general" role="button" class="secondary outline w-100">
-                        Settings
-                    </a>
-                    {% endif %}
-                </li>
-            </ul>
+        <nav style="display: flex; flex-direction: column; gap: 4px;">
+            <a href="/" class="nav-item {% if request.url.path == '/' %}active{% endif %}">
+                <i data-lucide="layout-dashboard"></i>
+                Dashboard
+            </a>
+            <a href="/inventory" class="nav-item {% if '/inventory' in request.url.path %}active{% endif %}">
+                <i data-lucide="server"></i>
+                Inventory
+            </a>
+            <a href="/templates" class="nav-item {% if '/templates' in request.url.path %}active{% endif %}">
+                <i data-lucide="copy"></i>
+                Templates
+            </a>
+            <a href="/schedules" class="nav-item {% if '/schedules' in request.url.path %}active{% endif %}">
+                <i data-lucide="calendar-clock"></i>
+                Schedules
+            </a>
+            <a href="/history" class="nav-item {% if '/history' in request.url.path %}active{% endif %}">
+                <i data-lucide="file-text"></i>
+                History
+            </a>
+            {% if request.state.user.role in ['operator', 'watcher'] %}
+            <a href="/settings/retention" class="nav-item {% if '/settings' in request.url.path %}active{% endif %}">
+                <i data-lucide="settings"></i>
+                Settings
+            </a>
+            {% else %}
+            <a href="/settings/general" class="nav-item {% if '/settings' in request.url.path %}active{% endif %}">
+                <i data-lucide="settings"></i>
+                Settings
+            </a>
+            {% endif %}
         </nav>
         <hr>
         <nav class="playbook-list" hx-get="/partials/sidebar" hx-trigger="load, sidebar-refresh from:body">

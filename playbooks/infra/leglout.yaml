@@ -1,0 +1,28 @@
+# Title: Create User
+# Description: Creates a new user with sudo privileges and SSH key.
+# Category: System
+# Author: Sible Team
+
+- name: Create a new user
+  hosts: all
+  become: yes
+  vars:
+    user_name: "newuser"
+    user_password: "$6$rounds=656000$vdK..." # Generate with: mkpasswd -m sha-512
+    ssh_key: "ssh-rsa AAA..."
+
+  tasks:
+    - name: Create user
+      user:
+        name: "{{ user_name }}"
+        password: "{{ user_password }}"
+        shell: /bin/bash
+        groups: sudo,docker
+        append: yes
+        state: present
+
+    - name: Set authorized key
+      authorized_key:
+        user: "{{ user_name }}"
+        state: present
+        key: "{{ ssh_key }}"

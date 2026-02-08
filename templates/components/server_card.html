@@ -36,13 +36,14 @@
     <div
         style="margin-top: 1rem; border-top: 1px solid var(--ds-gray-200); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
         <span
-            style="background: var(--ds-gray-100); color: var(--ds-gray-600); border: 1px solid var(--ds-gray-200); padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 500; width: fit-content;">
+            style="background: var(--ds-gray-100); color: var(--ds-gray-600); border: 1px solid var(--ds-gray-200); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; width: fit-content;">
             {{ host.group_name }}
         </span>
 
         {% if request.state.user.role == 'admin' %}
-        <button class="btn-icon" title="Open Terminal" onclick="openTerminal('{{ host.id }}', '{{ host.alias }}')">
-            <i data-lucide="terminal" style="width: 16px; height: 16px;"></i>
+        <button class="btn-icon" title="Open Terminal" onclick="openTerminal('{{ host.id }}', '{{ host.alias }}')"
+            style="background: #ffffff; border: 1px solid #eaeaea; width: 32px; height: 32px; padding: 0; border-radius: 6px; color: #000000;">
+            <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
         </button>
         {% endif %}
     </div>

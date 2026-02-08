@@ -1,7 +1,7 @@
 {% if request.state.user.role == 'admin' %}
-<div class="sidebar-btn-container">
+<div class="sidebar-btn-container" style="padding: 0 12px; margin-bottom: 12px;">
     <button class="btn-new" @click="$dispatch('open-new-playbook-modal')" style="width: 100%;">
-        <i data-lucide="plus-circle" style="width: 14px; height: 14px; margin-right: 6px;"></i> New Playbook
+        <i data-lucide="plus" style="width: 16px; height: 16px;"></i> New Playbook
     </button>
 </div>
 {% endif %}
