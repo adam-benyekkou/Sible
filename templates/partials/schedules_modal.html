@@ -73,8 +73,8 @@
                     <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
                 </div>
 
-                <div x-show="open" x-init="lucide.createIcons()" class="geist-select-dropdown"
-                    :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px; background: white; border: 1px solid var(--ds-gray-200); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; max-height: 250px; overflow-y: auto; padding: 4px;`"
+                <div x-show="open" x-transition class="geist-select-dropdown"
+                    style="position: absolute; top: 100%; left: 0; width: 100%; margin-top: 4px; background: white; border: 1px solid var(--ds-gray-200); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; max-height: 250px; overflow-y: auto; padding: 4px;"
                     x-cloak>
                     <!-- All -->
                     <div class="geist-select-option" :class="{ 'selected': selected === 'all' }"

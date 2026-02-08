@@ -1,5 +1,10 @@
 /* SIBLE DESIGN SYSTEM (Geist Light / Clear Aesthetic) */
 
+/* Alpine.js cloak - hide elements until Alpine initializes */
+[x-cloak] {
+    display: none !important;
+}
+
 :root {
     /* --- GLOBAL VARIABLES (Geist Light) --- */
     /* 1. The Geist Canvas */

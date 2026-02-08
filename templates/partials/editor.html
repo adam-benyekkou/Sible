@@ -117,10 +117,12 @@
                             }
                         },
                         get currentLabel() {
-                            if (!this.scheduleTarget || this.scheduleTarget === 'all') return 'All Hosts';
-                            if (this.launchParams.availableTargets.groups.includes(this.scheduleTarget)) return this.scheduleTarget;
-                            const host = this.launchParams.availableTargets.hosts.find(h => h.alias === this.scheduleTarget);
-                            return host ? host.alias + ' (host)' : this.scheduleTarget;
+                            const target = this.$data.$root.scheduleTarget;
+                            const targets = this.$data.$root.launchParams.availableTargets;
+                            if (!target || target === 'all') return 'All Hosts';
+                            if (targets.groups && targets.groups.includes(target)) return target;
+                            const host = targets.hosts && targets.hosts.find(h => h.alias === target);
+                            return host ? host.alias + ' (host)' : target;
                         }
                     }" @click.outside="open = false" @scroll.window="open = false" @resize.window="open = false"
                         class="geist-select-container">
@@ -228,8 +230,8 @@
                             <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
                         </div>
 
-                        <div x-show="open" class="geist-select-dropdown"
-                            :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px;`">
+                        <div x-show="open" x-transition class="geist-select-dropdown"
+                            style="position: absolute; top: 100%; left: 0; width: 100%; margin-top: 4px;">
                             <!-- All -->
                             <div class="geist-select-option" :class="{ 'selected': scheduleTarget === 'all' }"
                                 @click="scheduleTarget = 'all'; open = false">
