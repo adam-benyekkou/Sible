@@ -242,6 +242,15 @@ button.btn-icon {
 button.btn-icon:hover {
     background: #fafafa;
     border-color: #000;
+    color: #000;
+}
+
+/* Specific trigger highlight */
+.terminal-trigger:hover i,
+.terminal-trigger:active i {
+    stroke: #000 !important;
+    stroke-width: 2.5px;
+    /* Make the <_ pop more */
 }
 
 /* Inputs */
@@ -778,4 +787,170 @@ tr.hover:hover td {
 /* SSH Terminal Container specific overrides if needed */
 #ssh-terminal-container {
     background: #ffffff !important;
+}
+
+/* --- GEIST CUSTOM SELECT --- */
+.geist-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.geist-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 32px;
+    padding: 0 8px 0 12px;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #000;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.geist-select-trigger:hover {
+    border-color: #888;
+}
+
+.geist-select-trigger:focus,
+.geist-select-trigger[aria-expanded="true"] {
+    border-color: #000000;
+    outline: none;
+}
+
+.geist-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    min-width: 220px;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 4px;
+    display: none;
+    /* Hidden by default, toggled by Alpine */
+}
+
+.geist-select-header {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    padding: 8px 12px 4px;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.geist-select-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #000;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.geist-select-option:hover {
+    background: #fafafa;
+}
+
+.geist-select-option.selected {
+    font-weight: 500;
+    background: #fafafa;
+}
+
+.geist-select-option .check-icon {
+    margin-left: auto;
+    opacity: 0;
+    stroke: #000;
+}
+
+.geist-select-option.selected .check-icon {
+    opacity: 1;
+}
+
+/* --- MODAL SYSTEM --- */
+.modal-backdrop {
+    display: none;
+    /* Alpine will toggle this */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* When Alpine x-show is active, it sets display: block/flex. 
+   We want to enforce flex for centering. */
+.modal-backdrop[style*="display: block"] {
+    display: flex !important;
+}
+
+/* SSH Modal specific centering wrapper */
+.ssh-modal-wrapper {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.ssh-modal-wrapper[style*="display: block"] {
+    display: flex !important;
+}
+
+dialog {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    width: auto;
+    max-width: none;
+    display: block;
+    position: relative;
+    z-index: 1001;
+}
+
+article.modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--ds-gray-200);
+    overflow: hidden;
+    animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

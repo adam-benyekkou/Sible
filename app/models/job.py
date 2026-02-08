@@ -11,4 +11,5 @@ class JobRun(SQLModel, table=True):
     exit_code: Optional[int] = None
     trigger: str = "manual"  # manual, cron
     log_output: str = ""
+    target: Optional[str] = Field(default=None)  # host or group to limit execution to
     params: Optional[str] = Field(default=None)  # JSON string of execution parameters

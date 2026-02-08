@@ -12,6 +12,8 @@
         verbosity: 0,
         extraVars: []
     },
+    scheduleTarget: 'all',
+    showScheduleTargets: false,
     toggleTarget(t) {
         if (t === 'all') {
             this.launchParams.limit = ['all'];
@@ -94,17 +96,199 @@
             <input type="text" x-model="cronExpression" placeholder="* * * * *">
             <small>Example: <code>0 3 * * *</code> (Every day at 3am)</small>
             <footer>
-                <button class="secondary" @click="showScheduleModal = false">Cancel</button>
-                <button @click="
-                    htmx.ajax('POST', '/schedule', {
-                        values: { playbook: '{{ name | safe }}', cron: cronExpression },
-                        swap: 'none'
-                    });
-                    showScheduleModal = false;
-                ">
-                    <i data-lucide="calendar-check" style="width: 14px; height: 14px; margin-right: 6px;"></i> Save
-                    Schedule
-                </button>
+                <div style="margin-bottom: 16px;">
+                    <label
+                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target</label>
+
+                    <div x-data="{
+                        open: false,
+                        top: 0,
+                        left: 0,
+                        width: 0,
+                        toggle() {
+                            if (this.open) {
+                                this.open = false;
+                            } else {
+                                const rect = this.$refs.trigger.getBoundingClientRect();
+                                this.top = rect.bottom + 4;
+                                this.left = rect.left;
+                                this.width = rect.width;
+                                this.open = true;
+                            }
+                        },
+                        get currentLabel() {
+                            if (!this.scheduleTarget || this.scheduleTarget === 'all') return 'All Hosts';
+                            if (this.launchParams.availableTargets.groups.includes(this.scheduleTarget)) return this.scheduleTarget;
+                            const host = this.launchParams.availableTargets.hosts.find(h => h.alias === this.scheduleTarget);
+                            return host ? host.alias + ' (host)' : this.scheduleTarget;
+                        }
+                    }" @click.outside="open = false" @scroll.window="open = false" @resize.window="open = false"
+                        class="geist-select-container">
+
+                        <!-- Inject CSS locally to ensure it works -->
+                        <style>
+                            .geist-select-container {
+                                position: relative;
+                                width: 100%;
+                            }
+
+                            .geist-select-trigger {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                width: 100%;
+                                height: 32px;
+                                padding: 0 8px 0 12px;
+                                background: #ffffff;
+                                border: 1px solid #eaeaea;
+                                border-radius: 6px;
+                                font-size: 13px;
+                                color: #000;
+                                cursor: pointer;
+                                transition: all 0.15s ease;
+                                user-select: none;
+                                box-sizing: border-box;
+                            }
+
+                            .geist-select-trigger:hover {
+                                border-color: #888;
+                            }
+
+                            .geist-select-trigger:focus-within,
+                            .geist-select-trigger[aria-expanded="true"] {
+                                border-color: #000000;
+                                outline: none;
+                            }
+
+                            .geist-select-dropdown {
+                                position: absolute;
+                                top: calc(100% + 4px);
+                                left: 0;
+                                width: 100%;
+                                min-width: 220px;
+                                background: #ffffff;
+                                border: 1px solid #eaeaea;
+                                border-radius: 6px;
+                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                                z-index: 9999;
+                                max-height: 300px;
+                                overflow-y: auto;
+                                padding: 4px;
+                            }
+
+                            .geist-select-dropdown[style*="display: none"] {
+                                display: none !important;
+                            }
+
+                            .geist-select-header {
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.05em;
+                                color: #888;
+                                padding: 8px 12px 4px;
+                                font-weight: 500;
+                                pointer-events: none;
+                            }
+
+                            .geist-select-option {
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                                padding: 6px 12px;
+                                font-size: 13px;
+                                color: #000;
+                                cursor: pointer;
+                                border-radius: 4px;
+                                transition: background 0.15s;
+                            }
+
+                            .geist-select-option:hover {
+                                background: #fafafa;
+                            }
+
+                            .geist-select-option.selected {
+                                font-weight: 500;
+                                background: #fafafa;
+                            }
+
+                            .geist-select-option .check-icon {
+                                margin-left: auto;
+                                opacity: 0;
+                                stroke: #000;
+                            }
+
+                            .geist-select-option.selected .check-icon {
+                                opacity: 1;
+                            }
+                        </style>
+
+                        <div x-ref="trigger" @click="toggle()" class="geist-select-trigger" :aria-expanded="open">
+                            <span x-text="currentLabel"
+                                style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
+                            <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
+                        </div>
+
+                        <div x-show="open" class="geist-select-dropdown"
+                            :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px;`">
+                            <!-- All -->
+                            <div class="geist-select-option" :class="{ 'selected': scheduleTarget === 'all' }"
+                                @click="scheduleTarget = 'all'; open = false">
+                                <i data-lucide="globe" style="width: 14px; height: 14px; color: #666;"></i>
+                                <span>All Hosts</span>
+                                <i data-lucide="check" class="check-icon" style="width: 14px; height: 14px;"></i>
+                            </div>
+
+                            <!-- Groups -->
+                            <template
+                                x-if="launchParams.availableTargets.groups && launchParams.availableTargets.groups.length > 0">
+                                <div>
+                                    <div class="geist-select-header">Groups</div>
+                                    <template x-for="g in launchParams.availableTargets.groups" :key="g">
+                                        <div class="geist-select-option" :class="{ 'selected': scheduleTarget === g }"
+                                            @click="scheduleTarget = g; open = false">
+                                            <i data-lucide="users" style="width: 14px; height: 14px; color: #666;"></i>
+                                            <span x-text="g"></span>
+                                            <i data-lucide="check" class="check-icon"
+                                                style="width: 14px; height: 14px;"></i>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <!-- Servers -->
+                            <template
+                                x-if="launchParams.availableTargets.hosts && launchParams.availableTargets.hosts.length > 0">
+                                <div>
+                                    <div class="geist-select-header">Servers</div>
+                                    <template x-for="h in launchParams.availableTargets.hosts" :key="h.alias">
+                                        <div class="geist-select-option"
+                                            :class="{ 'selected': scheduleTarget === h.alias }"
+                                            @click="scheduleTarget = h.alias; open = false">
+                                            <i data-lucide="server" style="width: 14px; height: 14px; color: #666;"></i>
+                                            <span x-text="h.alias"></span>
+                                            <span style="color: #999; font-size: 11px; margin-left: 4px;">(host)</span>
+                                            <i data-lucide="check" class="check-icon"
+                                                style="width: 14px; height: 14px;"></i>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                    <button style="background-color: #000; border-color: #000; color: #fff;" @click='
+                        htmx.ajax("POST", "/schedule", {
+                            values: { playbook: {{ name | tojson | forceescape }}, cron: cronExpression, target: scheduleTarget || "all" },
+                            swap: "none"
+                        });
+                        showScheduleModal = false;
+                    '>
+                        <i data-lucide="calendar-check" style="width: 14px; height: 14px; margin-right: 6px;"></i> Save
+                        Schedule
+                    </button>
+                </div>
             </footer>
         </article>
     </dialog>
@@ -245,7 +429,6 @@
                 </div>
 
                 <footer style="margin-top: 2rem;">
-                    <button type="button" class="secondary" @click="showLaunchModal = false">Cancel</button>
                     <button type="submit">
                         <i data-lucide="check-circle" style="width: 14px; height: 14px; margin-right: 6px;"
                             x-show="launchMode === 'check'"></i>
@@ -300,7 +483,7 @@
 
             <!-- Schedule (Modal Trigger) - Admin & Operator -->
             {% if request.state.user and request.state.user.role == 'admin' %}
-            <button class="btn-icon" @click="showScheduleModal = true" title="Schedule">
+            <button class="btn-icon" @click="showScheduleModal = true; fetchTargets()" title="Schedule">
                 <i data-lucide="calendar"></i>
             </button>
             {% endif %}

@@ -221,6 +221,8 @@ async def create_env_var(
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
 ):
+    # Normalize newlines and strip whitespace for secrets
+    value = value.replace("\r\n", "\n").strip()
     service.create_env_var(key, value, True)
     response = Response(status_code=200)
     trigger_toast(response, f"Variable '{key}' added", "success")
@@ -265,6 +267,9 @@ async def update_env_var(
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
 ):
+    # Normalize newlines and strip whitespace for secrets
+    if value:
+        value = value.replace("\r\n", "\n").strip()
     env_var = service.update_env_var(env_id, key, value, True)
     if not env_var:
         return Response("Secret not found", status_code=404)

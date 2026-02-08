@@ -35,9 +35,13 @@ async def execute_playbook_job(playbook_name: str, **kwargs):
     The function triggering the actual playbook execution.
     """
     logger.info(f"Scheduler: Starting job for {playbook_name}")
+    target = kwargs.get("target")
+    
     with Session(engine) as session:
         runner_service = RunnerService(session)
-        result = await runner_service.run_playbook_headless(playbook_name)
+        # Pass limit if target is provided
+        limit = target if target and target != 'all' else None
+        result = await runner_service.run_playbook_headless(playbook_name, limit=limit)
     
     status = "SUCCESS" if result['success'] else "FAILED"
     logger.info(f"Scheduler: Job {playbook_name} finished with status {status}. RC: {result['rc']}")
@@ -62,13 +66,13 @@ class SchedulerService:
         scheduler.shutdown()
 
     @staticmethod
-    def add_playbook_job(playbook_name: str, cron_expression: str):
+    def add_playbook_job(playbook_name: str, cron_expression: str, target: str = None):
         try:
             job = scheduler.add_job(
                 execute_playbook_job,
                 CronTrigger.from_crontab(cron_expression),
                 args=[playbook_name],
-                kwargs={"cron_expr": cron_expression},
+                kwargs={"cron_expr": cron_expression, "target": target},
                 name=f"Run {playbook_name}",
                 replace_existing=False
             )
@@ -93,6 +97,7 @@ class SchedulerService:
                 "next_run_human": SchedulerService.format_timedelta(job.next_run_time) if job.next_run_time else "Paused",
                 "args": job.args,
                 "cron": job.kwargs.get("cron_expr", "Unknown"),
+                "target": job.kwargs.get("target", "all"),
                 "status": "paused" if is_paused else "running"
             })
         return jobs
@@ -106,13 +111,22 @@ class SchedulerService:
             return False
 
     @staticmethod
-    def update_job(job_id: str, cron_expression: str):
+    def update_job(job_id: str, cron_expression: str = None, target: str = None):
         try:
-            scheduler.reschedule_job(
-                job_id,
-                trigger=CronTrigger.from_crontab(cron_expression)
-            )
-            scheduler.modify_job(job_id, kwargs={"cron_expr": cron_expression})
+            kwargs = {}
+            if cron_expression:
+                kwargs["cron_expr"] = cron_expression
+                scheduler.reschedule_job(
+                    job_id,
+                    trigger=CronTrigger.from_crontab(cron_expression)
+                )
+            
+            if target:
+                kwargs["target"] = target
+            
+            if kwargs:
+                scheduler.modify_job(job_id, kwargs=kwargs)
+                
             return True
         except Exception as e:
             logger.error(f"Failed to update job {job_id}: {e}")
@@ -151,6 +165,7 @@ class SchedulerService:
             "next_run_human": SchedulerService.format_timedelta(job.next_run_time) if job.next_run_time else "Paused",
             "args": job.args,
             "cron": job.kwargs.get("cron_expr", "* * * * *"),
+            "target": job.kwargs.get("target", "all"),
             "status": "paused" if is_paused else "running"
         }
 

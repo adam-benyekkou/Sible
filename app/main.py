@@ -63,23 +63,34 @@ app = FastAPI(lifespan=lifespan)
 # Auth Middleware
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
-    if request.url.path.startswith("/static") or request.url.path in ["/login", "/logout", "/api/auth/login"]:
+    # Exclude static files, login/logout, and WebSockets from authentication redirect.
+    # WebSockets are authenticated internally in their own endpoints.
+    if (request.url.path.startswith("/static") or 
+        request.url.path.startswith("/ws/") or 
+        request.url.path in ["/login", "/logout", "/api/auth/login"]):
         return await call_next(request)
-    
+
+    if not check_auth(request):
+        # HTMX requests should probably be redirected to login or show 401
+        if request.headers.get("HX-Request") or request.headers.get("HX-Target"):
+             response = Response(status_code=200)
+             response.headers["HX-Redirect"] = "/login"
+             return response
+        return RedirectResponse(url="/login")
+        
     # Inject user into state for templates
     from app.core.security import get_user_from_token
     token = request.cookies.get("access_token")
     user_data = None
     if token:
          if token.startswith("Bearer "):
-            token = token.split(" ")[1]
+            token = token[7:]
          user_data = get_user_from_token(token)
     
-    if user_data:
-        request.state.user = user_data
-    else:
-        request.state.user = None
+    request.state.user = user_data
 
+    response = await call_next(request)
+    return response
 
     if not check_auth(request):
         # HTMX requests should probably be redirected to login or show 401

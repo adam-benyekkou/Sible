@@ -7,7 +7,7 @@
         </header>
 
         <form id="inventory-form" hx-trigger="submit" hx-swap="none"
-            hx-on:htmx:after-request="if(event.detail.successful) { document.getElementById('inventory-modal').close(); htmx.trigger('body', 'inventory-refresh'); }">
+            hx-on::after-request="if(event.detail.successful) { document.getElementById('inventory-modal').close(); htmx.trigger('body', 'inventory-refresh'); }">
 
             <label>
                 <small>Alias</small>

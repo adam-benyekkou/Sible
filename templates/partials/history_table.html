@@ -1,0 +1,55 @@
+<div id="history-container" style="overflow-x: auto;">
+    <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+        <thead>
+            <tr>
+                <th
+                    style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                    Date</th>
+                <th
+                    style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                    Playbook</th>
+                <th
+                    style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                    Status</th>
+                <th
+                    style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                    Duration</th>
+                <th
+                    style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                    Type</th>
+                <th
+                    style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600; text-align: right;">
+                    Actions</th>
+            </tr>
+        </thead>
+        <tbody id="history-table-body">
+            {% include "partials/history_rows.html" %}
+        </tbody>
+    </table>
+
+    <!-- Pagination Bar -->
+    {% if total_pages > 1 %}
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid #eaeaea;">
+        <div style="font-size: 13px; color: #666;">
+            Page {{ page }} of {{ total_pages }}
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+            <button type="button" {% if has_prev %} hx-get="/history?page={{ page - 1 }}" hx-target="#history-container"
+                hx-push-url="true" hx-include="[name='search'], [name='status']" {% else %} disabled {% endif %}
+                class="secondary"
+                style="height: 32px; padding: 0 16px; font-size: 13px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333;">
+                Previous
+            </button>
+
+            <button type="button" {% if has_next %} hx-get="/history?page={{ page + 1 }}" hx-target="#history-container"
+                hx-push-url="true" hx-include="[name='search'], [name='status']" {% else %} disabled {% endif %}
+                class="secondary"
+                style="height: 32px; padding: 0 16px; font-size: 13px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333;">
+                Next
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>

@@ -173,7 +173,7 @@ class RunnerService:
         }
         db_params = json.dumps(params_dict) if any(v is not None and v != "" and v != {} and v != 0 for v in params_dict.values()) else None
         
-        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params)
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=limit)
         
         self.db.add(job)
         self.db.commit()
@@ -214,13 +214,19 @@ class RunnerService:
                 *cmd, 
                 stdout=asyncio.subprocess.PIPE, 
                 stderr=asyncio.subprocess.STDOUT, 
-                env=env
+                env=env,
+                cwd=str(playbook_path.parent) if not settings.USE_DOCKER else None
             )
             stdout, _ = await process.communicate()
             output = stdout.decode('utf-8', errors='replace')
             
             job.status = "success" if process.returncode == 0 else "failed"
             job.end_time = datetime.utcnow()
+            
+            # If output is empty but process failed, provide a hint
+            if not output.strip() and job.status == "failed":
+                output = f"Error: Process failed with exit code {process.returncode} but produced no output. This might indicate an issue with finding the executable or permissions."
+                
             job.log_output = "\n".join([self.format_log_line(line) for line in output.splitlines()])
             job.exit_code = process.returncode
             self.db.add(job); self.db.commit()
@@ -260,7 +266,7 @@ class RunnerService:
         }
         db_params = json.dumps(params_dict) if any(v is not None and v != "" and v != {} and v != 0 for v in params_dict.values()) else None
         
-        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params)
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=limit)
         
         self.db.add(job); self.db.commit(); self.db.refresh(job); job_id = job.id
             

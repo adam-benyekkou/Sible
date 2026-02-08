@@ -148,7 +148,7 @@ async def update_host(
     if hostname: host.hostname = hostname
     if ssh_user: host.ssh_user = ssh_user
     if ssh_port: host.ssh_port = ssh_port
-    if group_name: host.group_name = InventoryService.sanitize_group_name(group_name)
+    if group_name: host.group_name = InventoryService.sanitize_ansible_name(group_name)
     
     # Handle secrets
     form_data = await request.form()

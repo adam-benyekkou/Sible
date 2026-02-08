@@ -88,5 +88,29 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <!-- Pagination Bar -->
+        {% if total_pages > 1 %}
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid #eaeaea; margin-top: 1rem;">
+            <div style="font-size: 13px; color: #666;">
+                Page {{ page }} of {{ total_pages }}
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button type="button" {% if has_prev %} hx-get="/history/{{ playbook_name }}?page={{ page - 1 }}"
+                    hx-target="closest dialog" hx-swap="outerHTML" {% else %} disabled {% endif %} class="secondary"
+                    style="height: 32px; padding: 0 16px; font-size: 13px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; margin-bottom: 0;">
+                    Previous
+                </button>
+
+                <button type="button" {% if has_next %} hx-get="/history/{{ playbook_name }}?page={{ page + 1 }}"
+                    hx-target="closest dialog" hx-swap="outerHTML" {% else %} disabled {% endif %} class="secondary"
+                    style="height: 32px; padding: 0 16px; font-size: 13px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; margin-bottom: 0;">
+                    Next
+                </button>
+            </div>
+        </div>
+        {% endif %}
     </article>
 </dialog>

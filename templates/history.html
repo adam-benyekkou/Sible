@@ -11,9 +11,9 @@
         </hgroup>
         {% if request.state.user.role == 'admin' %}
         <button type="button" hx-delete="/history/all"
-            hx-confirm="Are you sure you want to delete ALL history logs? This cannot be undone."
-            class="btn-danger-ghost"
-            style="background: white; color: var(--sible-error); border: 1px solid var(--ds-gray-200); font-size: 13px; font-weight: 500; padding: 6px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+            hx-confirm="Are you sure you want to delete ALL (filtered) history logs? This cannot be undone."
+            hx-include="[name='search'], [name='status']" class="btn-danger-ghost"
+            style="background: white; color: var(--sible-error); border: 1px solid var(--ds-gray-200); font-size: 13px; font-weight: 500; padding: 6px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; margin: 0;">
             Delete All
         </button>
         {% endif %}
@@ -27,62 +27,31 @@
                 style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ds-gray-600); pointer-events: none;"></i>
             <input type="text" name="search" id="search-input" placeholder="Filter by playbook or folder..."
                 value="{{ search or '' }}" hx-get="/history" hx-trigger="keyup changed delay:300ms, search-update"
-                hx-target="#history-table-body" hx-include="[name='status']" hx-push-url="false"
+                hx-target="#history-container" hx-include="[name='status']" hx-push-url="true"
                 style="padding-left: 32px; height: 36px; width: 100%; font-size: 13px; margin: 0; border: 1px solid #eaeaea; border-radius: 6px; box-shadow: none !important;">
         </div>
 
         <div class="filter-group"
-            style="display: flex; border: 1px solid #eaeaea; border-radius: 6px; overflow: hidden; width: auto; flex-shrink: 0;">
+            style="display: flex; border: 1px solid #eaeaea; border-radius: 6px; overflow: hidden; width: auto; flex-shrink: 0; align-items: stretch;">
             <!-- Hidden input to store status state for hx-include -->
             <input type="hidden" name="status" id="status-input" value="{{ status or 'all' }}">
 
             <button type="button" class="filter-btn {{ 'active' if not status or status == 'all' else '' }}"
-                onclick="updateStatus('all')"
-                style="border: none; border-right: 1px solid #eaeaea; border-radius: 0; padding: 0 16px; font-size: 13px; height: 36px; min-width: 80px;">
+                onclick="updateStatus('all')" style="border-right: 1px solid #eaeaea; min-width: 80px;">
                 All
             </button>
             <button type="button" class="filter-btn {{ 'active' if status == 'success' else '' }}"
-                onclick="updateStatus('success')"
-                style="border: none; border-right: 1px solid #eaeaea; border-radius: 0; padding: 0 16px; font-size: 13px; height: 36px; min-width: 100px;">
+                onclick="updateStatus('success')" style="border-right: 1px solid #eaeaea; min-width: 100px;">
                 Success
             </button>
             <button type="button" class="filter-btn {{ 'active' if status == 'failed' else '' }}"
-                onclick="updateStatus('failed')"
-                style="border: none; border-radius: 0; padding: 0 16px; font-size: 13px; height: 36px; min-width: 100px;">
+                onclick="updateStatus('failed')" style="min-width: 100px;">
                 Failed
             </button>
         </div>
     </div>
 
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
-            <thead>
-                <tr>
-                    <th
-                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
-                        Date</th>
-                    <th
-                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
-                        Playbook</th>
-                    <th
-                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
-                        Status</th>
-                    <th
-                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
-                        Duration</th>
-                    <th
-                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
-                        Type</th>
-                    <th
-                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600; text-align: right;">
-                        Actions</th>
-                </tr>
-            </thead>
-            <tbody id="history-table-body">
-                {% include "partials/history_rows.html" %}
-            </tbody>
-        </table>
-    </div>
+    {% include "partials/history_table.html" %}
 </div>
 
 <script>
@@ -119,9 +88,15 @@
         color: #666;
         cursor: pointer;
         transition: all 0.2s;
-        height: 32px;
+        height: 36px;
         display: flex;
         align-items: center;
+        justify-content: center;
+        margin: 0 !important;
+        border: none;
+        border-radius: 0;
+        padding: 0 16px;
+        font-size: 13px;
     }
 
     .filter-btn:hover {

@@ -12,30 +12,47 @@ router = APIRouter()
 @router.get("/history")
 async def get_history_page(
     request: Request,
+    page: int = 1,
     search: str = None,
     status: str = None,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
-    runs = service.get_recent_runs(limit=100, search=search, status=status)
+    limit = 20
+    offset = (page - 1) * limit
+    runs, total_count = service.get_recent_runs(limit=limit, offset=offset, search=search, status=status)
     
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse("partials/history_rows.html", {"request": request, "runs": runs})
-        
-    return templates.TemplateResponse("history.html", {
+    import math
+    total_pages = math.ceil(total_count / limit)
+    has_next = page < total_pages
+    has_prev = page > 1
+    
+    context = {
         "request": request, 
         "runs": runs, 
         "active_tab": "history",
         "search": search,
-        "status": status or 'all'
-    })
+        "status": status or 'all',
+        "page": page,
+        "total_pages": total_pages,
+        "has_next": has_next,
+        "has_prev": has_prev,
+        "total_count": total_count
+    }
+    
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/history_table.html", context)
+        
+    return templates.TemplateResponse("history.html", context)
 
 @router.delete("/history/all")
 async def delete_all_history(
+    search: str = None,
+    status: str = None,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))
 ):
-    service.delete_all_runs()
+    service.delete_all_runs(search=search, status=status)
     response = Response(status_code=200)
     response.headers["HX-Refresh"] = "true"
     return response
@@ -66,14 +83,28 @@ async def get_run_details(
 async def get_playbook_history(
     name: str,
     request: Request,
+    page: int = 1,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
-    runs = service.get_playbook_runs(name)
+    limit = 20
+    offset = (page - 1) * limit
+    runs, total_count = service.get_playbook_runs(name, limit=limit, offset=offset)
+    
+    import math
+    total_pages = math.ceil(total_count / limit)
+    has_next = page < total_pages
+    has_prev = page > 1
+
     return templates.TemplateResponse("partials/history_list_modal.html", {
         "request": request,
         "playbook_name": name,
-        "manual_runs": runs
+        "manual_runs": runs,
+        "page": page,
+        "total_pages": total_pages,
+        "has_next": has_next,
+        "has_prev": has_prev,
+        "total_count": total_count
     })
 
 @router.delete("/history/playbook/{name:path}/all")
