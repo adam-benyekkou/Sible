@@ -6,8 +6,13 @@ class HistoryService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_recent_runs(self, limit: int = 50) -> List[JobRun]:
-        return self.db.exec(select(JobRun).order_by(desc(JobRun.start_time)).limit(limit)).all()
+    def get_recent_runs(self, limit: int = 50, search: str = None, status: str = None) -> List[JobRun]:
+        query = select(JobRun).order_by(desc(JobRun.start_time))
+        if search:
+            query = query.where(JobRun.playbook.ilike(f"%{search}%"))
+        if status and status != 'all':
+            query = query.where(JobRun.status == status)
+        return self.db.exec(query.limit(limit)).all()
 
     def get_run(self, run_id: int) -> Optional[JobRun]:
         return self.db.get(JobRun, run_id)

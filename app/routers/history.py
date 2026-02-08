@@ -12,11 +12,23 @@ router = APIRouter()
 @router.get("/history")
 async def get_history_page(
     request: Request,
+    search: str = None,
+    status: str = None,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
-    runs = service.get_recent_runs()
-    return templates.TemplateResponse("history.html", {"request": request, "runs": runs, "active_tab": "history"})
+    runs = service.get_recent_runs(limit=100, search=search, status=status)
+    
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/history_rows.html", {"request": request, "runs": runs})
+        
+    return templates.TemplateResponse("history.html", {
+        "request": request, 
+        "runs": runs, 
+        "active_tab": "history",
+        "search": search,
+        "status": status or 'all'
+    })
 
 @router.delete("/history/all")
 async def delete_all_history(
