@@ -2,25 +2,26 @@
 
 {% block content %}
 <div class="container" x-data="templatesManager()">
-    <header class="flex justify-between items-center mb-4">
-        <div>
-            <h2>Template Library</h2>
-            <p class="color-muted">Manage reusable playbooks templates.</p>
+    <div style="margin-bottom: 24px;">
+        <h2>Template Library</h2>
+        <p class="color-muted">Manage reusable playbooks templates.</p>
+    </div>
+
+    <!-- Actions exactly above the table -->
+    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 4px; align-items: center;">
+        <div style="position: relative; height: 32px;">
+            <i data-lucide="search"
+                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ds-gray-600); pointer-events: none;"></i>
+            <input type="text" x-model="searchQuery" placeholder="Search templates..."
+                style="padding-left: 32px; height: 32px; width: 220px; font-size: 13px; margin: 0; border-radius: 6px; box-shadow: none !important;">
         </div>
-        <div class="flex items-center gap-2" style="display: flex; gap: 12px; align-items: center;">
-            <div style="position: relative; height: 32px;">
-                <i data-lucide="search"
-                    style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ds-gray-600); pointer-events: none;"></i>
-                <input type="text" x-model="searchQuery" placeholder="Search templates..."
-                    style="padding-left: 32px; height: 32px; width: 220px; font-size: 13px; margin: 0; border-radius: 6px; box-shadow: none !important;">
-            </div>
-            {% if request.state.user and request.state.user.role == 'admin' %}
-            <button class="primary" @click="openNewTemplateModal()">
-                <i data-lucide="plus" style="width: 14px; height: 14px;"></i> New Template
-            </button>
-            {% endif %}
-        </div>
-    </header>
+        {% if request.state.user and request.state.user.role == 'admin' %}
+        <button class="primary" @click="openNewTemplateModal()"
+            style="height: 32px; padding: 0 12px; font-size: 13px; display: inline-flex; align-items: center;">
+            <i data-lucide="plus" style="width: 14px; height: 14px; margin-right: 6px;"></i> New Template
+        </button>
+        {% endif %}
+    </div>
 
     <div class="overflow-auto">
         <!-- Inject Role -->

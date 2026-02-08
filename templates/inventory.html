@@ -71,30 +71,38 @@
         <p class="color-muted font-sm" style="margin-bottom: 0;">Manage your managed servers and groups.</p>
     </div>
 
-    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 16px;">
-        <div role="group">
-            <button :class="viewMode === 'table' ? 'primary' : 'secondary'" @click="viewMode = 'table'">Table</button>
-            <button :class="viewMode === 'raw' ? 'primary' : 'secondary'" @click="viewMode = 'raw'">Raw
+    <!-- Actions exactly above the table -->
+    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 4px; align-items: center;">
+        <div role="group" style="width: auto; margin-bottom: 0;">
+            <button :class="viewMode === 'table' ? 'primary' : 'secondary'"
+                style="height: 28px; padding: 2px 12px; font-size: 12px; width: auto;"
+                @click="viewMode = 'table'">Table</button>
+            <button :class="viewMode === 'raw' ? 'primary' : 'secondary'"
+                style="height: 28px; padding: 2px 12px; font-size: 12px; width: auto;" @click="viewMode = 'raw'">Raw
                 File</button>
         </div>
 
         {% if request.state.user.role == 'admin' %}
         <button class="secondary" hx-post="/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
-            hx-indicator="#ping-loading" style="white-space: nowrap;">
-            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Ping All
+            hx-indicator="#ping-loading"
+            style="white-space: nowrap; height: 28px; padding: 2px 12px; font-size: 12px; display: inline-flex; align-items: center;">
+            <i data-lucide="refresh-cw" style="width: 12px; height: 12px; margin-right: 4px;"></i> Ping All
         </button>
 
         <template x-if="viewMode === 'table'">
-            <button class="primary" @click="openModal()" style="white-space: nowrap;">
-                <i data-lucide="plus" style="width: 14px; height: 14px; color: white; stroke: white;"></i> Add
-                Server
+            <button class="primary" @click="openModal()"
+                style="white-space: nowrap; height: 28px; padding: 2px 12px; font-size: 12px; display: inline-flex; align-items: center;">
+                <i data-lucide="plus"
+                    style="width: 12px; height: 12px; color: white; stroke: white; margin-right: 4px;"></i> Add Server
             </button>
         </template>
         {% endif %}
     </div>
 
-    <div id="ping-loading" class="htmx-indicator" style="margin-bottom: 1rem;">
-        <span aria-busy="true">Pinging hosts...</span>
+    <div id="ping-loading" class="htmx-indicator" style="margin-bottom: 0.5rem; font-size: 12px;">
+        <i data-lucide="loader" class="spin"
+            style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;"></i>
+        <span class="color-muted">Pinging all hosts...</span>
     </div>
     <div id="ping-result" style="margin-bottom: 1.5rem;"></div>
 
