@@ -14,6 +14,10 @@
                     <small>Title</small>
                     <input type="text" x-model="title" required placeholder="e.g. Update System">
                 </label>
+                <label>
+                    <small>Description</small>
+                    <input type="text" x-model="description" placeholder="Short description of what this template does">
+                </label>
                 <div class="grid">
                     <label>
                         <small>Author</small>
@@ -80,6 +84,7 @@
             mode: 'create', // create | edit
             filename: '',
             title: '',
+            description: '',
             author: '',
             category: '',
             editor: null,
@@ -104,15 +109,17 @@
                     if (this.mode === 'edit') {
                         this.filename = detail.template.id;
                         this.title = detail.template.title;
+                        this.description = detail.template.description || '';
                         this.author = detail.template.author || '';
                         this.category = detail.template.category || '';
                         this.loadContent(detail.template.id);
                     } else {
                         this.filename = '';
                         this.title = 'New Template';
+                        this.description = '';
                         this.author = '';
                         this.category = '';
-                        this.editor.setValue("# Title: New Template\n# Author: ...\n# Category: ...\n\n- hosts: all\n  tasks:\n    - name: Hello World\n      debug:\n        msg: 'Hello'", -1);
+                        this.editor.setValue("# Title: New Template\n# Description: ...\n# Author: ...\n# Category: ...\n\n- hosts: all\n  tasks:\n    - name: Hello World\n      debug:\n        msg: 'Hello'", -1);
                     }
                 });
             },
@@ -130,10 +137,12 @@
                         // Try to extract metadata if not set (or sync it)
                         const lines = data.content.split('\n');
                         const titleLine = lines.find(l => l.startsWith('# Title:'));
+                        const descLine = lines.find(l => l.startsWith('# Description:'));
                         const authorLine = lines.find(l => l.startsWith('# Author:'));
                         const categoryLine = lines.find(l => l.startsWith('# Category:'));
 
                         if (titleLine) this.title = titleLine.replace('# Title:', '').trim();
+                        if (descLine) this.description = descLine.replace('# Description:', '').trim();
                         if (authorLine) this.author = authorLine.replace('# Author:', '').trim();
                         if (categoryLine) this.category = categoryLine.replace('# Category:', '').trim();
 
@@ -166,6 +175,7 @@
                 // Inject/Update Metadata in content
                 const metadata = {
                     'Title': this.title,
+                    'Description': this.description,
                     'Author': this.author,
                     'Category': this.category
                 };

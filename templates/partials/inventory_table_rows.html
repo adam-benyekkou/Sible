@@ -5,12 +5,9 @@
     <td>{{ host.ssh_user }}<span style="color: #666;">@{{ host.ssh_port }}</span></td>
     <td>
         {% if host.group_name != 'all' %}
-        <span
-            style="background: var(--ds-gray-100); color: var(--ds-gray-1000); border: 1px solid var(--ds-gray-200); padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 500;">{{
-            host.group_name }}</span>
+        <span class="group-badge">{{ host.group_name }}</span>
         {% else %}
-        <span
-            style="background: var(--ds-gray-100); color: var(--ds-gray-600); border: 1px solid var(--ds-gray-200); padding: 2px 8px; border-radius: 99px; font-size: 0.75rem;">All</span>
+        <span class="group-badge">All</span>
         {% endif %}
     </td>
     <td>
@@ -33,7 +30,7 @@
             {% endif %}
         </div>
     </td>
-    <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
+    <td style="text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 4px;">
         {% if request.state.user.role == 'admin' %}
         <button class="btn-icon" title="Edit Host"
             @click="editHost({{ host.id }}, '{{ host.alias }}', '{{ host.hostname }}', '{{ host.ssh_user }}', {{ host.ssh_port }}, '{{ host.group_name }}', '{{ host.ssh_key_path or '' }}', '{{ host.ssh_key_secret or '' }}', '{{ host.ssh_password_secret or '' }}')">

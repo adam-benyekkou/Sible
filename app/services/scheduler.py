@@ -83,12 +83,17 @@ class SchedulerService:
         for job in scheduler.get_jobs():
             if job.id == "refresh_inventory_status":
                 continue
+            
+            is_paused = job.next_run_time is None
+            
             jobs.append({
                 "id": job.id,
                 "name": job.name,
                 "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
-                "next_run_human": SchedulerService.format_timedelta(job.next_run_time),
-                "args": job.args
+                "next_run_human": SchedulerService.format_timedelta(job.next_run_time) if job.next_run_time else "Paused",
+                "args": job.args,
+                "cron": job.kwargs.get("cron_expr", "Unknown"),
+                "status": "paused" if is_paused else "running"
             })
         return jobs
 
@@ -112,24 +117,46 @@ class SchedulerService:
         except Exception as e:
             logger.error(f"Failed to update job {job_id}: {e}")
             return False
+            
+    @staticmethod
+    def pause_job(job_id: str):
+        try:
+            scheduler.pause_job(job_id)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to pause job {job_id}: {e}")
+            return False
+
+    @staticmethod
+    def resume_job(job_id: str):
+        try:
+            scheduler.resume_job(job_id)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to resume job {job_id}: {e}")
+            return False
 
     @staticmethod
     def get_job_info(job_id: str):
         job = scheduler.get_job(job_id)
         if not job:
             return None
+            
+        is_paused = job.next_run_time is None
+        
         return {
             "id": job.id,
             "name": job.name,
             "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
-            "next_run_human": SchedulerService.format_timedelta(job.next_run_time),
+            "next_run_human": SchedulerService.format_timedelta(job.next_run_time) if job.next_run_time else "Paused",
             "args": job.args,
-            "cron": job.kwargs.get("cron_expr", "* * * * *")
+            "cron": job.kwargs.get("cron_expr", "* * * * *"),
+            "status": "paused" if is_paused else "running"
         }
 
     @staticmethod
     def format_timedelta(dt: datetime) -> str:
-        if not dt: return "Not Scheduled"
+        if not dt: return "Paused"
         now = datetime.now(dt.tzinfo)
         diff = dt - now
         seconds = diff.total_seconds()

@@ -3,32 +3,81 @@
         <strong>{{ job.args[0] }}</strong>
     </td>
     <td>
-        <!-- We display the cron expression if we can parsed it, or just the name/desc -->
-        <!-- Since we don't store the raw cron separate from the trigger easily without accessing trigger fields, -->
-        <!-- For MVP let's imply the user knows what they set or we just show the name. -->
-        <!-- But wait, the user wants to EDIT the cron. We need to pre-fill the input. -->
-        <!-- APScheduler trigger doesn't always strictly give back the original string. -->
-        <!-- We might need to inspect job.trigger.fields to reconstruct? -->
-        <!-- Or just let them type a new one. -->
-        <span class="secondary">{{ job.name }}</span>
+        <div class="flex flex-col">
+            <code style="font-size: 12px; background: none; padding: 0; color: #000;">{{ job.cron }}</code>
+        </div>
     </td>
     <td>
-        <span data-tooltip="{{ job.next_run }}">
-            {{ job.next_run_human or 'Paused' }}
+        {% if request.state.user.role == 'admin' %}
+        <button class="status-btn {{ 'active' if job.status == 'running' else 'paused' }}"
+            hx-post="/schedule/{{ job.id }}/{% if job.status == 'running' %}pause{% else %}resume{% endif %}"
+            hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML">
+            <span class="status-dot"></span>
+            {{ 'Active' if job.status == 'running' else 'Paused' }}
+        </button>
+        {% else %}
+        <span class="badge {{ 'success' if job.status == 'running' else 'secondary' }}">
+            {{ job.status|title }}
+        </span>
+        {% endif %}
+    </td>
+    <td>
+        <span class="font-inter" style="font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;"
+            data-tooltip="{{ job.next_run }}">
+            {{ job.next_run_human }}
         </span>
     </td>
     <td style="text-align: right;">
-        <div style="display: flex; justify-content: flex-end; gap: 4px;">
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
             {% if request.state.user.role == 'admin' %}
             <button class="btn-icon" hx-get="/partials/schedules/row/{{ job.id }}/edit" hx-target="closest tr"
                 hx-swap="outerHTML" title="Edit Schedule">
-                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                <i data-lucide="edit-3" style="width: 14px; height: 14px; stroke-width: 1.5;"></i>
             </button>
             <button class="btn-icon" style="color: var(--sible-error);" hx-delete="/schedule/{{ job.id }}"
                 hx-confirm="Delete scheduled job?" hx-target="closest tr" hx-swap="outerHTML" title="Delete Schedule">
-                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                <i data-lucide="trash-2" style="width: 14px; height: 14px; stroke-width: 1.5;"></i>
             </button>
             {% endif %}
         </div>
     </td>
 </tr>
+
+<style>
+    .status-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid var(--ds-gray-200);
+        background: white;
+        color: var(--ds-gray-900);
+        height: 24px;
+    }
+
+    .status-btn:hover {
+        background: var(--ds-gray-100);
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: var(--ds-gray-400);
+    }
+
+    .status-btn.active .status-dot {
+        background-color: var(--sible-success);
+        box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+    }
+
+    .status-btn.paused {
+        background: var(--ds-gray-100);
+        color: var(--ds-gray-600);
+    }
+</style>

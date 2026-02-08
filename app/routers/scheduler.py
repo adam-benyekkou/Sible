@@ -86,6 +86,34 @@ async def update_schedule(
         trigger_toast(response, f"Error: {str(e)}", "error")
         return response
 
+@router.post("/schedule/{job_id}/pause")
+async def pause_schedule(
+    job_id: str,
+    request: Request,
+    current_user: object = Depends(requires_role(["admin"]))
+):
+    success = SchedulerService.pause_job(job_id)
+    if not success:
+        return Response(status_code=400)
+    
+    # Return updated row
+    job = SchedulerService.get_job_info(job_id)
+    return templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job})
+
+@router.post("/schedule/{job_id}/resume")
+async def resume_schedule(
+    job_id: str,
+    request: Request,
+    current_user: object = Depends(requires_role(["admin"]))
+):
+    success = SchedulerService.resume_job(job_id)
+    if not success:
+        return Response(status_code=400)
+    
+    # Return updated row
+    job = SchedulerService.get_job_info(job_id)
+    return templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job})
+
 @router.get("/partials/schedules/row/{job_id}")
 async def get_job_row(
     job_id: str, 

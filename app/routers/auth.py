@@ -10,7 +10,7 @@ router = APIRouter(tags=["auth"])
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request, "app_name": "Sible"})
+    return templates.TemplateResponse("login.html", {"request": request})
 
 @router.post("/api/auth/login")
 async def login_api(
@@ -23,7 +23,7 @@ async def login_api(
     service = AuthService(db)
     user = service.authenticate_user(username, password)
     if not user:
-        return templates.TemplateResponse("login.html", {"request": request, "app_name": "Sible", "error": "Invalid credentials"}, status_code=status.HTTP_401_UNAUTHORIZED)
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"}, status_code=status.HTTP_401_UNAUTHORIZED)
     
     # Create Token
     access_token = service.create_access_token(

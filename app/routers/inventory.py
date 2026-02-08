@@ -97,12 +97,9 @@ async def create_host(
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
 ):
-    # Validate connection
-    is_valid = await InventoryService.verify_connection(hostname, ssh_user, ssh_port)
-    if not is_valid:
-        response = Response(status_code=400)
-        trigger_toast(response, f"Connection failed to {hostname}", "error")
-        return response
+    # Validating connection is good, but blocking creation is bad UX.
+    # We will just create it and let the status check handle it later.
+    # is_valid = await InventoryService.verify_connection(hostname, ssh_user, ssh_port)
 
     try:
         new_host = Host(

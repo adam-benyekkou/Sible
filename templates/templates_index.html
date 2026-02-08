@@ -7,11 +7,19 @@
             <h2>Template Library</h2>
             <p class="color-muted">Manage reusable playbooks templates.</p>
         </div>
-        {% if request.state.user and request.state.user.role == 'admin' %}
-        <button class="primary" @click="openNewTemplateModal()">
-            <i data-lucide="plus" style="width: 14px; height: 14px;"></i> New Template
-        </button>
-        {% endif %}
+        <div class="flex items-center gap-2" style="display: flex; gap: 12px; align-items: center;">
+            <div style="position: relative; height: 32px;">
+                <i data-lucide="search"
+                    style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ds-gray-600); pointer-events: none;"></i>
+                <input type="text" x-model="searchQuery" placeholder="Search templates..."
+                    style="padding-left: 32px; height: 32px; width: 220px; font-size: 13px; margin: 0; border-radius: 6px; box-shadow: none !important;">
+            </div>
+            {% if request.state.user and request.state.user.role == 'admin' %}
+            <button class="primary" @click="openNewTemplateModal()">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i> New Template
+            </button>
+            {% endif %}
+        </div>
     </header>
 
     <div class="overflow-auto">
@@ -29,14 +37,25 @@
                 </tr>
             </thead>
             <tbody>
-                <template x-for="template in templates" :key="template.id">
-                    <tr>
+                <template x-for="template in filteredTemplates" :key="template.id">
+                    <tr class="hover">
                         <td>
                             <strong x-text="template.title"></strong>
-                            <div class="color-muted font-sm" x-text="template.description"></div>
+                            <div style="color: #666; font-size: 13px; margin-top: 2px;" x-text="template.description">
+                            </div>
                         </td>
-                        <td><span class="tag" x-text="template.category || 'Uncategorized'"></span></td>
-                        <td x-text="template.author || 'Unknown'"></td>
+                        <td>
+                            <template x-if="template.category">
+                                <span class="group-badge" x-text="template.category"></span>
+                            </template>
+                            <template x-if="!template.category">
+                                <span style="color: var(--ds-gray-600); font-size: 12px;">Uncategorized</span>
+                            </template>
+                        </td>
+                        <td>
+                            <span class="color-muted" style="font-size: 13px;"
+                                x-text="template.author || 'Unknown'"></span>
+                        </td>
                         <td style="text-align: right;">
                             <div class="flex gap-2" x-show="window.currentUserRole === 'admin'"
                                 style="display: flex; justify-content: flex-end; gap: 4px;">
@@ -51,7 +70,7 @@
                         </td>
                     </tr>
                 </template>
-                <tr x-show="templates.length === 0">
+                <tr x-show="filteredTemplates.length === 0">
                     <td colspan="4" class="text-center p-5 color-muted">
                         No templates found. Create one to get started!
                     </td>
@@ -68,11 +87,29 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('templatesManager', () => ({
             templates: [],
+            searchQuery: '',
+
+            get filteredTemplates() {
+                if (!this.searchQuery) return this.templates;
+                const q = this.searchQuery.toLowerCase();
+                return this.templates.filter(t =>
+                    (t.title && t.title.toLowerCase().includes(q)) ||
+                    (t.description && t.description.toLowerCase().includes(q)) ||
+                    (t.category && t.category.toLowerCase().includes(q))
+                );
+            },
 
             init() {
                 this.fetchTemplates();
                 // Listen for save events to refresh
                 window.addEventListener('template-saved', () => this.fetchTemplates());
+
+                // Re-initialize icons when filtering
+                this.$watch('searchQuery', () => {
+                    this.$nextTick(() => {
+                        lucide.createIcons();
+                    });
+                });
             },
 
             async fetchTemplates() {

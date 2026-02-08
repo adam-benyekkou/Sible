@@ -9,6 +9,11 @@
     formData: { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_password_secret: '', ssh_key_path: '' },
     init() {
         this.fetchSecrets();
+        this.$watch('viewMode', () => {
+            this.$nextTick(() => {
+                lucide.createIcons();
+            });
+        });
     },
     fetchSecrets() {
         fetch('/api/inventory/secrets').then(r => r.json()).then(data => this.secrets = data);
@@ -77,12 +82,13 @@
             {% if request.state.user.role == 'admin' %}
             <button class="secondary" hx-post="/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
                 hx-indicator="#ping-loading" style="white-space: nowrap;">
-                <i data-lucide="network" style="width: 14px; height: 14px;"></i> Ping All
+                <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Ping All
             </button>
 
             <template x-if="viewMode === 'table'">
                 <button class="primary" @click="openModal()" style="white-space: nowrap;">
-                    <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add Server
+                    <i data-lucide="plus" style="width: 14px; height: 14px; color: white; stroke: white;"></i> Add
+                    Server
                 </button>
             </template>
             {% endif %}
