@@ -138,9 +138,9 @@
                     Saving will overwrite the database configuration.
                 </p>
                 {% if request.state.user.role == 'admin' %}
-                <button type="submit" class="primary">
-                    <i data-lucide="save" style="width: 14px; height: 14px; margin-right: 6px;"></i> Save & Import Raw
-                    File
+                <button type="submit" class="primary" style="width: auto; height: 32px; display: inline-flex;">
+                    <i data-lucide="save" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                    <span>Save & Import Raw File</span>
                 </button>
                 {% else %}
                 <button type="button" disabled>Read Only (Watcher)</button>
