@@ -9,13 +9,13 @@ from app.utils.htmx import trigger_toast
 settings = get_settings()
 router = APIRouter()
 
-@router.get("/queue")
+@router.get("/schedules")
 async def get_queue_view(
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator"]))
 ):
     jobs = SchedulerService.list_jobs()
-    return templates.TemplateResponse("queue.html", {"request": request, "jobs": jobs, "active_tab": "queue"})
+    return templates.TemplateResponse("schedules.html", {"request": request, "jobs": jobs, "active_tab": "queue"})
 
 @router.post("/schedule")
 async def create_schedule(
@@ -77,7 +77,7 @@ async def update_schedule(
              trigger_toast(response, "Job not found after update", "error")
              return response
              
-        response = templates.TemplateResponse("partials/queue_row.html", {"request": request, "job": job})
+        response = templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job})
         trigger_toast(response, "Schedule updated", "success")
         return response
     except Exception as e:
@@ -86,7 +86,7 @@ async def update_schedule(
         trigger_toast(response, f"Error: {str(e)}", "error")
         return response
 
-@router.get("/partials/queue/row/{job_id}")
+@router.get("/partials/schedules/row/{job_id}")
 async def get_job_row(
     job_id: str, 
     request: Request,
@@ -94,9 +94,9 @@ async def get_job_row(
 ):
     job = SchedulerService.get_job_info(job_id)
     if not job: return Response("")
-    return templates.TemplateResponse("partials/queue_row.html", {"request": request, "job": job})
+    return templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job})
 
-@router.get("/partials/queue/row/{job_id}/edit")
+@router.get("/partials/schedules/row/{job_id}/edit")
 async def get_job_row_edit(
     job_id: str, 
     request: Request,
@@ -104,4 +104,4 @@ async def get_job_row_edit(
 ):
     job = SchedulerService.get_job_info(job_id)
     if not job: return Response(status_code=404)
-    return templates.TemplateResponse("partials/queue_row_edit.html", {"request": request, "job": job})
+    return templates.TemplateResponse("partials/schedules_row_edit.html", {"request": request, "job": job})

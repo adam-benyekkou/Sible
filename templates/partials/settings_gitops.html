@@ -25,8 +25,7 @@
                 </label>
                 <input type="text" id="git_repository_url" name="git_repository_url"
                     placeholder="https://github.com/username/repo.git or git@github.com:username/repo.git"
-                    value="{{ settings.git_repository_url or '' }}"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--ds-gray-300); border-radius: 4px;">
+                    value="{{ settings.git_repository_url or '' }}" style="width: 100%;">
                 <p style="font-size: 0.8rem; color: var(--ds-gray-500); margin-top: 0.25rem;">
                     The HTTPS or SSH URL of your Git repository.
                 </p>
@@ -38,8 +37,7 @@
                 </label>
                 <input type="password" id="git_ssh_key" name="git_ssh_key"
                     placeholder="Paste Private Key (starts with -----BEGIN...)" value="{{ settings.git_ssh_key or '' }}"
-                    autocomplete="off"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid var(--ds-gray-300); border-radius: 4px; font-family: monospace; font-size: 0.85rem;">
+                    autocomplete="off" style="width: 100%; font-family: monospace; font-size: 0.85rem;">
                 <p style="font-size: 0.8rem; color: var(--ds-gray-500); margin-top: 0.25rem;">
                     Required if using an SSH URL or a private HTTPS repository. This key is stored securely.
                 </p>

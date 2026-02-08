@@ -4,7 +4,7 @@
     /* --- GLOBAL VARIABLES (Geist Light) --- */
     /* 1. The Geist Canvas */
     --ds-background-100: #ffffff;
-    --ds-background-200: #fafafa;
+    --ds-background-200: #f7f7f8;
     /* Sidebar, Subtler backgrounds */
     --ds-gray-100: #f5f5f5;
     /* Hover states */
@@ -34,6 +34,8 @@
     --pico-color: var(--ds-gray-1000);
     --pico-border-radius: 6px;
     --pico-form-element-border-color: var(--ds-gray-200);
+    --pico-form-element-background-color: var(--ds-background-200);
+    --pico-form-element-active-background-color: var(--ds-background-100);
     --pico-primary-background: var(--ds-gray-1000);
     --pico-primary-border: var(--ds-gray-1000);
     --pico-primary-hover-background: #333;
@@ -181,26 +183,49 @@ button.btn-icon:hover {
 input,
 select,
 textarea {
-    background: #ffffff !important;
+    background: var(--ds-background-200) !important;
     border: 1px solid #eaeaea !important;
     color: #000000 !important;
     border-radius: 6px !important;
     box-shadow: none !important;
-    transition: border 0.15s ease;
+    transition: all 0.15s ease;
 }
 
-/* File Inputs */
+input[type="file"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Force Light Grey on Autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px var(--ds-background-200) inset !important;
+    -webkit-text-fill-color: var(--ds-gray-1000) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 input[type="file"]::file-selector-button {
     background: #000000;
     color: #ffffff;
     border: 1px solid #000000;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 0.75rem;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 0.875rem;
     font-weight: 500;
     margin-right: 12px;
     cursor: pointer;
     transition: background 0.15s ease;
+    vertical-align: middle;
 }
 
 input[type="file"]::file-selector-button:hover {

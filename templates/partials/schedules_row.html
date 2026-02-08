@@ -20,7 +20,7 @@
     <td style="text-align: right;">
         <div style="display: flex; justify-content: flex-end; gap: 4px;">
             {% if request.state.user.role == 'admin' %}
-            <button class="btn-icon" hx-get="/partials/queue/row/{{ job.id }}/edit" hx-target="closest tr"
+            <button class="btn-icon" hx-get="/partials/schedules/row/{{ job.id }}/edit" hx-target="closest tr"
                 hx-swap="outerHTML" title="Edit Schedule">
                 <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
             </button>
