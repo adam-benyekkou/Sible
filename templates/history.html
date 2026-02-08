@@ -2,80 +2,124 @@
 
 {% block content %}
 <div class="container" style="padding-top: 20px;">
-    <header class="flex justify-between items-center mb-4">
+    <!-- Modern Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
         <hgroup>
             <h1>History</h1>
-            <h2>Audit logs for all playbook executions</h2>
+            <h2 style="color: #666; font-size: 14px; font-weight: normal; margin-top: 4px;">Audit logs for all playbook
+                executions</h2>
         </hgroup>
         {% if request.state.user.role == 'admin' %}
-        <button class="outline danger" hx-delete="/history/all"
-            hx-confirm="Are you sure you want to delete ALL history logs? This cannot be undone." style="width: auto;">
+        <button type="button" hx-delete="/history/all"
+            hx-confirm="Are you sure you want to delete ALL history logs? This cannot be undone."
+            class="btn-danger-ghost"
+            style="background: white; color: var(--sible-error); border: 1px solid var(--ds-gray-200); font-size: 13px; font-weight: 500; padding: 6px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s;">
             Delete All
         </button>
         {% endif %}
-    </header>
+    </div>
 
     <div style="overflow-x: auto;">
-        <table class="striped" style="width: 100%;">
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Playbook</th>
-                    <th>Status</th>
-                    <th>Duration</th>
-                    <th>Type</th>
-                    <th style="text-align: right;">Actions</th>
+                    <th
+                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                        Date</th>
+                    <th
+                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                        Playbook</th>
+                    <th
+                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                        Status</th>
+                    <th
+                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                        Duration</th>
+                    <th
+                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600;">
+                        Type</th>
+                    <th
+                        style="padding: 12px; border-bottom: 1px solid #eaeaea; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: #666; font-weight: 600; text-align: right;">
+                        Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for run in runs %}
-                <tr id="run-row-{{ run.id }}">
-                    <td>{{ run.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>
-                        <a href="#" hx-get="/playbook/{{ run.playbook }}" hx-target="#main-content" hx-swap="innerHTML">
+                <tr id="run-row-{{ run.id }}" class="history-row">
+                    <!-- Date -->
+                    <td style="padding: 12px; border-bottom: 1px solid #eaeaea; font-size: 14px; color: #111;">
+                        {{ run.start_time.strftime('%Y-%m-%d %H:%M') }}
+                    </td>
+
+                    <!-- Playbook Link -->
+                    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
+                        <a href="#" hx-get="/playbook/{{ run.playbook }}" hx-target="#main-content" hx-swap="innerHTML"
+                            style="color: #000; text-decoration: none; font-weight: 500; font-size: 14px;"
+                            onmouseover="this.style.textDecoration='underline'"
+                            onmouseout="this.style.textDecoration='none'">
                             {{ run.playbook }}
                         </a>
                     </td>
-                    <td>
+
+                    <!-- Status -->
+                    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
                         {% if run.status == 'success' %}
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <span style="color: green;">●</span> Success
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--sible-success); display: inline-block;"></span>
+                            <span style="font-size: 14px; color: #111;">Success</span>
                         </div>
                         {% elif run.status == 'failed' %}
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <span style="color: red;">●</span> Failed
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span
+                                style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--sible-error); display: inline-block;"></span>
+                            <span style="font-size: 14px; color: #111;">Failed</span>
                         </div>
                         {% else %}
-                        <span aria-busy="true">Running</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span aria-busy="true" style="width: 8px; height: 8px; display: inline-block;"></span>
+                            <span style="font-size: 14px; color: var(--ds-gray-600);">Running</span>
+                        </div>
                         {% endif %}
                     </td>
-                    <td>
+
+                    <!-- Duration (Mono) -->
+                    <td
+                        style="padding: 12px; border-bottom: 1px solid #eaeaea; font-family: 'Geist Mono', monospace; font-size: 13px; color: #444;">
                         {% if run.end_time %}
                         {{ (run.end_time - run.start_time).total_seconds()|round(1) }}s
                         {% else %}
                         -
                         {% endif %}
                     </td>
-                    <td>
-                        {{ run.trigger }}
-                        {% if run.params %}
-                        <div style="font-size: 0.75rem; color: #888;" title="{{ run.params }}">
-                            (Custom)
+
+                    <!-- Type Badge -->
+                    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span
+                                style="background-color: #F5F5F5; color: #444; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 500; border: 1px solid #eaeaea;">
+                                {{ run.trigger|upper }}
+                            </span>
+                            {% if run.params %}
+                            <span
+                                style="font-size: 12px; color: #888; background: #fafafa; padding: 1px 4px; border-radius: 4px; border: 1px solid #eee;">Custom</span>
+                            {% endif %}
                         </div>
-                        {% endif %}
                     </td>
-                    <td style="text-align: right;">
-                        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+
+                    <!-- Actions -->
+                    <td style="padding: 12px; border-bottom: 1px solid #eaeaea; text-align: right;">
+                        <div style="display: flex; justify-content: flex-end; gap: 8px;">
                             <button type="button" class="btn-icon" title="View Logs" hx-get="/history/run/{{ run.id }}"
-                                hx-target="body" hx-swap="beforeend">
-                                <i data-lucide="file-text"></i>
+                                hx-target="body" hx-swap="beforeend" style="color: #666; transition: color 0.2s;">
+                                <i data-lucide="file-text" style="width: 16px; height: 16px;"></i>
                             </button>
                             {% if request.state.user.role == 'admin' %}
-                            <button class="btn-icon" style="color: var(--sible-error);"
+                            <button class="btn-icon" style="color: var(--sible-error); transition: opacity 0.2s;"
                                 hx-delete="/history/run/{{ run.id }}"
                                 hx-confirm="Are you sure you want to delete this log permanently?"
                                 hx-target="#run-row-{{ run.id }}" hx-swap="outerHTML" title="Delete">
-                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                             </button>
                             {% endif %}
                         </div>
@@ -83,11 +127,25 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="text-center">No runs recorded yet.</td>
+                    <td colspan="6" class="text-center" style="padding: 24px; color: #666;">No runs recorded yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<style>
+    /* Row Hover Effect */
+    tr.history-row:hover td {
+        background-color: #FAFAFA !important;
+    }
+
+    /* Button Hover */
+    .btn-danger-ghost:hover {
+        background: var(--sible-error) !important;
+        color: white !important;
+        border-color: var(--sible-error) !important;
+    }
+</style>
 {% endblock %}
