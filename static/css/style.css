@@ -40,6 +40,9 @@
     --pico-primary-border: var(--ds-gray-1000);
     --pico-primary-hover-background: #333;
     --pico-primary-inverse: #ffffff;
+    --pico-primary-focus: rgba(0, 0, 0, 0.05);
+    --pico-selection-background: rgba(0, 0, 0, 0.1);
+    --pico-selection-color: inherit;
     --pico-muted-color: var(--ds-gray-600);
     --pico-line-height: 1.5;
     --pico-font-size: 100%;
@@ -135,9 +138,40 @@ button:focus,
 button:active,
 [role="group"] button:focus,
 [role="group"] button:active,
-[role="group"] :focus {
+[role="group"] :focus,
+.nav-item:focus,
+.nav-item:active,
+.playbook-item:focus,
+.playbook-item:active,
+a:focus,
+a:active {
     box-shadow: none !important;
     outline: none !important;
+}
+
+/* Aggressive Global Reset for Blue Highlights */
+*:focus,
+*:active,
+*:focus-visible {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+}
+
+button.primary:focus {
+    background: #000;
+    border-color: #000;
+}
+
+[role="group"] button.primary:active,
+button.primary:active {
+    background: #444 !important;
+    border-color: #444 !important;
+}
+
+[role="group"] button.secondary:active,
+button.secondary:active {
+    background: var(--ds-gray-200) !important;
+    border-color: var(--ds-gray-200) !important;
 }
 
 /* Primary Button (Black Solid) */
