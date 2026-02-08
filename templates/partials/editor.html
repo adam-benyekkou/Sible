@@ -100,32 +100,8 @@
                     <label
                         style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target</label>
 
-                    <div x-data="{
-                        open: false,
-                        top: 0,
-                        left: 0,
-                        width: 0,
-                        toggle() {
-                            if (this.open) {
-                                this.open = false;
-                            } else {
-                                const rect = this.$refs.trigger.getBoundingClientRect();
-                                this.top = rect.bottom + 4;
-                                this.left = rect.left;
-                                this.width = rect.width;
-                                this.open = true;
-                            }
-                        },
-                        get currentLabel() {
-                            const target = this.$data.$root.scheduleTarget;
-                            const targets = this.$data.$root.launchParams.availableTargets;
-                            if (!target || target === 'all') return 'All Hosts';
-                            if (targets.groups && targets.groups.includes(target)) return target;
-                            const host = targets.hosts && targets.hosts.find(h => h.alias === target);
-                            return host ? host.alias + ' (host)' : target;
-                        }
-                    }" @click.outside="open = false" @scroll.window="open = false" @resize.window="open = false"
-                        class="geist-select-container">
+                    <div class="geist-select-container" @click.outside="showScheduleTargets = false"
+                        @scroll.window="showScheduleTargets = false">
 
                         <!-- Inject CSS locally to ensure it works -->
                         <style>
@@ -178,10 +154,6 @@
                                 padding: 4px;
                             }
 
-                            .geist-select-dropdown[style*="display: none"] {
-                                display: none !important;
-                            }
-
                             .geist-select-header {
                                 font-size: 11px;
                                 text-transform: uppercase;
@@ -224,17 +196,19 @@
                             }
                         </style>
 
-                        <div x-ref="trigger" @click="toggle()" class="geist-select-trigger" :aria-expanded="open">
-                            <span x-text="currentLabel"
+                        <div @click="showScheduleTargets = !showScheduleTargets" class="geist-select-trigger"
+                            :aria-expanded="showScheduleTargets">
+                            <span
+                                x-text="scheduleTarget === 'all' ? 'All Hosts' : (launchParams.availableTargets.hosts.find(h => h.alias === scheduleTarget) ? scheduleTarget + ' (host)' : scheduleTarget)"
                                 style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
                             <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
                         </div>
 
-                        <div x-show="open" x-transition class="geist-select-dropdown"
-                            style="position: absolute; top: 100%; left: 0; width: 100%; margin-top: 4px;">
+                        <div x-show="showScheduleTargets" x-transition class="geist-select-dropdown"
+                            x-init="$nextTick(() => lucide.createIcons())">
                             <!-- All -->
                             <div class="geist-select-option" :class="{ 'selected': scheduleTarget === 'all' }"
-                                @click="scheduleTarget = 'all'; open = false">
+                                @click="scheduleTarget = 'all'; showScheduleTargets = false">
                                 <i data-lucide="globe" style="width: 14px; height: 14px; color: #666;"></i>
                                 <span>All Hosts</span>
                                 <i data-lucide="check" class="check-icon" style="width: 14px; height: 14px;"></i>
@@ -247,7 +221,7 @@
                                     <div class="geist-select-header">Groups</div>
                                     <template x-for="g in launchParams.availableTargets.groups" :key="g">
                                         <div class="geist-select-option" :class="{ 'selected': scheduleTarget === g }"
-                                            @click="scheduleTarget = g; open = false">
+                                            @click="scheduleTarget = g; showScheduleTargets = false">
                                             <i data-lucide="users" style="width: 14px; height: 14px; color: #666;"></i>
                                             <span x-text="g"></span>
                                             <i data-lucide="check" class="check-icon"
@@ -265,7 +239,7 @@
                                     <template x-for="h in launchParams.availableTargets.hosts" :key="h.alias">
                                         <div class="geist-select-option"
                                             :class="{ 'selected': scheduleTarget === h.alias }"
-                                            @click="scheduleTarget = h.alias; open = false">
+                                            @click="scheduleTarget = h.alias; showScheduleTargets = false">
                                             <i data-lucide="server" style="width: 14px; height: 14px; color: #666;"></i>
                                             <span x-text="h.alias"></span>
                                             <span style="color: #999; font-size: 11px; margin-left: 4px;">(host)</span>
