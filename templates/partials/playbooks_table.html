@@ -1,0 +1,35 @@
+<table class="striped" style="margin-bottom: 0; border-collapse: separate; border-spacing: 0;">
+    <thead>
+        <tr style="border-bottom: 1px solid #EAEAEA;">
+            <th
+                style="width: 120px; padding-left: 24px; color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                Status</th>
+            <th
+                style="color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                Playbook</th>
+            <th
+                style="color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                Description</th>
+            <th
+                style="width: 150px; color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                Author</th>
+            <th
+                style="width: 180px; padding-right: 24px; color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                Last Execution</th>
+        </tr>
+    </thead>
+    <tbody id="playbooks-table-body" hx-get="/api/playbooks/list" hx-trigger="playbooks-refresh from:body"
+        hx-swap="outerHTML">
+        {% if playbooks %}
+        {% for playbook in playbooks %}
+        {% include "partials/playbooks_row.html" %}
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="5" style="text-align: center; padding: 64px 24px; color: #666;">
+                <div style="font-size: 14px; font-weight: 400; color: #999;">No automation found for this query</div>
+            </td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>

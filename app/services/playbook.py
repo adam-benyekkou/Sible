@@ -5,6 +5,8 @@ import re
 import yaml
 from app.core.config import get_settings
 from app.models import JobRun
+from datetime import datetime
+import os
 
 settings = get_settings()
 
@@ -90,6 +92,78 @@ class PlaybookService:
             file_path.unlink()
             return True
         except OSError: return False
+
+    def get_playbooks_metadata(self, search: Optional[str] = None) -> List[dict]:
+        if not settings.PLAYBOOKS_DIR.exists():
+            return []
+            
+        playbooks = []
+        for file_path in settings.PLAYBOOKS_DIR.rglob("*"):
+            if file_path.is_file() and file_path.suffix.lower() in {".yaml", ".yml"}:
+                rel_path = str(file_path.relative_to(settings.PLAYBOOKS_DIR)).replace("\\", "/")
+                content = self.get_playbook_content(rel_path) or ""
+                description = self._extract_description(content)
+                
+                # Search filtering
+                if search:
+                    s = search.lower()
+                    if s not in rel_path.lower() and s not in file_path.stem.lower() and s not in description.lower():
+                        continue
+
+                # Fetch history metadata
+                # Use subquery or separate query for latest job per playbook?
+                # For simplicity and performance with small sets, we'll get last successful/failed run
+                last_job = self.db.exec(
+                    select(JobRun)
+                    .where(JobRun.playbook == rel_path)
+                    .order_by(desc(JobRun.start_time))
+                ).first()
+
+                mtime = file_path.stat().st_mtime
+                last_modified = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                
+                # Folder prefix
+                folder_parts = rel_path.split("/")
+                folder_prefix = " / ".join(folder_parts[:-1]) if len(folder_parts) > 1 else ""
+
+                playbooks.append({
+                    "name": file_path.stem,
+                    "path": rel_path,
+                    "folder": folder_prefix,
+                    "description": description,
+                    "last_modified": last_modified,
+                    "status": last_job.status if last_job else "never_run",
+                    "last_run": self._get_relative_time(last_job.start_time) if last_job else "Never executed",
+                    "author": last_job.username if last_job and last_job.username else "System"
+                })
+        
+        return sorted(playbooks, key=lambda x: x["name"].lower())
+
+    def _get_relative_time(self, dt: datetime) -> str:
+        diff = datetime.utcnow() - dt
+        if diff.days > 0:
+            if diff.days == 1: return "Yesterday"
+            if diff.days < 7: return f"{diff.days} days ago"
+            return dt.strftime("%Y-%m-%d")
+        
+        seconds = diff.seconds
+        if seconds < 60: return "Just now"
+        if seconds < 3600: return f"{seconds // 60} minutes ago"
+        return f"{seconds // 3600} hours ago"
+
+    def _extract_description(self, content: str) -> str:
+        # Look for # Description: ... or # description: ...
+        match = re.search(r'^#\s*Description:\s*(.*)$', content, re.MULTILINE | re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return "Infrastructure playbook"
+
+    def delete_playbooks_bulk(self, names: List[str]) -> bool:
+        success = True
+        for name in names:
+            if not self.delete_playbook(name):
+                success = False
+        return success
 
     def has_requirements(self, name: str) -> bool:
         file_path = self._validate_path(name)

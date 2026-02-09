@@ -1,0 +1,60 @@
+<tr class="playbook-row"
+    onclick="if(!event.target.closest('.breadcrumb-link')){ htmx.ajax('GET', '/playbooks/{{ playbook.path | safe }}', {target: '#main-content', pushUrl: true}) }"
+    style="border-bottom: 1px solid #EAEAEA;">
+    <td style="padding: 20px 24px; vertical-align: middle;">
+        <div style="display: flex; align-items: center;">
+            <span class="status-dot status-{{ playbook.status }}"></span>
+            <span class="status-text-{{ playbook.status }}"
+                style="font-size: 13px; font-weight: 500; color: #000; text-transform: capitalize;">
+                {{ playbook.status | replace('_', ' ') }}
+            </span>
+        </div>
+    </td>
+    <td style="padding: 20px 0; vertical-align: middle;">
+        <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+                <span style="font-weight: 600; color: #000; font-size: 14px;">{{ playbook.name }}</span>
+            </div>
+            <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #999;">
+                {% if playbook.folder %}
+                {% set folders = playbook.path.split('/')[:-1] %}
+                {% for folder in folders %}
+                <a href="#" class="breadcrumb-link"
+                    onclick="event.stopPropagation(); document.getElementById('playbook-search').value='{{ folder }}'; htmx.trigger('#playbook-search', 'keyup'); return false;">{{
+                    folder }}</a> /
+                {% endfor %}
+                {% endif %}{{ playbook.path.split('/')[-1] }}
+            </div>
+        </div>
+    </td>
+    <td style="padding: 20px 0; vertical-align: middle;">
+        <div style="color: #666666; font-size: 14px; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+            title="{{ playbook.description }}">
+            {{ playbook.description }}
+        </div>
+    </td>
+    <td style="padding: 20px 0; vertical-align: middle;">
+        <div style="display: flex; align-items: center; gap: 8px;" x-data="{ showTooltip: false }">
+            {% if playbook.author == 'System' %}
+            <i data-lucide="clock" style="width: 14px; height: 14px; color: #999;" @mouseenter="showTooltip = true"
+                @mouseleave="showTooltip = false"></i>
+            {% else %}
+            <div @mouseenter="showTooltip = true" @mouseleave="showTooltip = false"
+                style="width: 20px; height: 20px; border-radius: 50%; background: #F5F5F5; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #666; cursor: help;">
+                {{ playbook.author[0] | upper if playbook.author else 'S' }}
+            </div>
+            {% endif %}
+            <span style="font-size: 13px; color: #000; position: relative;">
+                {{ playbook.author }}
+                <div x-show="showTooltip"
+                    style="position: absolute; bottom: 100%; left: 0; background: #000; color: #FFF; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 10; margin-bottom: 4px;"
+                    x-transition>
+                    {{ playbook.author }}
+                </div>
+            </span>
+        </div>
+    </td>
+    <td style="padding: 20px 24px 20px 0; vertical-align: middle; text-align: right;">
+        <span style="font-size: 13px; color: #999;">{{ playbook.last_run }}</span>
+    </td>
+</tr>

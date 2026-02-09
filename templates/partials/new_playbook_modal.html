@@ -40,6 +40,7 @@
                     htmx.ajax('GET', redirect, '#main-content');
                      // Also trigger sidebar refresh
                     document.body.dispatchEvent(new Event('sidebar-refresh'));
+                    document.body.dispatchEvent(new Event('playbooks-refresh'));
                     this.open = false;
                     this.filename = '';
                     this.folder = '';

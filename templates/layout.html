@@ -81,6 +81,11 @@
                 <i data-lucide="server"></i>
                 Inventory
             </a>
+            <a href="/playbooks/dashboard"
+                class="nav-item {% if '/playbooks/dashboard' in request.url.path %}active{% endif %}">
+                <i data-lucide="book"></i>
+                Playbooks
+            </a>
             <a href="/templates" class="nav-item {% if '/templates' in request.url.path %}active{% endif %}">
                 <i data-lucide="copy"></i>
                 Templates

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Request, Response, Form, Depends
+from fastapi import APIRouter, Request, Response, Form, Depends, Query
+from typing import List, Optional
 from app.templates import templates
 from app.core.config import get_settings
 from app.dependencies import get_playbook_service, get_runner_service, requires_role
@@ -9,6 +10,42 @@ import json
 
 settings = get_settings()
 router = APIRouter()
+@router.get("/playbooks/dashboard")
+async def get_dashboard(
+    request: Request,
+    playbook_service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+):
+    playbooks = playbook_service.get_playbooks_metadata()
+    return templates.TemplateResponse("playbooks_dashboard.html", {
+        "request": request,
+        "playbooks": playbooks
+    })
+
+@router.get("/api/playbooks/list")
+async def list_playbooks_api(
+    request: Request,
+    search: Optional[str] = Query(None),
+    playbook_service: PlaybookService = Depends(get_playbook_service)
+):
+    playbooks = playbook_service.get_playbooks_metadata(search=search)
+    return templates.TemplateResponse("partials/playbooks_table.html", {
+        "request": request,
+        "playbooks": playbooks
+    })
+
+@router.delete("/api/playbooks/bulk")
+async def delete_playbooks_bulk(
+    names: List[str] = Query(...),
+    playbook_service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role("admin"))
+):
+    success = playbook_service.delete_playbooks_bulk(names)
+    if success:
+        return Response(status_code=204, headers={"HX-Trigger": "sidebar-refresh, playbooks-refresh"})
+    return Response(status_code=500)
+
+
 
 @router.get("/api/playbook-vars/{name:path}")
 async def get_playbook_variables_form(
