@@ -39,7 +39,8 @@ async def stream_playbook_endpoint(
                 limit=limit,
                 tags=tags,
                 verbosity=verbosity,
-                extra_vars=ev_dict
+                extra_vars=ev_dict,
+                username=current_user.username
             ):
                 yield f"data: {line}\n\n"
         yield "event: end\ndata: Execution finished\n\n"

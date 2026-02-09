@@ -13,3 +13,4 @@ class JobRun(SQLModel, table=True):
     log_output: str = ""
     target: Optional[str] = Field(default=None)  # host or group to limit execution to
     params: Optional[str] = Field(default=None)  # JSON string of execution parameters
+    username: Optional[str] = Field(default=None)  # the user who executed the playbook

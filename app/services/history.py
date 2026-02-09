@@ -18,7 +18,10 @@ class HistoryService:
         count_query = select(func.count()).select_from(query.subquery())
         total_count = self.db.exec(count_query).one()
 
-        return self.db.exec(query.offset(offset).limit(limit)).all(), total_count
+        from app.models import User
+        users = self.db.exec(select(User)).all()
+
+        return self.db.exec(query.offset(offset).limit(limit)).all(), total_count, users
 
     def get_run(self, run_id: int) -> Optional[JobRun]:
         return self.db.get(JobRun, run_id)
@@ -48,7 +51,10 @@ class HistoryService:
         count_query = select(func.count()).select_from(statement.subquery())
         total_count = self.db.exec(count_query).one()
 
-        return self.db.exec(statement.offset(offset).limit(limit)).all(), total_count
+        from app.models import User
+        users = self.db.exec(select(User)).all()
+
+        return self.db.exec(statement.offset(offset).limit(limit)).all(), total_count, users
 
     def delete_playbook_runs(self, playbook_name: str):
         statement = delete(JobRun).where(JobRun.playbook == playbook_name)

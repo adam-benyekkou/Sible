@@ -92,7 +92,6 @@ async def create_host(
     ssh_user: str = Form("root"),
     ssh_port: int = Form(22),
     ssh_key_secret: str = Form(None),
-    ssh_password_secret: str = Form(None),
     group_name: str = Form("all"),
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
@@ -108,7 +107,6 @@ async def create_host(
             ssh_user=ssh_user, 
             ssh_port=ssh_port,
             ssh_key_secret=ssh_key_secret,
-            ssh_password_secret=ssh_password_secret,
             group_name=InventoryService.sanitize_ansible_name(group_name)
         )
         db.add(new_host)
@@ -153,7 +151,6 @@ async def update_host(
     # Handle secrets
     form_data = await request.form()
     if 'ssh_key_secret' in form_data: host.ssh_key_secret = form_data.get('ssh_key_secret') or None
-    if 'ssh_password_secret' in form_data: host.ssh_password_secret = form_data.get('ssh_password_secret') or None
     
     db.add(host)
     db.commit()

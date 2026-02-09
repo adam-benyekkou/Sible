@@ -8,7 +8,6 @@ class HostBase(BaseModel):
     ssh_port: int = 22
     ssh_key_path: Optional[str] = None
     ssh_key_secret: Optional[str] = None
-    ssh_password_secret: Optional[str] = None
     group_name: str = "all"
 
 class HostCreate(HostBase):
@@ -21,7 +20,6 @@ class HostUpdate(BaseModel):
     ssh_port: Optional[int] = None
     ssh_key_path: Optional[str] = None
     ssh_key_secret: Optional[str] = None
-    ssh_password_secret: Optional[str] = None
     group_name: Optional[str] = None
 
 class HostRead(HostBase):

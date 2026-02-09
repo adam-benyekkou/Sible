@@ -20,7 +20,7 @@ async def get_history_page(
 ):
     limit = 20
     offset = (page - 1) * limit
-    runs, total_count = service.get_recent_runs(limit=limit, offset=offset, search=search, status=status)
+    runs, total_count, users = service.get_recent_runs(limit=limit, offset=offset, search=search, status=status)
     
     # Get groups for UI distinction in Target column
     from sqlmodel import select
@@ -47,7 +47,8 @@ async def get_history_page(
         "has_next": has_next,
         "has_prev": has_prev,
         "total_count": total_count,
-        "groups": groups
+        "groups": groups,
+        "users": {u.username: u for u in users}
     }
     
     if request.headers.get("HX-Request"):
@@ -111,7 +112,7 @@ async def get_playbook_history(
 ):
     limit = 20
     offset = (page - 1) * limit
-    runs, total_count = service.get_playbook_runs(name, limit=limit, offset=offset)
+    runs, total_count, users = service.get_playbook_runs(name, limit=limit, offset=offset)
     
     import math
     total_pages = math.ceil(total_count / limit)
@@ -134,7 +135,8 @@ async def get_playbook_history(
         "has_next": has_next,
         "has_prev": has_prev,
         "total_count": total_count,
-        "groups": groups
+        "groups": groups,
+        "users": {u.username: u for u in users}
     })
 
 @router.delete("/history/playbook/{name:path}/all")

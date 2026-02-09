@@ -159,7 +159,7 @@ class RunnerService:
         elif "skipping:" in line: css_class = "log-debug"
         return f'<div class="{css_class}">{line}</div>' if css_class else f'<div>{line}</div>'
  
-    async def run_playbook_headless(self, playbook_name: str, check_mode: bool = False, limit: str = None, tags: str = None, verbosity: int = 0, extra_vars: dict = None) -> dict:
+    async def run_playbook_headless(self, playbook_name: str, check_mode: bool = False, limit: str = None, tags: str = None, verbosity: int = 0, extra_vars: dict = None, username: str = None) -> dict:
         playbook_name = playbook_name.replace("\\", "/")
         trigger = "cron" if not check_mode else "manual_check"
         
@@ -174,7 +174,7 @@ class RunnerService:
         db_params = json.dumps(params_dict) if any(v is not None and v != "" and v != {} and v != 0 for v in params_dict.values()) else None
         
         job_target = limit if limit else "all"
-        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=job_target)
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=job_target, username=username)
         
         self.db.add(job)
         self.db.commit()
@@ -253,7 +253,7 @@ class RunnerService:
                 return False
         return False
  
-    async def run_playbook(self, playbook_name: str, check_mode: bool = False, limit: str = None, tags: str = None, verbosity: int = 0, extra_vars: dict = None):
+    async def run_playbook(self, playbook_name: str, check_mode: bool = False, limit: str = None, tags: str = None, verbosity: int = 0, extra_vars: dict = None, username: str = None):
         playbook_name = playbook_name.replace("\\", "/")
         trigger = "manual" if not check_mode else "manual_check"
         
@@ -268,7 +268,7 @@ class RunnerService:
         db_params = json.dumps(params_dict) if any(v is not None and v != "" and v != {} and v != 0 for v in params_dict.values()) else None
         
         job_target = limit if limit else "all"
-        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=job_target)
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=job_target, username=username)
         
         self.db.add(job); self.db.commit(); self.db.refresh(job); job_id = job.id
             

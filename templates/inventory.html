@@ -6,7 +6,7 @@
     editingId: null, 
     viewMode: 'table', // table or raw
     secrets: [],
-    formData: { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_password_secret: '', ssh_key_path: '' },
+    formData: { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_key_path: '' },
     init() {
         this.fetchSecrets();
         this.$watch('viewMode', () => {
@@ -38,7 +38,7 @@
         this.showModal = false;
         this.resetForm();
     },
-    editHost(id, alias, hostname, user, port, group, keyPath, keySecret, passSecret) {
+    editHost(id, alias, hostname, user, port, group, keyPath, keySecret) {
         this.isEditing = true;
         this.editingId = id;
         this.formData = { 
@@ -48,8 +48,7 @@
             ssh_port: port, 
             group_name: group,
             ssh_key_path: keyPath || '',
-            ssh_key_secret: keySecret || '',
-            ssh_password_secret: passSecret || ''
+            ssh_key_secret: keySecret || ''
         };
         this.fetchSecrets();
         
@@ -64,7 +63,7 @@
         });
     },
     resetForm() {
-        this.formData = { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_password_secret: '', ssh_key_path: '' };
+        this.formData = { alias: '', hostname: '', ssh_user: 'root', ssh_port: 22, group_name: 'all', ssh_key_secret: '', ssh_key_path: '' };
     }
 }">
     <div style="margin-bottom: 24px;">

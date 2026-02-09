@@ -41,7 +41,7 @@ async def execute_playbook_job(playbook_name: str, **kwargs):
         runner_service = RunnerService(session)
         # Pass limit if target is provided
         limit = target if target and target != 'all' else None
-        result = await runner_service.run_playbook_headless(playbook_name, limit=limit)
+        result = await runner_service.run_playbook_headless(playbook_name, limit=limit, username="Scheduled")
     
     status = "SUCCESS" if result['success'] else "FAILED"
     logger.info(f"Scheduler: Job {playbook_name} finished with status {status}. RC: {result['rc']}")

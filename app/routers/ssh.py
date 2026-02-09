@@ -40,16 +40,9 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int):
                 await websocket.close(code=4001)
                 return
 
-            # Resolve secrets (Password or Key)
-            ssh_password = None
+            # Resolved secrets (Key)
             ssh_key_data = None
             ssh_key_path = host.ssh_key_path
-
-            if host.ssh_password_secret:
-                env_var = db.exec(select(EnvVar).where(EnvVar.key == host.ssh_password_secret)).first()
-                if env_var:
-                    ssh_password = env_var.value
-                    logger.info(f"DEBUG: Using SSH Password Secret '{host.ssh_password_secret}'")
 
             if host.ssh_key_secret:
                 env_var = db.exec(select(EnvVar).where(EnvVar.key == host.ssh_key_secret)).first()
@@ -68,9 +61,6 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int):
             "known_hosts": None, # Dev simplicity
             "connect_timeout": 15
         }
-        
-        if ssh_password:
-            connect_kwargs["password"] = ssh_password
         
         if ssh_key_data:
             try:

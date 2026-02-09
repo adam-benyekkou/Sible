@@ -26,6 +26,7 @@
                     <th>Date</th>
                     {% if not playbook_name %}<th>Playbook</th>{% endif %}
                     <th>Target</th>
+                    <th>User</th>
                     <th>Status</th>
                     <th>Duration</th>
                     <th>Type</th>
@@ -38,13 +39,27 @@
                     <td>{{ run.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
                     {% if not playbook_name %}<td><strong>{{ run.playbook }}</strong></td>{% endif %}
                     <td>
-                        <span
-                            style="background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: 'Geist Mono', monospace; display: inline-flex; align-items: center; gap: 4px;">
-                            {% if run.target in groups %}
-                            <span style="opacity: 0.7; font-weight: bold;">[G]</span>
-                            {% endif %}
-                            {{ run.target or 'N/A' }}
                         </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                            {% if run.username %}
+                            {% set db_user = users.get(run.username) if users else None %}
+                            {% if run.username == 'Scheduled' %}
+                            <i data-lucide="calendar" style="width: 14px; height: 14px; color: #888;"></i>
+                            <span style="color: #888; font-style: italic;">Scheduled</span>
+                            {% else %}
+                            <i data-lucide="user"
+                                style="width: 14px; height: 14px; color: {% if db_user and db_user.role == 'admin' %}#000{% else %}#666{% endif %};"></i>
+                            <span
+                                style="color: {% if db_user and db_user.role == 'admin' %}#000{% else %}#666{% endif %}; {% if db_user and db_user.role == 'admin' %}font-weight: 600;{% endif %}">
+                                {{ run.username }}
+                            </span>
+                            {% endif %}
+                            {% else %}
+                            <span style="color: #999; font-style: italic; font-size: 13px;">Unknown</span>
+                            {% endif %}
+                        </div>
                     </td>
                     <td>
                         {% if run.status == 'success' %}
@@ -93,7 +108,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="text-center">No runs recorded yet.</td>
+                    <td colspan="7" class="text-center">No runs recorded yet.</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -71,9 +71,6 @@ class InventoryService:
                         line += f" ansible_ssh_private_key_file={h.ssh_key_path}"
                     elif h.ssh_key_secret:
                         line += f" # Sible:ssh_key_secret={h.ssh_key_secret}"
-                        
-                    if h.ssh_password_secret:
-                        line += f" # Sible:ssh_password_secret={h.ssh_password_secret}"
                     
                     lines.append(line)
                 lines.append("") # Empty line between groups
@@ -150,7 +147,6 @@ class InventoryService:
                 ssh_port = 22
                 ssh_key_path = None
                 ssh_key_secret = None
-                ssh_password_secret = None
                 
                 for part in parts[1:]:
                     if '=' in part:
@@ -167,9 +163,6 @@ class InventoryService:
                         if 'ssh_key_secret=' in comment:
                             try: ssh_key_secret = comment.split('ssh_key_secret=')[1].split()[0]
                             except: pass
-                        if 'ssh_password_secret=' in comment:
-                            try: ssh_password_secret = comment.split('ssh_password_secret=')[1].split()[0]
-                            except: pass
 
                 host = Host(
                     alias=alias,
@@ -178,7 +171,6 @@ class InventoryService:
                     ssh_port=ssh_port,
                     ssh_key_path=ssh_key_path,
                     ssh_key_secret=ssh_key_secret,
-                    ssh_password_secret=ssh_password_secret,
                     group_name=current_group
                 )
                 db.add(host)
