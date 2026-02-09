@@ -47,11 +47,23 @@ async def get_history_page(
 
 @router.delete("/history/all")
 async def delete_all_history(
-    search: str = None,
-    status: str = None,
+    request: Request,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))
 ):
+    # HTMX hx-delete might send params in query or body depending on hx-include behavior
+    search = request.query_params.get("search")
+    status = request.query_params.get("status")
+    
+    if search is None or status is None:
+        try:
+            form = await request.form()
+            if search is None: search = form.get("search")
+            if status is None: status = form.get("status")
+        except:
+            pass
+
+    print(f"[Sible] Deleting filtered history: search='{search}', status='{status}'")
     service.delete_all_runs(search=search, status=status)
     response = Response(status_code=200)
     response.headers["HX-Refresh"] = "true"

@@ -229,7 +229,7 @@ async def get_inventory_targets(
         "all": ["all"]
     }
 
-@router.get("/host/{host_id}/card")
+@router.get("/api/inventory/host/{host_id}/card")
 async def get_host_card(
     request: Request, 
     host_id: int, 
