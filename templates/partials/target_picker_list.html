@@ -1,0 +1,63 @@
+{% if show_all %}
+<div class="picker-section">
+    <div class="picker-header">Global</div>
+    <label class="picker-row"
+        :class="{ 'disabled': selectedTargets.includes('all') === false && selectedTargets.includes('all') }">
+        <input type="checkbox" value="all" x-model="selectedTargets"
+            @change="if(selectedTargets.includes('all')) selectedTargets = ['all']" hidden>
+        <span class="custom-checkbox" :class="{ 'checked': selectedTargets.includes('all') }">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round" x-show="selectedTargets.includes('all')">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </span>
+        <span class="picker-label">All Hosts</span>
+    </label>
+</div>
+{% endif %}
+
+{% if groups %}
+<div class="picker-section">
+    <div class="picker-header">Groups</div>
+    {% for group in groups %}
+    <label class="picker-row"
+        :class="{ 'dimmed': selectedTargets.includes('all'), 'disabled': selectedTargets.includes('all') }">
+        <input type="checkbox" value="{{ group }}" x-model="selectedTargets" :disabled="selectedTargets.includes('all')"
+            @change="selectedTargets = selectedTargets.filter(t => t !== 'all')" hidden>
+        <span class="custom-checkbox" :class="{ 'checked': selectedTargets.includes('{{ group }}') }">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round" x-show="selectedTargets.includes('{{ group }}')">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </span>
+        <span class="picker-label">{{ group }}</span>
+        <span class="geist-badge">Group</span>
+    </label>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if hosts %}
+<div class="picker-section">
+    <div class="picker-header">Hosts</div>
+    {% for host in hosts %}
+    <label class="picker-row"
+        :class="{ 'dimmed': selectedTargets.includes('all'), 'disabled': selectedTargets.includes('all') }">
+        <input type="checkbox" value="{{ host.alias }}" x-model="selectedTargets"
+            :disabled="selectedTargets.includes('all')"
+            @change="selectedTargets = selectedTargets.filter(t => t !== 'all')" hidden>
+        <span class="custom-checkbox" :class="{ 'checked': selectedTargets.includes('{{ host.alias }}') }">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                stroke-linejoin="round" x-show="selectedTargets.includes('{{ host.alias }}')">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </span>
+        <span class="picker-label">{{ host.alias }}</span>
+    </label>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not show_all and not groups and not hosts %}
+<div style="padding: 20px; text-align: center; color: #666; font-size: 13px;">No results found</div>
+{% endif %}

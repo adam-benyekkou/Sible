@@ -226,6 +226,32 @@ async def get_inventory_targets(
         "all": ["all"]
     }
 
+@router.get("/api/inventory/targets/picker")
+async def get_inventory_targets_picker(
+    request: Request,
+    q: str = "",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
+    """
+    Returns the filtered list of targets for the picker component.
+    """
+    hosts = db.exec(select(Host)).all()
+    q = q.lower()
+    
+    filtered_hosts = [h for h in hosts if q in h.alias.lower() or q in h.hostname.lower()]
+    all_groups = sorted(list(set(h.group_name for h in hosts if h.group_name)))
+    filtered_groups = [g for g in all_groups if q in g.lower()]
+    
+    show_all = q in "all hosts" or not q
+
+    return templates.TemplateResponse("partials/target_picker_list.html", {
+        "request": request,
+        "hosts": filtered_hosts,
+        "groups": filtered_groups,
+        "show_all": show_all
+    })
+
 @router.get("/api/inventory/host/{host_id}/card")
 async def get_host_card(
     request: Request, 

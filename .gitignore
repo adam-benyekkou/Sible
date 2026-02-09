@@ -14,3 +14,9 @@ app/services_fix.py
 static/uploads/
 
 crash.log
+
+# Ansible
+playbooks/.jobs/
+playbooks/keys/
+playbooks/inventory.ini
+.ansible/

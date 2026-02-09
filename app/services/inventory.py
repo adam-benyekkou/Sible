@@ -9,10 +9,11 @@ import logging
 import uuid
 from app.utils.network import check_ssh
 
-logger = logging.getLogger("uvicorn.error")
+from app.core.config import get_settings
+settings = get_settings()
 
 class InventoryService:
-    INVENTORY_FILE = Path("inventory.ini")
+    INVENTORY_FILE = settings.PLAYBOOKS_DIR / "inventory.ini"
     
     @staticmethod
     def sanitize_ansible_name(name: str) -> str:
@@ -70,7 +71,33 @@ class InventoryService:
                     if h.ssh_key_path:
                         line += f" ansible_ssh_private_key_file={h.ssh_key_path}"
                     elif h.ssh_key_secret:
-                        line += f" # Sible:ssh_key_secret={h.ssh_key_secret}"
+                        # Resolve secret to file
+                        env_var = next((e for e in db.exec(select(EnvVar).where(EnvVar.key == h.ssh_key_secret)).all()), None)
+                        if env_var and env_var.value:
+                            secret_val = env_var.value
+                            keys_dir = settings.PLAYBOOKS_DIR / "keys"
+                            keys_dir.mkdir(exist_ok=True)
+                            key_file = keys_dir / f"{h.alias}.pem"
+                            
+                            # Ensure valid format
+                            if "\\n" in secret_val: secret_val = secret_val.replace("\\n", "\n")
+                            if not secret_val.endswith("\n"): secret_val += "\n"
+                            
+                            try:
+                                key_file.write_text(secret_val, encoding="utf-8")
+                                os.chmod(key_file, 0o600)
+                            except Exception as e:
+                                logger.error(f"Failed to write key file for {h.alias}: {e}")
+                            
+                            # Path for Ansible
+                            if settings.USE_DOCKER:
+                                 # DOCKER_WORKSPACE_PATH is /ansible
+                                 # key file is keys/foo.pem relative to playbook dir
+                                 line += f" ansible_ssh_private_key_file={settings.DOCKER_WORKSPACE_PATH}/keys/{h.alias}.pem"
+                            else:
+                                 line += f" ansible_ssh_private_key_file={key_file.resolve()}"
+                        else:
+                            line += f" # Sible:SecretNotFound={h.ssh_key_secret}"
                     
                     lines.append(line)
                 lines.append("") # Empty line between groups
@@ -210,4 +237,74 @@ class InventoryService:
         except Exception as e:
             logger.error(f"Failed to commit inventory status refresh: {e}")
             db.rollback()
+
+    @staticmethod
+    def create_job_inventory(db: Session, job_id: str) -> Path:
+        """
+        Creates a temporary inventory and key files for a specific job.
+        Returns the path to the inventory directory.
+        """
+        try:
+            job_dir = settings.PLAYBOOKS_DIR / ".jobs" / str(job_id)
+            if job_dir.exists():
+                shutil.rmtree(job_dir)
+            job_dir.mkdir(parents=True, exist_ok=True)
+            keys_dir = job_dir / "keys"
+            keys_dir.mkdir(exist_ok=True)
+            
+            hosts = db.exec(select(Host)).all()
+            lines = []
+            
+            # Group by group_name
+            groups = {}
+            for host in hosts:
+                g = host.group_name or "all"
+                if g not in groups:
+                    groups[g] = []
+                groups[g].append(host)
+            
+            for group, group_hosts in groups.items():
+                sanitized_group = InventoryService.sanitize_ansible_name(group or "all")
+                lines.append(f"[{sanitized_group}]")
+                for h in group_hosts:
+                    sanitized_alias = InventoryService.sanitize_ansible_name(h.alias)
+                    line = f"{sanitized_alias} ansible_host={h.hostname} ansible_user={h.ssh_user} ansible_port={h.ssh_port}"
+                    
+                    if h.ssh_key_path:
+                        line += f" ansible_ssh_private_key_file={h.ssh_key_path}"
+                    elif h.ssh_key_secret:
+                        # Resolve secret to file in job_dir/keys
+                        env_var = next((e for e in db.exec(select(EnvVar).where(EnvVar.key == h.ssh_key_secret)).all()), None)
+                        if env_var and env_var.value:
+                            secret_val = env_var.value
+                            key_file = keys_dir / f"{h.alias}.pem"
+                            
+                            # Ensure valid format
+                            if "\\n" in secret_val: secret_val = secret_val.replace("\\n", "\n")
+                            if not secret_val.endswith("\n"): secret_val += "\n"
+                            
+                            try:
+                                key_file.write_text(secret_val, encoding="utf-8")
+                                try: os.chmod(key_file, 0o600)
+                                except: pass
+                            except Exception as e:
+                                logger.error(f"Failed to write key file for {h.alias}: {e}")
+                            
+                            # Path relative to inventory file
+                            line += f" ansible_ssh_private_key_file=keys/{h.alias}.pem"
+                        else:
+                            line += f" # Sible:SecretNotFound={h.ssh_key_secret}"
+                    
+                    lines.append(line)
+                lines.append("")
+
+            content = "\n".join(lines)
+            inv_file = job_dir / "inventory.ini"
+            inv_file.write_text(content, encoding="utf-8")
+            
+            return job_dir
+            
+        except Exception as e:
+            logger.error(f"Failed to create job inventory: {e}")
+            return None
 

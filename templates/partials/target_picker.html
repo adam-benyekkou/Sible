@@ -1,0 +1,181 @@
+<div x-data="{ 
+    selectedTargets: (typeof initialTargets !== 'undefined' ? initialTargets : 'all').split(',').filter(x => x),
+    removeTarget(target) {
+        this.selectedTargets = this.selectedTargets.filter(t => t !== target);
+        if (this.selectedTargets.length === 0) this.selectedTargets = ['all'];
+    }
+}" x-init="$watch('selectedTargets', value => $dispatch('targets-changed', value))" class="target-picker-container">
+    <div class="search-container">
+        <input type="text" name="q" placeholder="Search targets..." hx-get="/api/inventory/targets/picker"
+            hx-trigger="keyup changed delay:200ms, load" hx-target="#picker-list" class="picker-search-input">
+        <i data-lucide="search" class="search-icon"></i>
+    </div>
+
+    <div class="selected-badges" x-show="selectedTargets.length > 0">
+        <template x-for="target in selectedTargets" :key="target">
+            <span class="picker-badge">
+                <span x-text="target === 'all' ? 'All Hosts' : target"></span>
+                <button type="button" @click="removeTarget(target)">&times;</button>
+            </span>
+        </template>
+    </div>
+
+    <div id="picker-list" class="picker-list-container">
+        <div style="padding: 20px; text-align: center;"><span aria-busy="true">Loading targets...</span></div>
+    </div>
+
+    <input type="hidden" name="target" :value="selectedTargets.join(',')">
+</div>
+
+<style>
+    .target-picker-container {
+        border: 1px solid #EAEAEA;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .search-container {
+        position: relative;
+        border-bottom: 1px solid #EAEAEA;
+    }
+
+    .picker-search-input {
+        width: 100% !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 12px 12px 12px 36px !important;
+        font-size: 14px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin-bottom: 0 !important;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #999;
+        pointer-events: none;
+    }
+
+    .selected-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 12px;
+        background: #FAFAFA;
+        border-bottom: 1px solid #EAEAEA;
+    }
+
+    .picker-badge {
+        display: inline-flex;
+        align-items: center;
+        background: #000;
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        gap: 6px;
+    }
+
+    .picker-badge button {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 0;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+        transition: color 0.1s;
+    }
+
+    .picker-badge button:hover {
+        color: #fff;
+    }
+
+    .picker-list-container {
+        max-height: 240px;
+        overflow-y: auto;
+    }
+
+    .picker-section {
+        padding-bottom: 4px;
+    }
+
+    .picker-header {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #888;
+        padding: 12px 12px 4px;
+        font-weight: 600;
+    }
+
+    .picker-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background 0.1s;
+        margin-bottom: 0 !important;
+        border: none !important;
+    }
+
+    .picker-row:hover {
+        background: #FAFAFA;
+    }
+
+    .picker-row.dimmed {
+        opacity: 0.5;
+    }
+
+    .picker-row.disabled {
+        cursor: not-allowed;
+    }
+
+    .picker-label {
+        font-size: 14px;
+        color: #000;
+        flex: 1;
+    }
+
+    .custom-checkbox {
+        width: 18px;
+        height: 18px;
+        border: 1px solid #EAEAEA;
+        border-radius: 4px;
+        background: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        flex-shrink: 0;
+    }
+
+    .custom-checkbox.checked {
+        background: #000000;
+        border-color: #000000;
+    }
+
+    .custom-checkbox svg {
+        width: 12px;
+        height: 12px;
+        color: #FFFFFF;
+    }
+
+    .geist-badge {
+        background: #f0f0f0;
+        color: #666;
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+</style>

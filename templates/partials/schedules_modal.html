@@ -9,8 +9,7 @@
         Update the cron expression and execution target for <strong>{{ job.args[0] or job.playbook }}</strong>.
     </p>
 
-    <form hx-put="/schedule/{{ job.id }}" hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML"
-        hx-on:htmx:after-request="if(event.detail.successful) { $dispatch('close-modal'); }">
+    <form hx-put="/schedule/{{ job.id }}" hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML">
 
         <label style="margin-bottom: 2rem;">
             <span style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Cron
@@ -24,129 +23,12 @@
             </div>
         </label>
 
-        <div style="margin-bottom: 2rem; position: relative;" x-init="lucide.createIcons()">
+        <div style="margin-bottom: 2rem;" x-init="lucide.createIcons()">
             <span
-                style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target</span>
-            {% set initial_target = job.target or 'all' %}
-
-            <div x-data="{
-                open: false,
-                search: '',
-                selected: '{{ initial_target | e }}'.split(',').filter(x => x),
-                getLabel() {
-                    if (this.selected.includes('all')) return 'All Hosts';
-                    if (this.selected.length === 0) return 'All Hosts';
-                    if (this.selected.length === 1) return this.selected[0];
-                    return this.selected.length + ' Targets Selected';
-                },
-                toggle() {
-                    this.open = !this.open;
-                },
-                toggleTarget(val) {
-                    if (val === 'all') {
-                        this.selected = ['all'];
-                    } else {
-                        // Remove 'all' if selecting specific
-                        this.selected = this.selected.filter(x => x !== 'all');
-                        if (this.selected.includes(val)) {
-                            this.selected = this.selected.filter(x => x !== val);
-                        } else {
-                            this.selected.push(val);
-                        }
-                        if (this.selected.length === 0) this.selected = ['all'];
-                    }
-                },
-                isDimmed(val) {
-                    return this.selected.includes('all') && val !== 'all';
-                },
-                matches(text) {
-                    if (!this.search) return true;
-                    return text.toLowerCase().includes(this.search.toLowerCase());
-                }
-            }" @click.outside="open = false" class="geist-select-container">
-
-                <input type="hidden" name="target" :value="selected.join(',')">
-
-                <!-- Using prevent for better control -->
-                <div @click.prevent="toggle()" class="geist-select-trigger" :aria-expanded="open"
-                    style="user-select: none;">
-                    <span x-text="getLabel()"
-                        style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; pointer-events: none;"></span>
-                    <i data-lucide="chevron-down"
-                        style="width: 14px; height: 14px; color: #666; pointer-events: none;"></i>
-                </div>
-
-                <div x-show="open" x-transition class="geist-select-dropdown" style="display: none;"
-                    :style="open ? 'display: block' : 'display: none'">
-                    <!-- Search Bar -->
-                    <div style="padding: 0; border-bottom: 1px solid #EAEAEA;">
-                        <input type="text" x-model="search" placeholder="Search targets..." @click.stop=""
-                            style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important; color: #000;">
-                    </div>
-
-                    <div style="max-height: 250px; overflow-y: auto; padding: 4px;">
-                        <!-- GLOBAL -->
-                        <div x-show="matches('all')">
-                            <div class="geist-select-header">Global</div>
-                            <div class="geist-select-option" @click="toggleTarget('all')"
-                                :class="{ 'dimmed': isDimmed('all') }">
-                                <span class="custom-checkbox" :class="{ 'checked': selected.includes('all') }">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                        stroke-linecap="round" stroke-linejoin="round"
-                                        x-show="selected.includes('all')">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </span>
-                                <span>All Hosts</span>
-                            </div>
-                        </div>
-
-                        <!-- GROUPS -->
-                        {% if groups %}
-                        <div x-show="{% for g in groups %}matches({{ g | tojson }}) || {% endfor %} false">
-                            <div class="geist-select-header">Groups</div>
-                            {% for group in groups %}
-                            <div class="geist-select-option" x-show="matches({{ group | tojson }})"
-                                @click="toggleTarget({{ group | tojson }})"
-                                :class="{ 'dimmed': isDimmed({{ group | tojson }}) }">
-                                <span class="custom-checkbox"
-                                    :class="{ 'checked': selected.includes({{ group | tojson }}) }">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                        stroke-linecap="round" stroke-linejoin="round"
-                                        x-show="selected.includes({{ group | tojson }})">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </span>
-                                <span style="flex: 1;" x-text='{{ group | tojson }}'></span>
-                                <span class="geist-badge">Group</span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <!-- HOSTS -->
-                        {% if servers %}
-                        <div x-show="{% for s in servers %}matches({{ s | tojson }}) || {% endfor %} false">
-                            <div class="geist-select-header">Hosts</div>
-                            {% for server in servers %}
-                            <div class="geist-select-option" x-show="matches({{ server | tojson }})"
-                                @click="toggleTarget({{ server | tojson }})"
-                                :class="{ 'dimmed': isDimmed({{ server | tojson }}) }">
-                                <span class="custom-checkbox"
-                                    :class="{ 'checked': selected.includes({{ server | tojson }}) }">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                        stroke-linecap="round" stroke-linejoin="round"
-                                        x-show="selected.includes({{ server | tojson }})">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </span>
-                                <span x-text='{{ server | tojson }}'></span>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+                style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 8px;">Target</span>
+            {% set initial_targets = job.target or 'all' %}
+            <div x-init="initialTargets = '{{ initial_targets | e }}'">
+                {% include "partials/target_picker.html" %}
             </div>
         </div>
 

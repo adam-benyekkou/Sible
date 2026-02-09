@@ -34,11 +34,14 @@ async def get_queue_view(
 async def create_schedule(
     playbook: str = Form(...), 
     cron: str = Form(...),
+    target: str = Form(default=None),
     current_user: object = Depends(requires_role(["admin"]))
 ):
-    job_id = SchedulerService.add_playbook_job(playbook, cron)
+    job_id = SchedulerService.add_playbook_job(playbook, cron, target=target)
     response = Response(status_code=200)
     if job_id:
+        import json
+        response.headers["HX-Trigger"] = json.dumps({"close-modal": True})
         trigger_toast(response, f"Scheduled {playbook}", "success")
     else:
         trigger_toast(response, "Invalid Cron Expression", "error")
@@ -97,7 +100,12 @@ async def update_schedule(
         groups = list(set(h.group_name for h in hosts if h.group_name))
              
         response = templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job, "groups": groups})
+        
+        # Trigger modal close and toast
+        import json
+        response.headers["HX-Trigger"] = json.dumps({"close-modal": True})
         trigger_toast(response, "Schedule updated", "success")
+        
         return response
     except Exception as e:
         logger.error(f"Exception updating job {job_id}: {e}")

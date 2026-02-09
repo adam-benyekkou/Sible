@@ -124,107 +124,16 @@
                     </div>
                 </label>
 
-                <div style="margin-bottom: 2rem; position: relative; overflow: visible;" x-init="lucide.createIcons()">
+                <div style="margin-bottom: 2rem;" x-init="lucide.createIcons()">
                     <span
-                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target</span>
-                    <div x-data="{
-                        open: false,
-                        search: '',
-                        getLabel() {
-                            if (scheduleTargets.includes('all')) return 'All Hosts';
-                            if (scheduleTargets.length === 0) return 'All Hosts';
-                            if (scheduleTargets.length === 1) return scheduleTargets[0];
-                            return scheduleTargets.length + ' Targets Selected';
-                        },
-                        isDimmed(val) {
-                            return scheduleTargets.includes('all') && val !== 'all';
-                        },
-                        matches(text) {
-                            if (!this.search) return true;
-                            return text.toLowerCase().includes(this.search.toLowerCase());
-                        }
-                    }" @click.outside="open = false" class="geist-select-container"
-                        style="position: relative; overflow: visible;">
-
-                        <div @click.prevent="open = !open" class="geist-select-trigger" :aria-expanded="open"
-                            style="user-select: none;">
-                            <span x-text="getLabel()"
-                                style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; pointer-events: none;"></span>
-                            <i data-lucide="chevron-down"
-                                style="width: 14px; height: 14px; color: #666; pointer-events: none;"></i>
-                        </div>
-
-                        <div x-show="open" x-transition class="geist-select-dropdown" style="display: none;"
-                            :style="open ? 'display: block' : 'display: none'">
-                            <div style="padding: 0; border-bottom: 1px solid #EAEAEA;">
-                                <input type="text" x-model="search" placeholder="Search targets..." @click.stop=""
-                                    style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important; color: #000;">
-                            </div>
-
-                            <div style="max-height: 250px; overflow-y: auto; padding: 4px;">
-                                <div x-show="matches('all')">
-                                    <div class="geist-select-header">Global</div>
-                                    <div class="geist-select-option" @click="toggleScheduleTarget('all')"
-                                        :class="{ 'dimmed': isDimmed('all') }">
-                                        <span class="custom-checkbox"
-                                            :class="{ 'checked': scheduleTargets.includes('all') }">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                                stroke-linecap="round" stroke-linejoin="round"
-                                                x-show="scheduleTargets.includes('all')">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        </span>
-                                        <span>All Hosts</span>
-                                    </div>
-                                </div>
-
-                                <template
-                                    x-if="launchParams.availableTargets.groups && launchParams.availableTargets.groups.length > 0">
-                                    <div x-show="launchParams.availableTargets.groups.some(g => matches(g))">
-                                        <div class="geist-select-header">Groups</div>
-                                        <template x-for="g in launchParams.availableTargets.groups" :key="g">
-                                            <div class="geist-select-option" x-show="matches(g)"
-                                                @click="toggleScheduleTarget(g)" :class="{ 'dimmed': isDimmed(g) }">
-                                                <span class="custom-checkbox"
-                                                    :class="{ 'checked': scheduleTargets.includes(g) }">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-                                                        x-show="scheduleTargets.includes(g)">
-                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                    </svg>
-                                                </span>
-                                                <span style="flex: 1;" x-text="g"></span>
-                                                <span class="geist-badge">Group</span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-
-                                <template
-                                    x-if="launchParams.availableTargets.hosts && launchParams.availableTargets.hosts.length > 0">
-                                    <div x-show="launchParams.availableTargets.hosts.some(h => matches(h.alias))">
-                                        <div class="geist-select-header">Hosts</div>
-                                        <template x-for="h in launchParams.availableTargets.hosts" :key="h.alias">
-                                            <div class="geist-select-option" x-show="matches(h.alias)"
-                                                @click="toggleScheduleTarget(h.alias)"
-                                                :class="{ 'dimmed': isDimmed(h.alias) }">
-                                                <span class="custom-checkbox"
-                                                    :class="{ 'checked': scheduleTargets.includes(h.alias) }">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-                                                        x-show="scheduleTargets.includes(h.alias)">
-                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                    </svg>
-                                                </span>
-                                                <span x-text="h.alias"></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
+                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 8px;">Target</span>
+                    <div x-data="{ initialTargets: scheduleTargets.join(',') }"
+                        @targets-changed="scheduleTargets = $event.detail">
+                        {% include "partials/target_picker.html" %}
                     </div>
                 </div>
+
+
 
                 <footer
                     style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1rem; border-top: none; padding: 0;">

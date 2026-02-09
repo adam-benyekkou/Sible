@@ -36,9 +36,25 @@ class RunnerService:
         limit: str = None,
         tags: str = None,
         verbosity: int = 0,
-        extra_vars: dict = None
+        extra_vars: dict = None,
+        inventory_path: Path = None
     ) -> Tuple[List[str], str]:
-        inventory_file = "inventory.ini"
+        # Use provided inventory path or default to global inventory.ini
+        # inventory_path should be relative to PLAYBOOKS_DIR if possible, or absolute
+        
+        # If inventory_path is provided as absolute path, we need to handle it for Docker
+        if inventory_path:
+             if inventory_path.is_absolute():
+                 try:
+                     rel_inv = inventory_path.resolve().relative_to(settings.PLAYBOOKS_DIR.resolve())
+                     inventory_file = rel_inv.as_posix()
+                 except ValueError:
+                     # Fallback if outside playbooks dir (shouldn't happen with new logic)
+                     inventory_file = "inventory.ini"
+             else:
+                 inventory_file = str(inventory_path).replace("\\", "/")
+        else:
+             inventory_file = "inventory.ini"
         
         # 1. Try Docker execution if enabled
         if settings.USE_DOCKER:
@@ -160,6 +176,10 @@ class RunnerService:
         return f'<div class="{css_class}">{line}</div>' if css_class else f'<div>{line}</div>'
  
     async def run_playbook_headless(self, playbook_name: str, check_mode: bool = False, limit: str = None, tags: str = None, verbosity: int = 0, extra_vars: dict = None, username: str = None) -> dict:
+        # Sync inventory before run
+        from app.services.inventory import InventoryService
+        InventoryService.sync_db_to_ini(self.db)
+
         playbook_name = playbook_name.replace("\\", "/")
         trigger = "cron" if not check_mode else "manual_check"
         
@@ -190,8 +210,20 @@ class RunnerService:
  
         env_vars_db = self.db.exec(select(EnvVar)).all()
         custom_env = {ev.key: ev.value for ev in env_vars_db}
-        custom_env.update({"ANSIBLE_FORCE_COLOR": "0", "ANSIBLE_NOCOWS": "1"})
+        custom_env.update({"ANSIBLE_FORCE_COLOR": "0", "ANSIBLE_NOCOWS": "1", "ANSIBLE_HOST_KEY_CHECKING": "False"})
  
+        # Create ephemeral inventory
+        from app.services.inventory import InventoryService
+        import shutil
+        
+        job_inv_dir = InventoryService.create_job_inventory(self.db, job_id)
+        inv_path = job_inv_dir / "inventory.ini" if job_inv_dir else None
+        
+        if not inv_path:
+             job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = "Failed to create inventory"; job.exit_code = 1
+             self.db.add(job); self.db.commit()
+             return {'success': False, 'output': "Failed to create inventory", 'rc': 1}
+
         cmd, error_msg = self._get_ansible_command(
             playbook_path, 
             check_mode=check_mode,
@@ -199,13 +231,15 @@ class RunnerService:
             limit=limit,
             tags=tags,
             verbosity=verbosity,
-            extra_vars=extra_vars
+            extra_vars=extra_vars,
+            inventory_path=inv_path
         )
         if not cmd:
             job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = error_msg; job.exit_code = 127
             self.db.add(job); self.db.commit()
+            if job_inv_dir and job_inv_dir.exists(): shutil.rmtree(job_inv_dir)
             return {'success': False, 'output': error_msg, 'rc': 127}
- 
+
         env = os.environ.copy()
         env.update(custom_env)
         env["PYTHONUNBUFFERED"] = "1"
@@ -241,6 +275,10 @@ class RunnerService:
                 job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = msg; job.exit_code = 1
                 self.db.add(job); self.db.commit()
             return {'success': False, 'output': msg, 'rc': 1}
+        finally:
+            if job_inv_dir and job_inv_dir.exists():
+                try: shutil.rmtree(job_inv_dir)
+                except: pass
  
     def stop_playbook(self, playbook_name: str) -> bool:
         playbook_name = playbook_name.replace("\\", "/")
@@ -254,6 +292,10 @@ class RunnerService:
         return False
  
     async def run_playbook(self, playbook_name: str, check_mode: bool = False, limit: str = None, tags: str = None, verbosity: int = 0, extra_vars: dict = None, username: str = None):
+        # Sync inventory before run
+        from app.services.inventory import InventoryService
+        InventoryService.sync_db_to_ini(self.db)
+        
         playbook_name = playbook_name.replace("\\", "/")
         trigger = "manual" if not check_mode else "manual_check"
         
@@ -298,8 +340,14 @@ class RunnerService:
  
             env_vars_db = self.db.exec(select(EnvVar)).all()
             custom_env = {ev.key: ev.value for ev in env_vars_db}
-            custom_env.update({"ANSIBLE_FORCE_COLOR": "0", "ANSIBLE_NOCOWS": "1"})
+            custom_env.update({"ANSIBLE_FORCE_COLOR": "0", "ANSIBLE_NOCOWS": "1", "ANSIBLE_HOST_KEY_CHECKING": "False"})
  
+            # Create ephemeral inventory
+            from app.services.inventory import InventoryService
+            import shutil
+            job_inv_dir = InventoryService.create_job_inventory(self.db, job_id)
+            inv_path = job_inv_dir / "inventory.ini" if job_inv_dir else None
+
             cmd, error_msg = self._get_ansible_command(
                 playbook_path, 
                 check_mode=check_mode, 
@@ -307,12 +355,14 @@ class RunnerService:
                 limit=limit,
                 tags=tags,
                 verbosity=verbosity,
-                extra_vars=extra_vars
+                extra_vars=extra_vars,
+                inventory_path=inv_path
             )
             if not cmd:
                  yield error_msg
                  job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = error_msg; job.exit_code = 127
                  self.db.add(job); self.db.commit()
+                 if job_inv_dir and job_inv_dir.exists(): shutil.rmtree(job_inv_dir)
                  return
  
             try:
@@ -369,6 +419,9 @@ class RunnerService:
             finally:
                 if playbook_name in RunnerService._processes:
                     del RunnerService._processes[playbook_name]
+                if job_inv_dir and job_inv_dir.exists():
+                    try: shutil.rmtree(job_inv_dir)
+                    except: pass
  
     async def install_requirements(self, playbook_name: str):
         playbook_name = playbook_name.replace("\\", "/")
