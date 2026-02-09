@@ -92,23 +92,28 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int):
         # 5. Establish SSH Connection
         async with asyncssh.connect(**connect_kwargs) as conn:
             logger.info(f"SSH Connected to {host.hostname} for host_id: {host_id}")
-            # Start interactive session with explicit encoding (Reverted from binary)
-            async with conn.create_process(term_type='xterm', term_size=(80, 24), encoding='utf-8') as process:
+            # Start interactive session in binary mode
+            async with conn.create_process(term_type='xterm', term_size=(80, 24), encoding=None) as process:
                 
                 # Bi-directional forwarding tasks
                 async def forward_stdout():
                     try:
-                        async for msg in process.stdout:
-                            # logger.info(f"STDOUT: {repr(msg)}") 
-                            await websocket.send_text(msg)
+                        while True:
+                            msg = await process.stdout.read(4096)
+                            if not msg:
+                                break
+                            # logger.info(f"STDOUT (bin): {len(msg)} bytes") 
+                            await websocket.send_bytes(msg)
                     except Exception as e:
                         logger.error(f"Error forwarding stdout: {e}")
-                        pass
                         
                 async def forward_stderr():
                      try:
-                        async for msg in process.stderr:
-                            await websocket.send_text(msg)
+                        while True:
+                            msg = await process.stderr.read(4096)
+                            if not msg:
+                                break
+                            await websocket.send_bytes(msg)
                      except Exception:
                         pass
 
@@ -116,40 +121,51 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int):
                 stderr_task = asyncio.create_task(forward_stderr())
 
                 try:
+                    import json
                     while True:
-                        data = await websocket.receive_text()
+                        try:
+                            msg_data = await websocket.receive_text()
+                            try:
+                                payload = json.loads(msg_data)
+                                msg_type = payload.get("type")
+                                if msg_type == "input":
+                                    input_data = payload.get("data", "")
+                                    if isinstance(input_data, str):
+                                        input_data = input_data.encode("utf-8")
+                                    process.stdin.write(input_data)
+                                    await process.stdin.drain()
+                                elif msg_type == "resize":
+                                    process.set_terminal_size(payload.get("cols"), payload.get("rows"))
+                            except json.JSONDecodeError:
+                                process.stdin.write(msg_data.encode("utf-8"))
+                                await process.stdin.drain()
+                        except WebSocketDisconnect:
+                            break
+                        except Exception as e:
+                            logger.error(f"SSH WS Input Error: {e}")
+                            break
                         
-                        # logger.info(f"WS_RX: {repr(data)}") # Debug what we got
-                        
-                        process.stdin.write(data)
-                        await process.stdin.drain()
-                        
-                        # logger.info("WROTE_TO_PTY") # Confirm write happened
-                        
-                except WebSocketDisconnect:
-                    logger.info(f"WebSocket disconnected for host_id: {host_id}")
-                except Exception as e:
-                    logger.error(f"Input loop error: {e}")
-                    import traceback
-                    logger.error(traceback.format_exc())
                 finally:
                     stdout_task.cancel()
                     stderr_task.cancel()
+                    try:
+                        await stdout_task
+                        await stderr_task
+                    except asyncio.CancelledError:
+                        pass
                     
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"SSH WS Error for host {host_id}: {error_msg}")
+        logger.error(f"SSH WS Error: {error_msg}")
         try:
              clean_reason = "".join(ch for ch in error_msg if ch.isprintable())
              await websocket.send_text(f"\r\n\x1b[31mSSH Error: {clean_reason}\x1b[0m\r\n")
-             # Small delay to allow message to arrive
-             await asyncio.sleep(1)
-             await websocket.close(code=4001, reason=clean_reason[:120])
-        except Exception as close_err:
-             logger.error(f"Error during socket closure for host {host_id}: {close_err}")
+             await asyncio.sleep(0.5)
+             await websocket.close(code=1011, reason=clean_reason[:120])
+        except:
+             pass
     finally:
         try:
-            # Check if socket is already closed to avoid double-close errors
             await websocket.close()
         except:
             pass

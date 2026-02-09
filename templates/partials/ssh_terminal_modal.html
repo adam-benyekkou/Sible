@@ -1,28 +1,64 @@
 <div x-data="sshTerminalModal()" @open-ssh-terminal.window="openModal($event.detail)" class="ssh-modal-wrapper"
     x-show="isOpen" x-transition.opacity style="display: none;">
 
-    <dialog open x-show="isOpen" x-transition.scale>
-        <article class="modal-content" style="min-width: 800px; width: 90vw; max-width: 1200px;">
+    <style>
+        /* Custom scrollbar for xterm - Light theme version */
+        #ssh-terminal-container .xterm-viewport::-webkit-scrollbar {
+            width: 8px !important;
+            height: 0px !important;
+            background: transparent !important;
+        }
+
+        #ssh-terminal-container .xterm-viewport::-webkit-scrollbar-track {
+            background: #fdfdfd !important;
+            border: none !important;
+        }
+
+        #ssh-terminal-container .xterm-viewport::-webkit-scrollbar-thumb {
+            background: #e5e7eb !important;
+            border-radius: 4px !important;
+        }
+
+        #ssh-terminal-container .xterm-viewport::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db !important;
+        }
+
+        /* Ensure the viewport only scrolls vertically and hides track when unnecessary */
+        #ssh-terminal-container .xterm-viewport {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            background: transparent !important;
+        }
+
+        #ssh-terminal-container .xterm-screen {
+            background: transparent !important;
+        }
+    </style>
+
+    <dialog open x-show="isOpen" x-transition.scale style="background: transparent; border: none; padding: 0;">
+        <article class="modal-content"
+            style="min-width: 800px; width: 90vw; max-width: 1200px; border-radius: 12px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb; background: #ffffff;">
             <header
-                style="background: rgba(255,255,255,0.8); border-bottom: 1px solid var(--ds-gray-200); padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i data-lucide="terminal" style="width: 18px; height: 18px; color: var(--ds-gray-1000);"></i>
-                    <h5 style="margin: 0; font-size: 1rem; font-weight: 600;">Terminal: <span x-text="alias"></span>
-                    </h5>
-                </div>
+                style="background: #ffffff; padding: 1.5rem 1.5rem 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #111827;">Terminal: <span
+                        x-text="alias"></span></h2>
                 <button @click="closeModal()"
-                    style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--ds-gray-600);"
+                    style="background: transparent; border: none; padding: 4px; cursor: pointer; color: #9ca3af;"
                     title="Close">
                     <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                 </button>
             </header>
 
-            <div id="ssh-terminal-container"
-                style="height: 600px; width: 100%; background: #ffffff; padding: 5px; outline: none;" tabindex="0"
-                @click="term && term.focus()">
+            <div style="padding: 0 1.5rem 1.5rem 1.5rem; background: #ffffff;">
+                <!-- Light "Editor-style" box for the terminal -->
+                <div
+                    style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; overflow: hidden;">
+                    <div id="ssh-terminal-container"
+                        style="height: 600px; width: 100%; background: transparent; outline: none; overflow: hidden;"
+                        tabindex="0" @click="term && term.focus()">
+                    </div>
+                </div>
             </div>
-
-
         </article>
     </dialog>
 </div>
@@ -78,28 +114,29 @@
 
                 this.term = new Terminal({
                     cursorBlink: true,
-                    disableStdin: false, // Ensure input is enabled
+                    disableStdin: false,
+                    allowTransparency: true,
                     theme: {
                         background: '#ffffff',
-                        foreground: '#000000',
-                        cursor: '#000000',
-                        selectionBackground: '#D7EAFF',
+                        foreground: '#1f2937',
+                        cursor: '#111827',
+                        selectionBackground: 'rgba(0, 0, 0, 0.1)',
                         black: '#000000',
-                        red: '#EE0000',
-                        green: '#10B981',
-                        yellow: '#F59E0B',
-                        blue: '#0070F3',
-                        magenta: '#D235A0',
-                        cyan: '#00E5FF',
-                        white: '#FFFFFF',
-                        brightBlack: '#666666',
-                        brightRed: '#EE0000',
-                        brightGreen: '#10B981',
-                        brightYellow: '#F59E0B',
-                        brightBlue: '#0070F3',
-                        brightMagenta: '#D235A0',
-                        brightCyan: '#00E5FF',
-                        brightWhite: '#FFFFFF'
+                        red: '#dc2626',
+                        green: '#16a34a',
+                        yellow: '#d97706',
+                        blue: '#2563eb',
+                        magenta: '#9333ea',
+                        cyan: '#0891b2',
+                        white: '#f3f4f6',
+                        brightBlack: '#4b5563',
+                        brightRed: '#ef4444',
+                        brightGreen: '#22c55e',
+                        brightYellow: '#f59e0b',
+                        brightBlue: '#3b82f6',
+                        brightMagenta: '#a855f7',
+                        brightCyan: '#06b6d4',
+                        brightWhite: '#ffffff'
                     },
                     fontSize: 13,
                     fontFamily: "'Geist Mono', 'SF Mono', 'Menlo', monospace"
@@ -108,17 +145,37 @@
                 this.fitAddon = new FitAddon.FitAddon();
                 this.term.loadAddon(this.fitAddon);
                 this.term.open(container);
+
+                // Multiple fits to handle transitions
                 this.fitAddon.fit();
+                setTimeout(() => {
+                    this.fitAddon.fit();
+                    this.onResize();
+                }, 100);
+                setTimeout(() => {
+                    this.fitAddon.fit();
+                    this.onResize();
+                }, 500);
 
                 // CRITICAL: Focus with a slight delay to ensure the modal transition is complete
                 setTimeout(() => {
                     this.term.focus();
-                }, 300);
+                }, 400);
 
                 // Connect WebSocket
                 this.connectWebSocket();
 
                 // Handle Resize
+                this.term.onResize(size => {
+                    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                        this.socket.send(JSON.stringify({
+                            type: 'resize',
+                            cols: size.cols,
+                            rows: size.rows
+                        }));
+                    }
+                });
+
                 window.addEventListener('resize', this.onResize.bind(this));
             },
 
@@ -140,14 +197,22 @@
                 const url = `${protocol}//${window.location.host}/ws/ssh/${this.hostId}${token ? '?token=' + token : ''}`;
 
                 this.socket = new WebSocket(url);
+                this.socket.binaryType = 'arraybuffer'; // Handle binary from SSH
 
                 this.socket.onopen = () => {
                     this.term.write('\r\n\x1b[32mConnecting to SSH...\x1b[0m\r\n');
-                    setTimeout(() => this.term.focus(), 100);
+                    setTimeout(() => {
+                        this.term.focus();
+                        this.onResize(); // Initial resize sync
+                    }, 400);
                 };
 
                 this.socket.onmessage = (event) => {
-                    this.term.write(event.data);
+                    if (event.data instanceof ArrayBuffer) {
+                        this.term.write(new Uint8Array(event.data));
+                    } else {
+                        this.term.write(event.data);
+                    }
                 };
 
                 this.socket.onclose = (event) => {
@@ -176,7 +241,12 @@
 
                 this.term.onData((data) => {
                     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                        this.socket.send(data);
+                        // Send as object to distinguish from control messages if needed
+                        // but for now keep raw for input
+                        this.socket.send(JSON.stringify({
+                            type: 'input',
+                            data: data
+                        }));
                     } else {
                         console.warn('[Sible] Socket not open, ignoring input');
                     }
