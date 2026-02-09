@@ -17,7 +17,9 @@
                 </button>
             </header>
 
-            <div id="ssh-terminal-container" style="height: 600px; width: 100%; background: #ffffff; padding: 5px;">
+            <div id="ssh-terminal-container"
+                style="height: 600px; width: 100%; background: #ffffff; padding: 5px; outline: none;" tabindex="0"
+                @click="term && term.focus()">
             </div>
 
 
@@ -36,11 +38,19 @@
             socket: null,
 
             openModal(detail) {
+                console.log(`[Sible] Terminal modal triggered for host ${detail.hostId}`);
                 this.hostId = detail.hostId;
                 this.alias = detail.alias;
                 this.isOpen = true;
                 this.$nextTick(() => {
-                    this.initTerminal();
+                    try {
+                        this.initTerminal();
+                    } catch (e) {
+                        console.error('[Sible] Terminal init failed:', e);
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message: "Terminal Init Failed: " + e.message, level: 'error' }
+                        }));
+                    }
                 });
             },
 
@@ -58,10 +68,17 @@
 
             initTerminal() {
                 const container = document.getElementById('ssh-terminal-container');
+                if (!container) throw new Error("Terminal container not found");
+
                 container.innerHTML = ''; // Clear previous
+
+                if (typeof Terminal === 'undefined' || typeof FitAddon === 'undefined') {
+                    throw new Error("xterm.js libraries not loaded");
+                }
 
                 this.term = new Terminal({
                     cursorBlink: true,
+                    disableStdin: false, // Ensure input is enabled
                     theme: {
                         background: '#ffffff',
                         foreground: '#000000',
@@ -93,16 +110,24 @@
                 this.term.open(container);
                 this.fitAddon.fit();
 
+                // CRITICAL: Focus with a slight delay to ensure the modal transition is complete
+                setTimeout(() => {
+                    this.term.focus();
+                }, 300);
+
                 // Connect WebSocket
                 this.connectWebSocket();
 
                 // Handle Resize
-                window.addEventListener('resize', () => {
-                    if (this.isOpen && this.fitAddon) {
+                window.addEventListener('resize', this.onResize.bind(this));
+            },
+
+            onResize() {
+                if (this.isOpen && this.fitAddon) {
+                    try {
                         this.fitAddon.fit();
-                        // Optional: Send resize event to backend if supported
-                    }
-                });
+                    } catch (e) { console.warn("Fit error", e); }
+                }
             },
 
             connectWebSocket() {
@@ -118,6 +143,7 @@
 
                 this.socket.onopen = () => {
                     this.term.write('\r\n\x1b[32mConnecting to SSH...\x1b[0m\r\n');
+                    setTimeout(() => this.term.focus(), 100);
                 };
 
                 this.socket.onmessage = (event) => {
@@ -151,6 +177,8 @@
                 this.term.onData((data) => {
                     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
                         this.socket.send(data);
+                    } else {
+                        console.warn('[Sible] Socket not open, ignoring input');
                     }
                 });
             }

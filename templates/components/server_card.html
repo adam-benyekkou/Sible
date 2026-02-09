@@ -48,9 +48,4 @@
         {% endif %}
     </div>
 
-    <script>
-        function openTerminal(hostId, alias) {
-            window.dispatchEvent(new CustomEvent('open-ssh-terminal', { detail: { hostId: hostId, alias: alias } }));
-        }
-    </script>
 </div>

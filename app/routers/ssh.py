@@ -92,15 +92,17 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int):
         # 5. Establish SSH Connection
         async with asyncssh.connect(**connect_kwargs) as conn:
             logger.info(f"SSH Connected to {host.hostname} for host_id: {host_id}")
-            # Start interactive session
-            async with conn.create_process(term_type='xterm', term_size=(80, 24)) as process:
+            # Start interactive session with explicit encoding (Reverted from binary)
+            async with conn.create_process(term_type='xterm', term_size=(80, 24), encoding='utf-8') as process:
                 
                 # Bi-directional forwarding tasks
                 async def forward_stdout():
                     try:
                         async for msg in process.stdout:
+                            # logger.info(f"STDOUT: {repr(msg)}") 
                             await websocket.send_text(msg)
-                    except Exception:
+                    except Exception as e:
+                        logger.error(f"Error forwarding stdout: {e}")
                         pass
                         
                 async def forward_stderr():
@@ -116,9 +118,20 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int):
                 try:
                     while True:
                         data = await websocket.receive_text()
+                        
+                        # logger.info(f"WS_RX: {repr(data)}") # Debug what we got
+                        
                         process.stdin.write(data)
+                        await process.stdin.drain()
+                        
+                        # logger.info("WROTE_TO_PTY") # Confirm write happened
+                        
                 except WebSocketDisconnect:
                     logger.info(f"WebSocket disconnected for host_id: {host_id}")
+                except Exception as e:
+                    logger.error(f"Input loop error: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
                 finally:
                     stdout_task.cancel()
                     stderr_task.cancel()

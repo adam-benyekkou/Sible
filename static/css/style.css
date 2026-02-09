@@ -924,7 +924,7 @@ tr.hover:hover td {
 
 /* SSH Modal specific centering wrapper - Reverted to original name */
 .ssh-modal-wrapper {
-    display: none;
+    display: flex;
     position: fixed;
     top: 0;
     left: 0;
@@ -935,10 +935,6 @@ tr.hover:hover td {
     z-index: 2000;
     justify-content: center;
     align-items: center;
-}
-
-.ssh-modal-wrapper[style*="display: block"] {
-    display: flex !important;
 }
 
 /* Global dialog overrides removed to avoid breaking other components */

@@ -242,6 +242,27 @@
             window.addEventListener('popstate', updateSidebarActiveState);
         });
     </script>
+    <script>
+        // Global Terminal Helpers
+        window.openTerminal = function (hostId, alias) {
+            console.log(`[Sible] Attempting to open terminal for host ${hostId} (${alias})`);
+            try {
+                const event = new CustomEvent('open-ssh-terminal', {
+                    detail: { hostId: hostId, alias: alias }
+                });
+                window.dispatchEvent(event);
+                console.log('[Sible] Terminal event dispatched');
+            } catch (err) {
+                console.error('[Sible] Failed to dispatch terminal event:', err);
+                window.dispatchEvent(new CustomEvent('show-toast', {
+                    detail: {
+                        message: "Failed to open terminal: " + err.message,
+                        level: 'error'
+                    }
+                }));
+            }
+        };
+    </script>
 </body>
 
 </html>
