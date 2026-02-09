@@ -289,6 +289,22 @@ Goal: Bridge the gap between Infrastructure as Code (IaC) and your UI.
     - [x] Form to edit Repository URL and SSH Key.
     - [x] Secure storage in DB (AppConfig).
 
+## Phase 13.5: Advanced Execution & Security (Completed)
+
+Goal: Harden the execution environment and improve targeting.
+
+- [x] **Secure Ephemeral Inventory**
+  - [x] Implemented per-job temporary inventory directories.
+  - [x] Secure materialization of SSH keys from DB secrets (0o600 permissions).
+  - [x] Automatic cleanup of sensitive data after execution.
+- [x] **Advanced Targeting**
+  - [x] Created `TargetPicker` component for selecting Hosts/Groups.
+  - [x] Integrated Picker into Playbook Editor and Schedule Modal.
+  - [x] Fixed Schedule target selection bug.
+- [x] **Infrastructure Hardening**
+  - [x] Moved `inventory.ini` to `playbooks/` and git-ignored it.
+  - [x] Disabled Strict Host Key Checking for automated runs to prevent hanging.
+
 ## Phase 14: Release Engineering (The Launch)
 
 Goal: Automate the distribution so people can `docker run` it.

@@ -63,8 +63,9 @@
                 <img src="{{ get_settings().logo_path or '/static/img/logo.png' }}" alt="Logo"
                     style="max-height: 32px; width: auto;">
                 <div>
-                    <h3 style="margin: 0; font-size: 1.1rem; letter-spacing: -0.02em;">{{ app_name()|default('Sible') }}
-                    </h3>
+                    <h3 style="margin: 0; font-size: 1.1rem; letter-spacing: -0.02em; line-height: 1.2;">{{
+                        app_name()|default('Sible') }}</h3>
+                    <div style="font-size: 0.75rem; color: var(--ds-gray-400); font-weight: 500;">v1.0.0</div>
                 </div>
             </a>
 

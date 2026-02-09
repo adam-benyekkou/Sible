@@ -36,12 +36,22 @@ async def execute_playbook_job(playbook_name: str, **kwargs):
     """
     logger.info(f"Scheduler: Starting job for {playbook_name}")
     target = kwargs.get("target")
+    extra_vars = kwargs.get("extra_vars")
+    
+    # Parse extra_vars from JSON string if needed
+    ev_dict = None
+    if extra_vars:
+        try:
+            import json
+            ev_dict = json.loads(extra_vars) if isinstance(extra_vars, str) else extra_vars
+        except Exception:
+            pass
     
     with Session(engine) as session:
         runner_service = RunnerService(session)
         # Pass limit if target is provided
         limit = target if target and target != 'all' else None
-        result = await runner_service.run_playbook_headless(playbook_name, limit=limit, username="Scheduled")
+        result = await runner_service.run_playbook_headless(playbook_name, limit=limit, extra_vars=ev_dict, username="Scheduled")
     
     status = "SUCCESS" if result['success'] else "FAILED"
     logger.info(f"Scheduler: Job {playbook_name} finished with status {status}. RC: {result['rc']}")
@@ -66,13 +76,13 @@ class SchedulerService:
         scheduler.shutdown()
 
     @staticmethod
-    def add_playbook_job(playbook_name: str, cron_expression: str, target: str = None):
+    def add_playbook_job(playbook_name: str, cron_expression: str, target: str = None, extra_vars: str = None):
         try:
             job = scheduler.add_job(
                 execute_playbook_job,
                 CronTrigger.from_crontab(cron_expression),
                 args=[playbook_name],
-                kwargs={"cron_expr": cron_expression, "target": target},
+                kwargs={"cron_expr": cron_expression, "target": target, "extra_vars": extra_vars},
                 name=f"Run {playbook_name}",
                 replace_existing=False
             )

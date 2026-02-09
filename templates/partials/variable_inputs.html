@@ -1,0 +1,59 @@
+<div x-data="{
+    variables: [
+        {% for var in variables %}
+        { name: '{{ var }}', type: 'manual', value: '', secret: '' }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    secrets: [
+        {% for s in secrets %}
+        { key: '{{ s.key }}', id: {{ s.id }} }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ],
+    get json() {
+        let obj = {};
+        this.variables.forEach(v => {
+            if (v.type === 'secret' && v.secret) {
+                obj[v.name] = '{{ " {{" }} secret.' + v.secret + ' {{ "}}" }}' ; } else if (v.value) {
+    obj[v.name]=v.value; } }); return JSON.stringify(obj); } }" hx-on::after-swap="lucide.createIcons()"
+    x-init="$nextTick(() => lucide.createIcons())">
+    <!-- Hidden input for form submission -->
+    <input type="hidden" name="extra_vars" :value="json">
+
+    <template x-for="(v, index) in variables" :key="v.name">
+        <label style="margin-bottom: 15px; display: block;">
+            <span x-text="v.name"
+                style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9em; color: var(--ds-gray-900);"></span>
+            <div class="input-group" style="display: flex; gap: 8px;">
+                <!-- Manual Input -->
+                <input type="text" x-model="v.value" :placeholder="'Value for ' + v.name" x-show="v.type === 'manual'"
+                    style="width: 100%; height: 38px; padding: 0 10px; border: 1px solid var(--ds-gray-300); border-radius: 6px;">
+
+                <!-- Secret Display / Select -->
+                <div x-show="v.type === 'secret'" style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
+                    <select x-model="v.secret"
+                        style="width: 100%; height: 38px; padding: 0 10px; border: 1px solid #cce5ff; border-radius: 6px; background-color: #f0f7ff; color: #004085;">
+                        <option value="" disabled selected>Select Secret...</option>
+                        <template x-for="s in secrets" :key="s.id">
+                            <option :value="s.key" x-text="s.key"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Toggle Button -->
+                <button type="button" class="outline"
+                    @click="v.type = (v.type === 'manual' ? 'secret' : 'manual'); if(v.type==='manual') v.secret='';"
+                    style="width: 40px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 6px;"
+                    :title="v.type === 'manual' ? 'Pick from Secrets' : 'Enter Manual Value'">
+                    <i data-lucide="key" x-show="v.type === 'manual'" style="width: 16px; height: 16px;"></i>
+                    <i data-lucide="type" x-show="v.type === 'secret'" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+        </label>
+    </template>
+    <div x-init="$nextTick(() => lucide.createIcons())"></div>
+
+    <div x-show="variables.length === 0"
+        style="color: var(--ds-gray-500); font-style: italic; font-size: 0.9em; padding: 10px 0;">
+        No variables detected in this playbook.
+    </div>
+</div>

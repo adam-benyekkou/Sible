@@ -35,9 +35,10 @@ async def create_schedule(
     playbook: str = Form(...), 
     cron: str = Form(...),
     target: str = Form(default=None),
+    extra_vars: str = Form(default=None),
     current_user: object = Depends(requires_role(["admin"]))
 ):
-    job_id = SchedulerService.add_playbook_job(playbook, cron, target=target)
+    job_id = SchedulerService.add_playbook_job(playbook, cron, target=target, extra_vars=extra_vars)
     response = Response(status_code=200)
     if job_id:
         import json

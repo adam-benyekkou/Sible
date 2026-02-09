@@ -68,11 +68,3 @@
     </a>
 </div>
 {% endif %}
-
-<div
-    style="margin-top: auto; padding: 1rem 0; border-top: 1px solid var(--ds-gray-200); color: var(--ds-gray-400); font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-    <span style="font-weight: 500;">v1.0.0</span>
-    {% if request.state.user %}
-    <span style="opacity: 0.7;">{{ request.state.user.username }}</span>
-    {% endif %}
-</div>

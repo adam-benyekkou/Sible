@@ -10,6 +10,26 @@ import json
 settings = get_settings()
 router = APIRouter()
 
+@router.get("/api/playbook-vars/{name:path}")
+async def get_playbook_variables_form(
+    name: str,
+    request: Request,
+    service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
+    from app.services.settings import SettingsService
+    settings_service = SettingsService(service.db)
+    env_vars = settings_service.get_env_vars()
+    secrets = [v for v in env_vars if v.is_secret]
+    
+    variables = service.get_playbook_variables(name)
+    
+    return templates.TemplateResponse("partials/variable_inputs.html", {
+        "request": request,
+        "variables": variables,
+        "secrets": secrets
+    })
+
 @router.get("/playbooks/{name:path}")
 async def get_playbook_view(
     name: str, 
@@ -166,6 +186,7 @@ async def lint_playbook(
     content = form.get("content")
     if not content: return []
     return await LinterService.lint_playbook_content(content)
+
 @router.post("/playbook/{name:path}/install-requirements")
 async def install_requirements_endpoint(
     name: str,

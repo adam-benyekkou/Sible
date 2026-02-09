@@ -9,8 +9,7 @@
         availableTargets: { hosts: [], groups: [], all: ['all'] },
         showTargets: false,
         tags: '',
-        verbosity: 0,
-        extraVars: []
+        verbosity: 0
     },
     scheduleTargets: ['all'],
     showScheduleTargets: false,
@@ -45,19 +44,12 @@
         try {
             const res = await fetch('/api/inventory/targets');
             if (res.ok) this.launchParams.availableTargets = await res.json();
-        } catch(e) { console.log(e); }
-    },
-    addExtraVar() {
-        this.launchParams.extraVars.push({ key: '', value: '' });
-    },
-    removeExtraVar(index) {
-        this.launchParams.extraVars.splice(index, 1);
+        } catch(e) { console.error(e); }
     },
     getExtraVarsJson() {
         let obj = {};
-        this.launchParams.extraVars.forEach(v => {
-            if (v.key) obj[v.key] = v.value;
-        });
+        const dynInput = document.querySelector('#playbook-variables-container input[name=extra_vars]');
+        if (dynInput && dynInput.value) { try { Object.assign(obj, JSON.parse(dynInput.value)); } catch(e) {} }
         return JSON.stringify(obj);
     }
 }" x-init="fetchTargets(); lucide.createIcons()">
@@ -129,7 +121,21 @@
                         style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 8px;">Target</span>
                     <div x-data="{ initialTargets: scheduleTargets.join(',') }"
                         @targets-changed="scheduleTargets = $event.detail">
+                        {% with picker_id='schedule-target-picker' %}
                         {% include "partials/target_picker.html" %}
+                        {% endwith %}
+                    </div>
+                </div>
+
+                <!-- Dynamic Variables -->
+                <div style="margin-bottom: 1.5rem;">
+                    <span
+                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 8px;">Variables</span>
+                    <div id="schedule-variables-container" hx-get="/api/playbook-vars/{{ name | safe }}"
+                        hx-trigger="load, intersect once" hx-swap="innerHTML">
+                        <div style="padding: 10px 0; color: #888; font-size: 0.9em;">
+                            <span aria-busy="true" style="font-size: 0.9em;">Loading variables...</span>
+                        </div>
                     </div>
                 </div>
 
@@ -139,7 +145,13 @@
                     style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1rem; border-top: none; padding: 0;">
                     <button
                         style="background-color: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500;"
-                        @click='htmx.ajax("POST", "/schedule", { values: { playbook: {{ name | tojson | forceescape }}, cron: cronExpression, target: scheduleTargets.join(",") || "all" }, swap: "none" }); showScheduleModal = false;'>
+                        @click='
+                            let extraVars = "{}";
+                            const dynInput = document.querySelector("#schedule-variables-container input[name=extra_vars]");
+                            if (dynInput && dynInput.value) { extraVars = dynInput.value; }
+                            htmx.ajax("POST", "/schedule", { values: { playbook: {{ name | tojson | forceescape }}, cron: cronExpression, target: scheduleTargets.join(",") || "all", extra_vars: extraVars }, swap: "none" }); 
+                            showScheduleModal = false;
+                        '>
                         <i data-lucide="calendar-check" style="width: 14px; height: 14px; margin-right: 6px;"></i> Save
                         Schedule
                     </button>
@@ -166,101 +178,11 @@
                     <label
                         style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target
                         Hosts / Groups</label>
-                    <div x-data="{
-                        open: false,
-                        search: '',
-                        getLabel() {
-                            if (launchParams.limit.includes('all')) return 'All Hosts';
-                            if (launchParams.limit.length === 0) return 'All Hosts';
-                            if (launchParams.limit.length === 1) return launchParams.limit[0];
-                            return launchParams.limit.length + ' Targets Selected';
-                        },
-                        isDimmed(val) {
-                            return launchParams.limit.includes('all') && val !== 'all';
-                        },
-                        matches(text) {
-                            if (!this.search) return true;
-                            return text.toLowerCase().includes(this.search.toLowerCase());
-                        }
-                    }" @click.outside="open = false" class="geist-select-container"
-                        style="position: relative; overflow: visible;">
-
-                        <div @click.prevent="open = !open" class="geist-select-trigger" :aria-expanded="open"
-                            style="user-select: none;">
-                            <span x-text="getLabel()"
-                                style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; pointer-events: none;"></span>
-                            <i data-lucide="chevron-down"
-                                style="width: 14px; height: 14px; color: #666; pointer-events: none;"></i>
-                        </div>
-
-                        <div x-show="open" x-transition class="geist-select-dropdown" style="display: none;"
-                            :style="open ? 'display: block' : 'display: none'">
-                            <div style="padding: 0; border-bottom: 1px solid #EAEAEA;">
-                                <input type="text" x-model="search" placeholder="Search targets..." @click.stop=""
-                                    style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important; color: #000;">
-                            </div>
-
-                            <div style="max-height: 250px; overflow-y: auto; padding: 4px;">
-                                <div x-show="matches('all')">
-                                    <div class="geist-select-header">Global</div>
-                                    <div class="geist-select-option" @click="toggleTarget('all')"
-                                        :class="{ 'dimmed': isDimmed('all') }">
-                                        <span class="custom-checkbox"
-                                            :class="{ 'checked': launchParams.limit.includes('all') }">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                                                stroke-linecap="round" stroke-linejoin="round"
-                                                x-show="launchParams.limit.includes('all')">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        </span>
-                                        <span>All Hosts</span>
-                                    </div>
-                                </div>
-
-                                <template
-                                    x-if="launchParams.availableTargets.groups && launchParams.availableTargets.groups.length > 0">
-                                    <div x-show="launchParams.availableTargets.groups.some(g => matches(g))">
-                                        <div class="geist-select-header">Groups</div>
-                                        <template x-for="g in launchParams.availableTargets.groups" :key="g">
-                                            <div class="geist-select-option" x-show="matches(g)"
-                                                @click="toggleTarget(g)" :class="{ 'dimmed': isDimmed(g) }">
-                                                <span class="custom-checkbox"
-                                                    :class="{ 'checked': launchParams.limit.includes(g) }">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-                                                        x-show="launchParams.limit.includes(g)">
-                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                    </svg>
-                                                </span>
-                                                <span style="flex: 1;" x-text="g"></span>
-                                                <span class="geist-badge">Group</span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-
-                                <template
-                                    x-if="launchParams.availableTargets.hosts && launchParams.availableTargets.hosts.length > 0">
-                                    <div x-show="launchParams.availableTargets.hosts.some(h => matches(h.alias))">
-                                        <div class="geist-select-header">Hosts</div>
-                                        <template x-for="h in launchParams.availableTargets.hosts" :key="h.alias">
-                                            <div class="geist-select-option" x-show="matches(h.alias)"
-                                                @click="toggleTarget(h.alias)" :class="{ 'dimmed': isDimmed(h.alias) }">
-                                                <span class="custom-checkbox"
-                                                    :class="{ 'checked': launchParams.limit.includes(h.alias) }">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-                                                        x-show="launchParams.limit.includes(h.alias)">
-                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                    </svg>
-                                                </span>
-                                                <span x-text="h.alias"></span>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
+                    <div x-data="{ initialTargets: launchParams.limit.join(',') }"
+                        @targets-changed="launchParams.limit = $event.detail">
+                        {% with picker_id='launch-target-picker' %}
+                        {% include "partials/target_picker.html" %}
+                        {% endwith %}
                     </div>
                 </div>
 
@@ -283,33 +205,24 @@
                 <div style="margin-top: 1rem;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                        <strong style="font-size: 13px;">Extra Variables</strong>
-                        <button type="button" class="outline"
-                            style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;" @click="addExtraVar()">
-                            <i data-lucide="plus" style="width: 12px; height: 12px; margin-right: 4px;"></i> Add Var
-                        </button>
+                        <strong style="font-size: 13px;">Variables</strong>
                     </div>
 
-                    <template x-for="(v, index) in launchParams.extraVars" :key="index">
-                        <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
-                            <input type="text" x-model="v.key" placeholder="Key"
-                                style="margin-bottom: 0; min-height: 40px;">
-                            <input type="text" x-model="v.value" placeholder="Value"
-                                style="margin-bottom: 0; min-height: 40px;">
-                            <button type="button" class="secondary outline btn-icon"
-                                style="padding: 8px; border-color: #ff4444; color: #ff4444; min-height: 40px;"
-                                @click="removeExtraVar(index)">
-                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
-                            </button>
+                    <!-- Dynamic Variables (loaded from playbook) -->
+                    <div id="playbook-variables-container" hx-get="/api/playbook-vars/{{ name | safe }}"
+                        hx-trigger="load, intersect once" hx-swap="innerHTML">
+                        <div style="padding: 10px 0; color: #888; font-size: 0.9em;">
+                            <span aria-busy="true" style="font-size: 0.9em;">Loading variables...</span>
                         </div>
-                    </template>
+                    </div>
+
                 </div>
 
                 <footer style="margin-top: 2rem; padding: 0; border-top: none;">
                     <button type="submit"
                         style="background-color: #000; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; width: 100%;">
                         <i data-lucide="rocket" style="width: 14px; height: 14px; margin-right: 6px;"></i>
-                        <span x-text="launchMode === 'check' ? 'Run Dry Run' : 'Launch Playbook'"></span>
+                        <span x-text="launchMode === 'check' ? 'Launch Dry Run' : 'Launch Playbook'"></span>
                     </button>
                 </footer>
             </form>

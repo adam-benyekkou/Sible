@@ -5,9 +5,10 @@
         if (this.selectedTargets.length === 0) this.selectedTargets = ['all'];
     }
 }" x-init="$watch('selectedTargets', value => $dispatch('targets-changed', value))" class="target-picker-container">
+    {% set picker_id = picker_id or 'picker-list' %}
     <div class="search-container">
         <input type="text" name="q" placeholder="Search targets..." hx-get="/api/inventory/targets/picker"
-            hx-trigger="keyup changed delay:200ms, load" hx-target="#picker-list" class="picker-search-input">
+            hx-trigger="keyup changed delay:200ms, load" hx-target="#{{ picker_id }}" class="picker-search-input">
         <i data-lucide="search" class="search-icon"></i>
     </div>
 
@@ -20,7 +21,7 @@
         </template>
     </div>
 
-    <div id="picker-list" class="picker-list-container">
+    <div id="{{ picker_id }}" class="picker-list-container">
         <div style="padding: 20px; text-align: center;"><span aria-busy="true">Loading targets...</span></div>
     </div>
 

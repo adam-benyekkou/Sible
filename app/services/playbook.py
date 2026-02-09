@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List, Optional
 from sqlmodel import Session, select, desc
 import re
+import yaml
 from app.core.config import get_settings
 from app.models import JobRun
 
@@ -95,3 +96,41 @@ class PlaybookService:
         if not file_path: return False
         parent = file_path.parent
         return (parent / "requirements.yml").exists() or (parent / "requirements.yaml").exists()
+
+    def get_playbook_variables(self, name: str) -> List[str]:
+        content = self.get_playbook_content(name)
+        if not content: return []
+        
+        variables = set()
+        
+        # 1. Parse vars_prompt
+        try:
+            data = yaml.safe_load(content)
+            if isinstance(data, list):
+                for play in data:
+                    if 'vars_prompt' in play:
+                        for prompt in play['vars_prompt']:
+                            if isinstance(prompt, dict) and 'name' in prompt:
+                                variables.add(prompt['name'])
+                            elif isinstance(prompt, str):
+                                variables.add(prompt)
+        except Exception:
+            pass # Fallback to regex if YAML parsing fails or is incomplete
+            
+        # 2. Regex for {{ var }}
+        # Matches {{ var_name }} or {{ var_name | filter }}
+        # Excludes standard ansible vars (item, ansible_*, etc.)
+        regex = r'\{\{\s*([a-zA-Z0-9_]+)(?:\s*\|.*?)?\s*\}\}'
+        matches = re.findall(regex, content)
+        
+        ignored_vars = {
+            'item', 'playbook_dir', 'inventory_hostname', 'ansible_host', 
+            'ansible_user', 'ansible_port', 'ansible_connection', 'groups',
+            'group_names', 'hostvars'
+        }
+        
+        for var in matches:
+            if var not in ignored_vars and not var.startswith('ansible_'):
+                variables.add(var)
+                
+        return sorted(list(variables))
