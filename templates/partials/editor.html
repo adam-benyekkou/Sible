@@ -60,7 +60,7 @@
         });
         return JSON.stringify(obj);
     }
-}">
+}" x-init="fetchTargets(); lucide.createIcons()">
     <style>
         /* Fix Ace Editor Alignment */
         /* Fix Ace Editor Alignment */
@@ -124,7 +124,7 @@
                     </div>
                 </label>
 
-                <div style="margin-bottom: 2rem; position: relative;">
+                <div style="margin-bottom: 2rem; position: relative; overflow: visible;" x-init="lucide.createIcons()">
                     <span
                         style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target</span>
                     <div x-data="{
@@ -143,18 +143,22 @@
                             if (!this.search) return true;
                             return text.toLowerCase().includes(this.search.toLowerCase());
                         }
-                    }" @click.outside="open = false" class="geist-select-container">
+                    }" @click.outside="open = false" class="geist-select-container"
+                        style="position: relative; overflow: visible;">
 
-                        <div @click="open = !open" class="geist-select-trigger" :aria-expanded="open">
+                        <div @click.prevent="open = !open" class="geist-select-trigger" :aria-expanded="open"
+                            style="user-select: none;">
                             <span x-text="getLabel()"
-                                style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
-                            <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
+                                style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; pointer-events: none;"></span>
+                            <i data-lucide="chevron-down"
+                                style="width: 14px; height: 14px; color: #666; pointer-events: none;"></i>
                         </div>
 
-                        <div x-show="open" x-transition class="geist-select-dropdown" x-cloak>
+                        <div x-show="open" x-transition class="geist-select-dropdown" style="display: none;"
+                            :style="open ? 'display: block' : 'display: none'">
                             <div style="padding: 0; border-bottom: 1px solid #EAEAEA;">
                                 <input type="text" x-model="search" placeholder="Search targets..." @click.stop=""
-                                    style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important;">
+                                    style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important; color: #000;">
                             </div>
 
                             <div style="max-height: 250px; overflow-y: auto; padding: 4px;">
@@ -249,7 +253,7 @@
 
             <form
                 @submit.prevent=" let vals={ limit: Array.isArray(launchParams.limit) ? launchParams.limit.join(',') : launchParams.limit, tags: launchParams.tags, verbosity: launchParams.verbosity, extra_vars: getExtraVarsJson() }; htmx.ajax('POST', (launchMode==='check' ? '/check/{{ name | safe }}' : '/run/{{ name | safe }}' ), { values: vals, target: '#terminal-container', swap: 'innerHTML' }); showLaunchModal=false; ">
-                <div style="margin-bottom: 2rem; position: relative;">
+                <div style="margin-bottom: 2rem; position: relative; overflow: visible;">
                     <label
                         style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target
                         Hosts / Groups</label>
@@ -269,18 +273,22 @@
                             if (!this.search) return true;
                             return text.toLowerCase().includes(this.search.toLowerCase());
                         }
-                    }" @click.outside="open = false" class="geist-select-container">
+                    }" @click.outside="open = false" class="geist-select-container"
+                        style="position: relative; overflow: visible;">
 
-                        <div @click="open = !open" class="geist-select-trigger" :aria-expanded="open">
+                        <div @click.prevent="open = !open" class="geist-select-trigger" :aria-expanded="open"
+                            style="user-select: none;">
                             <span x-text="getLabel()"
-                                style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
-                            <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
+                                style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; pointer-events: none;"></span>
+                            <i data-lucide="chevron-down"
+                                style="width: 14px; height: 14px; color: #666; pointer-events: none;"></i>
                         </div>
 
-                        <div x-show="open" x-transition class="geist-select-dropdown" x-cloak>
+                        <div x-show="open" x-transition class="geist-select-dropdown" style="display: none;"
+                            :style="open ? 'display: block' : 'display: none'">
                             <div style="padding: 0; border-bottom: 1px solid #EAEAEA;">
                                 <input type="text" x-model="search" placeholder="Search targets..." @click.stop=""
-                                    style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important;">
+                                    style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important; color: #000;">
                             </div>
 
                             <div style="max-height: 250px; overflow-y: auto; padding: 4px;">
