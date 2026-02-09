@@ -9,7 +9,7 @@
             </header>
 
             <form id="inventory-form" hx-trigger="submit" hx-swap="none"
-                hx-on::after-request="if(event.detail.successful) { closeModal(); htmx.trigger('body', 'inventory-refresh'); }">
+                @htmx:after-request="if($event.detail.successful) { closeModal(); htmx.trigger('body', 'inventory-refresh'); }">
 
                 <label>
                     <small>Alias</small>

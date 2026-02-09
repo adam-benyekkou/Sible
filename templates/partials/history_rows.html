@@ -14,6 +14,17 @@
         </a>
     </td>
 
+    <!-- Target -->
+    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
+        <span
+            style="background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: 'Geist Mono', monospace; display: inline-flex; align-items: center; gap: 4px;">
+            {% if run.target in groups %}
+            <span style="opacity: 0.7; font-weight: bold;">[G]</span>
+            {% endif %}
+            {{ run.target or 'N/A' }}
+        </span>
+    </td>
+
     <!-- Status -->
     <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
         {% if run.status == 'success' %}

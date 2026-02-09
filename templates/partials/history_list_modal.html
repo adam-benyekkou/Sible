@@ -25,6 +25,7 @@
                 <tr>
                     <th>Date</th>
                     {% if not playbook_name %}<th>Playbook</th>{% endif %}
+                    <th>Target</th>
                     <th>Status</th>
                     <th>Duration</th>
                     <th>Type</th>
@@ -36,6 +37,15 @@
                 <tr>
                     <td>{{ run.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
                     {% if not playbook_name %}<td><strong>{{ run.playbook }}</strong></td>{% endif %}
+                    <td>
+                        <span
+                            style="background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: 'Geist Mono', monospace; display: inline-flex; align-items: center; gap: 4px;">
+                            {% if run.target in groups %}
+                            <span style="opacity: 0.7; font-weight: bold;">[G]</span>
+                            {% endif %}
+                            {{ run.target or 'N/A' }}
+                        </span>
+                    </td>
                     <td>
                         {% if run.status == 'success' %}
                         <div style="display: flex; align-items: center; gap: 5px;">

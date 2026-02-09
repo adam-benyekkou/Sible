@@ -12,7 +12,7 @@
         {% if request.state.user.role == 'admin' %}
         <button type="button" hx-delete="/history/all"
             hx-confirm="Are you sure you want to delete ALL (filtered) history logs? This cannot be undone."
-            hx-include="[name='search'], [name='status']" class="btn-danger-ghost"
+            hx-include="#search-input, #status-input" class="btn-danger-ghost"
             style="background: white; color: var(--sible-error); border: 1px solid var(--ds-gray-200); font-size: 13px; font-weight: 500; padding: 6px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; margin: 0;">
             Delete All
         </button>

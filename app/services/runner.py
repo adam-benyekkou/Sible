@@ -173,7 +173,8 @@ class RunnerService:
         }
         db_params = json.dumps(params_dict) if any(v is not None and v != "" and v != {} and v != 0 for v in params_dict.values()) else None
         
-        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=limit)
+        job_target = limit if limit else "all"
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=job_target)
         
         self.db.add(job)
         self.db.commit()
@@ -266,7 +267,8 @@ class RunnerService:
         }
         db_params = json.dumps(params_dict) if any(v is not None and v != "" and v != {} and v != 0 for v in params_dict.values()) else None
         
-        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=limit)
+        job_target = limit if limit else "all"
+        job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=job_target)
         
         self.db.add(job); self.db.commit(); self.db.refresh(job); job_id = job.id
             

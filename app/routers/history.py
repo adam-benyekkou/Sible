@@ -22,6 +22,15 @@ async def get_history_page(
     offset = (page - 1) * limit
     runs, total_count = service.get_recent_runs(limit=limit, offset=offset, search=search, status=status)
     
+    # Get groups for UI distinction in Target column
+    from sqlmodel import select
+    from app.models import Host
+    from app.dependencies import get_db
+    # We can use the service or just a quick query
+    db = next(get_db())
+    groups = list(set(h.group_name for h in db.exec(select(Host)).all() if h.group_name))
+    groups.append("all")
+    
     import math
     total_pages = math.ceil(total_count / limit)
     has_next = page < total_pages
@@ -37,7 +46,8 @@ async def get_history_page(
         "total_pages": total_pages,
         "has_next": has_next,
         "has_prev": has_prev,
-        "total_count": total_count
+        "total_count": total_count,
+        "groups": groups
     }
     
     if request.headers.get("HX-Request"):
@@ -108,6 +118,13 @@ async def get_playbook_history(
     has_next = page < total_pages
     has_prev = page > 1
 
+    from sqlmodel import select
+    from app.models import Host
+    from app.dependencies import get_db
+    db = next(get_db())
+    groups = list(set(h.group_name for h in db.exec(select(Host)).all() if h.group_name))
+    groups.append("all")
+
     return templates.TemplateResponse("partials/history_list_modal.html", {
         "request": request,
         "playbook_name": name,
@@ -116,7 +133,8 @@ async def get_playbook_history(
         "total_pages": total_pages,
         "has_next": has_next,
         "has_prev": has_prev,
-        "total_count": total_count
+        "total_count": total_count,
+        "groups": groups
     })
 
 @router.delete("/history/playbook/{name:path}/all")
