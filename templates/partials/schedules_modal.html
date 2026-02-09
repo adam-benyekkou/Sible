@@ -28,32 +28,19 @@
             <span
                 style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target</span>
             {% set initial_target = job.target or 'all' %}
-            {% set display_label = 'all' %}
-            {% if initial_target != 'all' %}
-            {% set display_label = initial_target %}
-            {% for g in groups %}
-            {% if g == initial_target %}{% set display_label = g %}{% endif %}
-            {% endfor %}
-            {% for s in servers %}
-            {% if s == initial_target %}{% set display_label = s ~ ' (host)' %}{% endif %}
-            {% endfor %}
-            {% endif %}
 
             <div x-data="{
                 open: false,
+                search: '',
                 selected: '{{ initial_target | e }}'.split(',').filter(x => x),
                 getLabel() {
-                    if (this.selected.includes('all')) return 'all';
-                    if (this.selected.length === 0) return 'all';
-                    if (this.selected.length === 1) return this.selected[0] + (this.selected[0] === 'all' ? '' : ' (host)');
-                    return this.selected.length + ' targets selected';
+                    if (this.selected.includes('all')) return 'All Hosts';
+                    if (this.selected.length === 0) return 'All Hosts';
+                    if (this.selected.length === 1) return this.selected[0];
+                    return this.selected.length + ' Targets Selected';
                 },
                 toggle() {
-                    if (this.open) {
-                        this.open = false;
-                    } else {
-                        this.open = true;
-                    }
+                    this.open = !this.open;
                 },
                 toggleTarget(val) {
                     if (val === 'all') {
@@ -68,81 +55,96 @@
                         }
                         if (this.selected.length === 0) this.selected = ['all'];
                     }
-                    // Trigger Lucide icon refresh if needed, but since we use SVG it's usually fine
+                },
+                isDimmed(val) {
+                    return this.selected.includes('all') && val !== 'all';
+                },
+                matches(text) {
+                    if (!this.search) return true;
+                    return text.toLowerCase().includes(this.search.toLowerCase());
                 }
-            }" @click.outside="open = false" @scroll.window="open = false" @resize.window="open = false"
-                class="geist-select-container" style="display: block; width: 100%;">
+            }" @click.outside="open = false" class="geist-select-container">
 
                 <input type="hidden" name="target" :value="selected.join(',')">
 
-                <div x-ref="trigger" @click.stop="toggle()" class="geist-select-trigger" :aria-expanded="open"
-                    style="display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--ds-gray-200); border-radius: 6px; padding: 0 12px; height: 36px; cursor: pointer; background: white;">
+                <div x-ref="trigger" @click.stop="toggle()" class="geist-select-trigger" :aria-expanded="open">
                     <span x-text="getLabel()"
                         style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
                     <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
                 </div>
 
-                <div x-show="open" x-transition class="geist-select-dropdown"
-                    style="position: absolute; top: 100%; left: 0; width: 100%; margin-top: 4px; background: white; border: 1px solid var(--ds-gray-200); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; max-height: 250px; overflow-y: auto; padding: 4px;"
-                    x-cloak>
-                    <!-- All -->
-                    <div class="geist-select-option" :class="{ 'selected': selected.includes('all') }"
-                        @click="toggleTarget('all')"
-                        style="padding: 8px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                        <i data-lucide="globe" style="width: 14px; height: 14px; color: #666;"></i>
-                        <span>all</span>
-                        <i data-lucide="check" class="check-icon"
-                            style="width: 14px; height: 14px; margin-left: auto;"></i>
+                <div x-show="open" x-transition class="geist-select-dropdown" x-cloak>
+                    <!-- Search Bar -->
+                    <div style="padding: 0; border-bottom: 1px solid #EAEAEA;">
+                        <input type="text" x-model="search" placeholder="Search targets..." @click.stop=""
+                            style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important;">
                     </div>
 
-                    <!-- Groups -->
-                    {% if groups %}
-                    <template x-if="true">
-                        <div>
-                            <div class="geist-select-header"
-                                style="font-size: 11px; text-transform: uppercase; color: #888; padding: 8px 12px 4px; font-weight: 500;">
-                                Groups</div>
-                            {% for group in groups %}
-                            <div class="geist-select-option" :class="{ 'selected': selected.includes('{{ group }}') }"
-                                @click="toggleTarget('{{ group }}')"
-                                style="padding: 8px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                                <i data-lucide="users" style="width: 14px; height: 14px; color: #666;"></i>
-                                <span>{{ group }}</span>
-                                <i data-lucide="check" class="check-icon"
-                                    style="width: 14px; height: 14px; margin-left: auto;"></i>
+                    <div style="max-height: 250px; overflow-y: auto; padding: 4px;">
+                        <!-- GLOBAL -->
+                        <div x-show="matches('all')">
+                            <div class="geist-select-header">Global</div>
+                            <div class="geist-select-option" @click="toggleTarget('all')"
+                                :class="{ 'dimmed': isDimmed('all') }">
+                                <span class="custom-checkbox" :class="{ 'checked': selected.includes('all') }">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        x-show="selected.includes('all')">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                                <span>All Hosts</span>
                             </div>
-                            {% endfor %}
                         </div>
-                    </template>
-                    {% endif %}
 
-                    <!-- Servers -->
-                    {% if servers %}
-                    <template x-if="true">
-                        <div>
-                            <div class="geist-select-header"
-                                style="font-size: 11px; text-transform: uppercase; color: #888; padding: 8px 12px 4px; font-weight: 500;">
-                                Servers</div>
-                            {% for server in servers %}
-                            <div class="geist-select-option" :class="{ 'selected': selected.includes('{{ server }}') }"
-                                @click="toggleTarget('{{ server }}')"
-                                style="padding: 8px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
-                                <i data-lucide="server" style="width: 14px; height: 14px; color: #666;"></i>
-                                <span>{{ server }}</span>
-                                <span style="color: #999; font-size: 11px; margin-left: 4px;">(host)</span>
-                                <i data-lucide="check" class="check-icon"
-                                    style="width: 14px; height: 14px; margin-left: auto;"></i>
+                        <!-- GROUPS -->
+                        {% if groups %}
+                        <div x-show="{% for g in groups %}matches('{{ g }}') || {% endfor %} false">
+                            <div class="geist-select-header">Groups</div>
+                            {% for group in groups %}
+                            <div class="geist-select-option" x-show="matches('{{ group }}')"
+                                @click="toggleTarget('{{ group }}')" :class="{ 'dimmed': isDimmed('{{ group }}') }">
+                                <span class="custom-checkbox" :class="{ 'checked': selected.includes('{{ group }}') }">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        x-show="selected.includes('{{ group }}')">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                                <span style="flex: 1;">{{ group }}</span>
+                                <span class="geist-badge">Group</span>
                             </div>
                             {% endfor %}
                         </div>
-                    </template>
-                    {% endif %}
+                        {% endif %}
+
+                        <!-- HOSTS -->
+                        {% if servers %}
+                        <div x-show="{% for s in servers %}matches('{{ s }}') || {% endfor %} false">
+                            <div class="geist-select-header">Hosts</div>
+                            {% for server in servers %}
+                            <div class="geist-select-option" x-show="matches('{{ server }}')"
+                                @click="toggleTarget('{{ server }}')" :class="{ 'dimmed': isDimmed('{{ server }}') }">
+                                <span class="custom-checkbox" :class="{ 'checked': selected.includes('{{ server }}') }">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        x-show="selected.includes('{{ server }}')">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                                <span>{{ server }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
 
         <footer style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 2rem; border-top: none;">
-            <button type="submit" style="width: auto; background: #000; color: #fff; border: none;">Save
+            <button type="submit"
+                style="width: auto; background: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500;">Save
                 Changes</button>
         </footer>
     </form>
@@ -159,74 +161,96 @@
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        height: 36px;
-        padding: 0 8px 0 12px;
+        height: 42px;
+        padding: 0 12px;
         background: #ffffff;
-        border: 1px solid #eaeaea;
+        border: 1px solid #EAEAEA;
         border-radius: 6px;
-        font-size: 13px;
+        font-size: 14px;
         color: #000;
         cursor: pointer;
         transition: all 0.15s ease;
-        user-select: none;
         box-sizing: border-box;
     }
 
     .geist-select-trigger:hover {
-        border-color: #888;
-    }
-
-    .geist-select-trigger[aria-expanded="true"] {
         border-color: #000;
     }
 
     .geist-select-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        margin-top: 4px;
         background: #ffffff;
-        border: 1px solid #eaeaea;
+        border: 1px solid #EAEAEA;
         border-radius: 6px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        z-index: 9999;
-        max-height: 250px;
-        overflow-y: auto;
-        padding: 4px;
+        z-index: 10000;
+        overflow: hidden;
     }
 
     .geist-select-header {
-        font-size: 11px;
+        font-size: 10px;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #888;
-        padding: 8px 12px 4px;
-        font-weight: 500;
+        letter-spacing: 0.1em;
+        color: #666666;
+        padding: 12px 12px 6px;
+        font-weight: 700;
     }
 
     .geist-select-option {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
         padding: 8px 12px;
-        font-size: 13px;
+        font-size: 14px;
         color: #000;
         cursor: pointer;
-        border-radius: 4px;
+        transition: background 0.15s;
     }
 
     .geist-select-option:hover {
-        background: #fafafa;
+        background: #FAFAFA;
     }
 
-    .geist-select-option.selected {
-        font-weight: 500;
-        background: #fafafa;
+    .geist-select-option.dimmed {
+        opacity: 0.4;
+        pointer-events: none;
     }
 
-    .geist-select-option .check-icon {
-        margin-left: auto;
-        opacity: 0;
+    .custom-checkbox {
+        width: 18px;
+        height: 18px;
+        border: 1px solid #EAEAEA;
+        border-radius: 4px;
+        background: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
     }
 
-    .geist-select-option.selected .check-icon {
-        opacity: 1;
+    .custom-checkbox.checked {
+        background: #000000;
+        border-color: #000000;
+    }
+
+    .custom-checkbox svg {
+        width: 12px;
+        height: 12px;
+        color: #FFFFFF;
+    }
+
+    .geist-badge {
+        background: #111111;
+        color: #FFFFFF;
+        font-size: 9px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        font-weight: 700;
     }
 </style>
 

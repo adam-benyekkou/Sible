@@ -100,264 +100,118 @@
 
     <!-- Schedule Modal -->
     <dialog :open="showScheduleModal">
-        <article>
-            <header>
-                <a href="#close" aria-label="Close" class="close" @click="showScheduleModal = false"></a>
-                <h5>Schedule {{ name }}</h5>
+        <article style="max-width: 600px; width: 100%;">
+            <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+                <h5 style="margin: 0;">Schedule Playbook</h5>
+                <button type="button" aria-label="Close" @click="showScheduleModal = false"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ds-gray-600); line-height: 1; padding: 0;">&times;</button>
             </header>
-            <p>Run this playbook automatically using a Cron expression.</p>
-            <input type="text" x-model="cronExpression" placeholder="* * * * *">
-            <small>Example: <code>0 3 * * *</code> (Every day at 3am)</small>
-            <footer>
-                <div style="margin-bottom: 16px;">
-                    <label
-                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target</label>
+            <section style="padding: 1rem 0;">
+                <p style="color: var(--ds-gray-600); font-size: 14px; margin-bottom: 1.5rem;">
+                    Run <strong>{{ name }}</strong> automatically using a Cron expression.
+                </p>
 
-                    <div class="geist-select-container" @click.outside="showScheduleTargets = false"
-                        @scroll.window="showScheduleTargets = false">
+                <label style="margin-bottom: 2rem;">
+                    <span
+                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Cron
+                        Expression</span>
+                    <input type="text" x-model="cronExpression" placeholder="* * * * *" required
+                        style="margin-bottom: 8px;">
+                    <div style="color: var(--ds-gray-500); font-size: 11px;">
+                        Example: <code
+                            style="background: var(--ds-background-200); padding: 2px 4px; border-radius: 4px; font-size: 10px;">0 3 * * *</code>
+                        (Every day at 3am)
+                    </div>
+                </label>
 
-                        <!-- Inject CSS locally to ensure it works -->
-                        <style>
-                            .geist-select-container {
-                                position: relative;
-                                width: 100%;
-                            }
+                <div style="margin-bottom: 2rem; position: relative;">
+                    <span
+                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target</span>
+                    <div x-data="{
+                        open: false,
+                        search: '',
+                        getLabel() {
+                            if (scheduleTargets.includes('all')) return 'All Hosts';
+                            if (scheduleTargets.length === 0) return 'All Hosts';
+                            if (scheduleTargets.length === 1) return scheduleTargets[0];
+                            return scheduleTargets.length + ' Targets Selected';
+                        },
+                        isDimmed(val) {
+                            return scheduleTargets.includes('all') && val !== 'all';
+                        },
+                        matches(text) {
+                            if (!this.search) return true;
+                            return text.toLowerCase().includes(this.search.toLowerCase());
+                        }
+                    }" @click.outside="open = false" class="geist-select-container">
 
-                            .geist-select-trigger {
-                                display: flex;
-                                align-items: center;
-                                justify-content: space-between;
-                                width: 100%;
-                                height: 32px;
-                                padding: 0 8px 0 12px;
-                                background: #ffffff;
-                                border: 1px solid #eaeaea;
-                                border-radius: 6px;
-                                font-size: 13px;
-                                color: #000;
-                                cursor: pointer;
-                                transition: all 0.15s ease;
-                                user-select: none;
-                                box-sizing: border-box;
-                            }
-
-                            .geist-select-trigger:hover {
-                                border-color: #888;
-                            }
-
-                            .geist-select-trigger:focus-within,
-                            .geist-select-trigger[aria-expanded="true"] {
-                                border-color: #000000;
-                                outline: none;
-                            }
-
-                            .geist-select-dropdown {
-                                position: absolute;
-                                top: calc(100% + 4px);
-                                left: 0;
-                                width: 100%;
-                                min-width: 220px;
-                                background: #ffffff;
-                                border: 1px solid #eaeaea;
-                                border-radius: 6px;
-                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                                z-index: 9999;
-                                max-height: 300px;
-                                overflow-y: auto;
-                                padding: 4px;
-                            }
-
-                            .geist-select-header {
-                                font-size: 11px;
-                                text-transform: uppercase;
-                                letter-spacing: 0.05em;
-                                color: #888;
-                                padding: 8px 12px 4px;
-                                font-weight: 500;
-                                pointer-events: none;
-                            }
-
-                            .geist-select-option {
-                                display: flex;
-                                align-items: center;
-                                gap: 8px;
-                                padding: 6px 12px;
-                                font-size: 13px;
-                                color: #000;
-                                cursor: pointer;
-                                border-radius: 4px;
-                                transition: background 0.15s;
-                            }
-
-                            .geist-select-option:hover {
-                                background: #fafafa;
-                            }
-
-                            .geist-select-option.selected {
-                                font-weight: 500;
-                                background: #fafafa;
-                            }
-
-                            .geist-select-option .check-icon {
-                                margin-left: auto;
-                                opacity: 0;
-                                stroke: #000;
-                            }
-
-                            .geist-select-option.selected .check-icon {
-                                opacity: 1;
-                            }
-                        </style>
-
-                        <div @click="showScheduleTargets = !showScheduleTargets" class="geist-select-trigger"
-                            :aria-expanded="showScheduleTargets">
-                            <span
-                                x-text="scheduleTargets.includes('all') ? 'All Hosts' : (scheduleTargets.length === 1 ? (launchParams.availableTargets.hosts.find(h => h.alias === scheduleTargets[0]) ? scheduleTargets[0] + ' (host)' : scheduleTargets[0]) : scheduleTargets.length + ' targets selected')"
+                        <div @click="open = !open" class="geist-select-trigger" :aria-expanded="open">
+                            <span x-text="getLabel()"
                                 style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
                             <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
                         </div>
 
-                        <div x-show="showScheduleTargets" x-transition class="geist-select-dropdown"
-                            x-init="$nextTick(() => lucide.createIcons())">
-                            <!-- All -->
-                            <div class="geist-select-option" :class="{ 'selected': scheduleTargets.includes('all') }"
-                                @click="toggleScheduleTarget('all')">
-                                <i data-lucide="globe" style="width: 14px; height: 14px; color: #666;"></i>
-                                <span>All Hosts</span>
-                                <i data-lucide="check" class="check-icon" style="width: 14px; height: 14px;"></i>
+                        <div x-show="open" x-transition class="geist-select-dropdown" x-cloak>
+                            <div style="padding: 0; border-bottom: 1px solid #EAEAEA;">
+                                <input type="text" x-model="search" placeholder="Search targets..." @click.stop=""
+                                    style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important;">
                             </div>
 
-                            <!-- Groups -->
-                            <template
-                                x-if="launchParams.availableTargets.groups && launchParams.availableTargets.groups.length > 0">
-                                <div>
-                                    <div class="geist-select-header">Groups</div>
-                                    <template x-for="g in launchParams.availableTargets.groups" :key="g">
-                                        <div class="geist-select-option"
-                                            :class="{ 'selected': scheduleTargets.includes(g) }"
-                                            @click="toggleScheduleTarget(g)">
-                                            <i data-lucide="users" style="width: 14px; height: 14px; color: #666;"></i>
-                                            <span x-text="g"></span>
-                                            <i data-lucide="check" class="check-icon"
-                                                style="width: 14px; height: 14px;"></i>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-
-                            <!-- Servers -->
-                            <template
-                                x-if="launchParams.availableTargets.hosts && launchParams.availableTargets.hosts.length > 0">
-                                <div>
-                                    <div class="geist-select-header">Servers</div>
-                                    <template x-for="h in launchParams.availableTargets.hosts" :key="h.alias">
-                                        <div class="geist-select-option"
-                                            :class="{ 'selected': scheduleTargets.includes(h.alias) }"
-                                            @click="toggleScheduleTarget(h.alias)">
-                                            <i data-lucide="server" style="width: 14px; height: 14px; color: #666;"></i>
-                                            <span x-text="h.alias"></span>
-                                            <span style="color: #999; font-size: 11px; margin-left: 4px;">(host)</span>
-                                            <i data-lucide="check" class="check-icon"
-                                                style="width: 14px; height: 14px;"></i>
-                                        </div>
-                                    </template>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                    <button style="background-color: #000; border-color: #000; color: #fff;"
-                        @click='
-                        htmx.ajax("POST", "/schedule", {
-                            values: { playbook: {{ name | tojson | forceescape }}, cron: cronExpression, target: scheduleTargets.join(' ,') || "all" }, swap: "none" });
-                        showScheduleModal=false; '>
-                        <i data-lucide="calendar-check" style="width: 14px; height: 14px; margin-right: 6px;"></i> Save
-                        Schedule
-                    </button>
-                </div>
-            </footer>
-        </article>
-    </dialog>
-
-    <!-- Launchpad Modal -->
-    <dialog :open="showLaunchModal">
-        <article style="max-width: 600px; width: 100%;">
-            <header>
-                <a href="#close" aria-label="Close" class="close" @click="showLaunchModal = false"></a>
-                <h5 x-text="launchMode === ' check' ? 'Dry Run: ' + '{{ name }}' : 'Launch: ' + '{{ name }}'"></h5>
-            </header>
-
-            <form @submit.prevent=" let vals={ limit: Array.isArray(launchParams.limit) ? launchParams.limit.join(',')
-                        : launchParams.limit, tags: launchParams.tags, verbosity: launchParams.verbosity, extra_vars:
-                        getExtraVarsJson() }; htmx.ajax('POST', (launchMode==='check' ? '/check/{{ name | safe }}'
-                        : '/run/{{ name | safe }}' ), { values: vals, target: '#terminal-container' , swap: 'innerHTML'
-                        }); showLaunchModal=false; ">
-                <div class=" grid">
-                        <div style="position: relative;">
-                            <label>Target Hosts / Groups</label>
-                            <div class="custom-select-trigger"
-                                @click="launchParams.showTargets = !launchParams.showTargets"
-                                :class="{ 'expanded': launchParams.showTargets }"
-                                style="cursor: pointer; padding: 10px; border: 1px solid var(--ds-gray-200); border-radius: 6px; background: var(--ds-background-100); display: flex; justify-content: space-between; align-items: center; min-height: 42px;">
-                                <span x-text="launchParams.limit.join(', ')"
-                                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;"></span>
-                                <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
-                            </div>
-
-                            <div x-show="launchParams.showTargets" x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="transform opacity-0 scale-95"
-                                x-transition:enter-end="transform opacity-100 scale-100"
-                                @click.away="launchParams.showTargets = false" class="custom-select-dropdown"
-                                style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; background: white; border: 1px solid var(--ds-gray-200); border-radius: 6px; margin-top: 4px; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-
-                                <style>
-                                    .select-item:hover {
-                                        background: var(--ds-background-200) !important;
-                                    }
-
-                                    .select-item input[type="checkbox"] {
-                                        pointer-events: none;
-                                    }
-                                </style>
-
-                                <div class="select-item" @click="toggleTarget('all')"
-                                    style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.2s;"
-                                    :style="launchParams.limit.includes('all') ? 'background: var(--ds-blue-100); color: var(--ds-blue-700); font-weight: 500;' : ''">
-                                    <input type="checkbox" :checked="launchParams.limit.includes('all')"
-                                        style="margin-bottom: 0;">
-                                    <span>all</span>
+                            <div style="max-height: 250px; overflow-y: auto; padding: 4px;">
+                                <div x-show="matches('all')">
+                                    <div class="geist-select-header">Global</div>
+                                    <div class="geist-select-option" @click="toggleScheduleTarget('all')"
+                                        :class="{ 'dimmed': isDimmed('all') }">
+                                        <span class="custom-checkbox"
+                                            :class="{ 'checked': scheduleTargets.includes('all') }">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                x-show="scheduleTargets.includes('all')">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </span>
+                                        <span>All Hosts</span>
+                                    </div>
                                 </div>
 
-                                <template x-if="launchParams.availableTargets.groups.length > 0">
-                                    <div>
-                                        <div
-                                            style="padding: 4px 12px; font-size: 0.75rem; color: var(--ds-gray-500); font-weight: 600; text-transform: uppercase;">
-                                            Groups</div>
+                                <template
+                                    x-if="launchParams.availableTargets.groups && launchParams.availableTargets.groups.length > 0">
+                                    <div x-show="launchParams.availableTargets.groups.some(g => matches(g))">
+                                        <div class="geist-select-header">Groups</div>
                                         <template x-for="g in launchParams.availableTargets.groups" :key="g">
-                                            <div class="select-item" @click="toggleTarget(g)"
-                                                style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px;"
-                                                :style="launchParams.limit.includes(g) ? 'background: var(--ds-blue-100); color: var(--ds-blue-700);' : ''">
-                                                <input type="checkbox" :checked="launchParams.limit.includes(g)"
-                                                    style="margin-bottom: 0;">
-                                                <span x-text="g"></span>
+                                            <div class="geist-select-option" x-show="matches(g)"
+                                                @click="toggleScheduleTarget(g)" :class="{ 'dimmed': isDimmed(g) }">
+                                                <span class="custom-checkbox"
+                                                    :class="{ 'checked': scheduleTargets.includes(g) }">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                                                        x-show="scheduleTargets.includes(g)">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
+                                                <span style="flex: 1;" x-text="g"></span>
+                                                <span class="geist-badge">Group</span>
                                             </div>
                                         </template>
                                     </div>
                                 </template>
 
-                                <template x-if="launchParams.availableTargets.hosts.length > 0">
-                                    <div>
-                                        <div
-                                            style="padding: 4px 12px; font-size: 0.75rem; color: var(--ds-gray-500); font-weight: 600; text-transform: uppercase;">
-                                            Hosts</div>
+                                <template
+                                    x-if="launchParams.availableTargets.hosts && launchParams.availableTargets.hosts.length > 0">
+                                    <div x-show="launchParams.availableTargets.hosts.some(h => matches(h.alias))">
+                                        <div class="geist-select-header">Hosts</div>
                                         <template x-for="h in launchParams.availableTargets.hosts" :key="h.alias">
-                                            <div class="select-item" @click="toggleTarget(h.alias)"
-                                                style="padding: 8px 12px; cursor: pointer; display: flex; align-items: center; gap: 10px;"
-                                                :style="launchParams.limit.includes(h.alias) ? 'background: var(--ds-blue-100); color: var(--ds-blue-700);' : ''">
-                                                <input type="checkbox" :checked="launchParams.limit.includes(h.alias)"
-                                                    style="margin-bottom: 0;">
+                                            <div class="geist-select-option" x-show="matches(h.alias)"
+                                                @click="toggleScheduleTarget(h.alias)"
+                                                :class="{ 'dimmed': isDimmed(h.alias) }">
+                                                <span class="custom-checkbox"
+                                                    :class="{ 'checked': scheduleTargets.includes(h.alias) }">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                                                        x-show="scheduleTargets.includes(h.alias)">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
                                                 <span x-text="h.alias"></span>
                                             </div>
                                         </template>
@@ -365,59 +219,183 @@
                                 </template>
                             </div>
                         </div>
-                        <label>
-                            Tags
-                            <input type="text" x-model="launchParams.tags" placeholder="e.g. deploy, !db">
-                        </label>
+                    </div>
                 </div>
 
-                <label>
-                    Verbosity
-                    <select x-model="launchParams.verbosity">
-                        <option value="0">Normal</option>
-                        <option value="1">Verbose (-v)</option>
-                        <option value="2">More Verbose (-vv)</option>
-                        <option value="3">Debug (-vvv)</option>
-                    </select>
-                </label>
+                <footer
+                    style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1rem; border-top: none; padding: 0;">
+                    <button
+                        style="background-color: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500;"
+                        @click='htmx.ajax("POST", "/schedule", { values: { playbook: {{ name | tojson | forceescape }}, cron: cronExpression, target: scheduleTargets.join(",") || "all" }, swap: "none" }); showScheduleModal = false;'>
+                        <i data-lucide="calendar-check" style="width: 14px; height: 14px; margin-right: 6px;"></i> Save
+                        Schedule
+                    </button>
+                    <button class="secondary outline" @click="showScheduleModal = false"
+                        style="padding: 10px 20px; border-radius: 6px;">Cancel</button>
+                </footer>
+            </section>
+        </article>
+    </dialog>
+
+    <!-- Launchpad Modal -->
+    <dialog :open="showLaunchModal">
+        <article style="max-width: 600px; width: 100%;">
+            <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
+                <h5 x-text="launchMode === 'check' ? 'Dry Run: ' + '{{ name }}' : 'Launch: ' + '{{ name }}'"
+                    style="margin: 0;"></h5>
+                <button type="button" aria-label="Close" @click="showLaunchModal = false"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ds-gray-600); line-height: 1; padding: 0;">&times;</button>
+            </header>
+
+            <form
+                @submit.prevent=" let vals={ limit: Array.isArray(launchParams.limit) ? launchParams.limit.join(',') : launchParams.limit, tags: launchParams.tags, verbosity: launchParams.verbosity, extra_vars: getExtraVarsJson() }; htmx.ajax('POST', (launchMode==='check' ? '/check/{{ name | safe }}' : '/run/{{ name | safe }}' ), { values: vals, target: '#terminal-container', swap: 'innerHTML' }); showLaunchModal=false; ">
+                <div style="margin-bottom: 2rem; position: relative;">
+                    <label
+                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target
+                        Hosts / Groups</label>
+                    <div x-data="{
+                        open: false,
+                        search: '',
+                        getLabel() {
+                            if (launchParams.limit.includes('all')) return 'All Hosts';
+                            if (launchParams.limit.length === 0) return 'All Hosts';
+                            if (launchParams.limit.length === 1) return launchParams.limit[0];
+                            return launchParams.limit.length + ' Targets Selected';
+                        },
+                        isDimmed(val) {
+                            return launchParams.limit.includes('all') && val !== 'all';
+                        },
+                        matches(text) {
+                            if (!this.search) return true;
+                            return text.toLowerCase().includes(this.search.toLowerCase());
+                        }
+                    }" @click.outside="open = false" class="geist-select-container">
+
+                        <div @click="open = !open" class="geist-select-trigger" :aria-expanded="open">
+                            <span x-text="getLabel()"
+                                style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
+                            <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
+                        </div>
+
+                        <div x-show="open" x-transition class="geist-select-dropdown" x-cloak>
+                            <div style="padding: 0; border-bottom: 1px solid #EAEAEA;">
+                                <input type="text" x-model="search" placeholder="Search targets..." @click.stop=""
+                                    style="width: 100%; border: none !important; border-radius: 0; padding: 10px 12px; font-size: 13px; background: transparent; box-shadow: none !important;">
+                            </div>
+
+                            <div style="max-height: 250px; overflow-y: auto; padding: 4px;">
+                                <div x-show="matches('all')">
+                                    <div class="geist-select-header">Global</div>
+                                    <div class="geist-select-option" @click="toggleTarget('all')"
+                                        :class="{ 'dimmed': isDimmed('all') }">
+                                        <span class="custom-checkbox"
+                                            :class="{ 'checked': launchParams.limit.includes('all') }">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                                stroke-linecap="round" stroke-linejoin="round"
+                                                x-show="launchParams.limit.includes('all')">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </span>
+                                        <span>All Hosts</span>
+                                    </div>
+                                </div>
+
+                                <template
+                                    x-if="launchParams.availableTargets.groups && launchParams.availableTargets.groups.length > 0">
+                                    <div x-show="launchParams.availableTargets.groups.some(g => matches(g))">
+                                        <div class="geist-select-header">Groups</div>
+                                        <template x-for="g in launchParams.availableTargets.groups" :key="g">
+                                            <div class="geist-select-option" x-show="matches(g)"
+                                                @click="toggleTarget(g)" :class="{ 'dimmed': isDimmed(g) }">
+                                                <span class="custom-checkbox"
+                                                    :class="{ 'checked': launchParams.limit.includes(g) }">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                                                        x-show="launchParams.limit.includes(g)">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
+                                                <span style="flex: 1;" x-text="g"></span>
+                                                <span class="geist-badge">Group</span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template
+                                    x-if="launchParams.availableTargets.hosts && launchParams.availableTargets.hosts.length > 0">
+                                    <div x-show="launchParams.availableTargets.hosts.some(h => matches(h.alias))">
+                                        <div class="geist-select-header">Hosts</div>
+                                        <template x-for="h in launchParams.availableTargets.hosts" :key="h.alias">
+                                            <div class="geist-select-option" x-show="matches(h.alias)"
+                                                @click="toggleTarget(h.alias)" :class="{ 'dimmed': isDimmed(h.alias) }">
+                                                <span class="custom-checkbox"
+                                                    :class="{ 'checked': launchParams.limit.includes(h.alias) }">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                                                        x-show="launchParams.limit.includes(h.alias)">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </span>
+                                                <span x-text="h.alias"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <label>
+                        Tags
+                        <input type="text" x-model="launchParams.tags" placeholder="e.g. deploy, !db">
+                    </label>
+                    <label>
+                        Verbosity
+                        <select x-model="launchParams.verbosity" style="height: 42px;">
+                            <option value="0">Normal</option>
+                            <option value="1">Verbose (-v)</option>
+                            <option value="2">More Verbose (-vv)</option>
+                            <option value="3">Debug (-vvv)</option>
+                        </select>
+                    </label>
+                </div>
 
                 <div style="margin-top: 1rem;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                        <strong>Extra Variables</strong>
-                        <button type="button" class="outline" style="padding: 2px 8px; font-size: 0.8rem;"
-                            @click="addExtraVar()">
+                        <strong style="font-size: 13px;">Extra Variables</strong>
+                        <button type="button" class="outline"
+                            style="padding: 2px 8px; font-size: 0.8rem; border-radius: 4px;" @click="addExtraVar()">
                             <i data-lucide="plus" style="width: 12px; height: 12px; margin-right: 4px;"></i> Add Var
                         </button>
                     </div>
 
                     <template x-for="(v, index) in launchParams.extraVars" :key="index">
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start;">
-                            <input type="text" x-model="v.key" placeholder="Key" style="margin-bottom: 0;">
-                            <input type="text" x-model="v.value" placeholder="Value" style="margin-bottom: 0;">
+                            <input type="text" x-model="v.key" placeholder="Key"
+                                style="margin-bottom: 0; min-height: 40px;">
+                            <input type="text" x-model="v.value" placeholder="Value"
+                                style="margin-bottom: 0; min-height: 40px;">
                             <button type="button" class="secondary outline btn-icon"
-                                style="padding: 4px; border-color: #ff4444; color: #ff4444;"
+                                style="padding: 8px; border-color: #ff4444; color: #ff4444; min-height: 40px;"
                                 @click="removeExtraVar(index)">
                                 <i data-lucide="x" style="width: 14px; height: 14px;"></i>
                             </button>
                         </div>
                     </template>
-                    <div x-show="launchParams.extraVars.length === 0"
-                        style="color: #868e96; font-size: 0.9rem; text-align: center; padding: 10px; border: 1px dashed #dee2e6; border-radius: 4px;">
-                        No extra variables defined.
-                    </div>
                 </div>
 
-                <footer style="margin-top: 2rem;">
-                    <button type="submit">
-                        <i data-lucide="check-circle" style="width: 14px; height: 14px; margin-right: 6px;"
-                            x-show="launchMode === 'check'"></i>
-                        <i data-lucide="rocket" style="width: 14px; height: 14px; margin-right: 6px;"
-                            x-show="launchMode === 'run'"></i>
-                        <span x-text="launchMode === 'check' ? 'Run Check' : 'Launch'"></span>
+                <footer style="margin-top: 2rem; padding: 0; border-top: none;">
+                    <button type="submit"
+                        style="background-color: #000; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; width: 100%;">
+                        <i data-lucide="rocket" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        <span x-text="launchMode === 'check' ? 'Run Dry Run' : 'Launch Playbook'"></span>
                     </button>
                 </footer>
-                </form>
+            </form>
         </article>
     </dialog>
     <header class="main-header">
