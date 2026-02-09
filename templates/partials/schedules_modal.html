@@ -41,35 +41,44 @@
 
             <div x-data="{
                 open: false,
-                selected: '{{ initial_target | e }}',
-                label: '{{ display_label | e }}',
-                top: 0,
-                left: 0,
-                width: 0,
+                selected: '{{ initial_target | e }}'.split(',').filter(x => x),
+                getLabel() {
+                    if (this.selected.includes('all')) return 'all';
+                    if (this.selected.length === 0) return 'all';
+                    if (this.selected.length === 1) return this.selected[0] + (this.selected[0] === 'all' ? '' : ' (host)');
+                    return this.selected.length + ' targets selected';
+                },
                 toggle() {
                     if (this.open) {
                         this.open = false;
                     } else {
-                        const rect = this.$refs.trigger.getBoundingClientRect();
-                        this.top = rect.bottom + 4;
-                        this.left = rect.left;
-                        this.width = rect.width;
                         this.open = true;
                     }
                 },
-                select(val, lbl) {
-                    this.selected = val;
-                    this.label = lbl;
-                    this.open = false;
+                toggleTarget(val) {
+                    if (val === 'all') {
+                        this.selected = ['all'];
+                    } else {
+                        // Remove 'all' if selecting specific
+                        this.selected = this.selected.filter(x => x !== 'all');
+                        if (this.selected.includes(val)) {
+                            this.selected = this.selected.filter(x => x !== val);
+                        } else {
+                            this.selected.push(val);
+                        }
+                        if (this.selected.length === 0) this.selected = ['all'];
+                    }
+                    // Trigger Lucide icon refresh if needed, but since we use SVG it's usually fine
                 }
             }" @click.outside="open = false" @scroll.window="open = false" @resize.window="open = false"
                 class="geist-select-container" style="display: block; width: 100%;">
 
-                <input type="hidden" name="target" :value="selected">
+                <input type="hidden" name="target" :value="selected.join(',')">
 
                 <div x-ref="trigger" @click.stop="toggle()" class="geist-select-trigger" :aria-expanded="open"
                     style="display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--ds-gray-200); border-radius: 6px; padding: 0 12px; height: 36px; cursor: pointer; background: white;">
-                    <span x-text="label" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
+                    <span x-text="getLabel()"
+                        style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></span>
                     <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #666;"></i>
                 </div>
 
@@ -77,11 +86,13 @@
                     style="position: absolute; top: 100%; left: 0; width: 100%; margin-top: 4px; background: white; border: 1px solid var(--ds-gray-200); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; max-height: 250px; overflow-y: auto; padding: 4px;"
                     x-cloak>
                     <!-- All -->
-                    <div class="geist-select-option" :class="{ 'selected': selected === 'all' }"
-                        @click="select('all', 'all')"
+                    <div class="geist-select-option" :class="{ 'selected': selected.includes('all') }"
+                        @click="toggleTarget('all')"
                         style="padding: 8px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
                         <i data-lucide="globe" style="width: 14px; height: 14px; color: #666;"></i>
                         <span>all</span>
+                        <i data-lucide="check" class="check-icon"
+                            style="width: 14px; height: 14px; margin-left: auto;"></i>
                     </div>
 
                     <!-- Groups -->
@@ -92,11 +103,13 @@
                                 style="font-size: 11px; text-transform: uppercase; color: #888; padding: 8px 12px 4px; font-weight: 500;">
                                 Groups</div>
                             {% for group in groups %}
-                            <div class="geist-select-option" :class="{ 'selected': selected === '{{ group }}' }"
-                                @click="select('{{ group }}', '{{ group }}')"
+                            <div class="geist-select-option" :class="{ 'selected': selected.includes('{{ group }}') }"
+                                @click="toggleTarget('{{ group }}')"
                                 style="padding: 8px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
                                 <i data-lucide="users" style="width: 14px; height: 14px; color: #666;"></i>
                                 <span>{{ group }}</span>
+                                <i data-lucide="check" class="check-icon"
+                                    style="width: 14px; height: 14px; margin-left: auto;"></i>
                             </div>
                             {% endfor %}
                         </div>
@@ -111,12 +124,14 @@
                                 style="font-size: 11px; text-transform: uppercase; color: #888; padding: 8px 12px 4px; font-weight: 500;">
                                 Servers</div>
                             {% for server in servers %}
-                            <div class="geist-select-option" :class="{ 'selected': selected === '{{ server }}' }"
-                                @click="select('{{ server }}', '{{ server }} (host)')"
+                            <div class="geist-select-option" :class="{ 'selected': selected.includes('{{ server }}') }"
+                                @click="toggleTarget('{{ server }}')"
                                 style="padding: 8px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px;">
                                 <i data-lucide="server" style="width: 14px; height: 14px; color: #666;"></i>
                                 <span>{{ server }}</span>
                                 <span style="color: #999; font-size: 11px; margin-left: 4px;">(host)</span>
+                                <i data-lucide="check" class="check-icon"
+                                    style="width: 14px; height: 14px; margin-left: auto;"></i>
                             </div>
                             {% endfor %}
                         </div>

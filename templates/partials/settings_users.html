@@ -54,141 +54,142 @@
     </div>
 
     <!-- Create User Modal -->
-    <dialog :open="showCreateModal" @click.self="showCreateModal = false">
-        <article
-            style="min-width: 450px; padding: 24px; border-radius: 12px; border: 1px solid var(--ds-gray-200); box-shadow: var(--ds-shadow-large);">
-            <header
-                style="padding: 0; margin-bottom: 24px; border: none; background: transparent; display: flex; justify-content: space-between; align-items: center;">
-                <h5 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Create New User</h5>
-                <button type="button" @click="showCreateModal = false"
-                    style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--ds-gray-600); transition: color 0.15s ease;">
-                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
-                </button>
-            </header>
+    <div class="sible-modal-backdrop" x-show="showCreateModal" x-transition.opacity
+        @click.self="showCreateModal = false" style="display: none;">
+        <dialog :open="showCreateModal" style="display: contents;">
+            <article class="modal-content" style="min-width: 450px; padding: 24px;" x-show="showCreateModal"
+                x-transition.scale>
+                <header
+                    style="padding: 0; margin-bottom: 24px; border: none; background: transparent; display: flex; justify-content: space-between; align-items: center;">
+                    <h5 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Create New User</h5>
+                    <button type="button" @click="showCreateModal = false"
+                        style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--ds-gray-600); transition: color 0.15s ease;">
+                        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                    </button>
+                </header>
 
-            <form hx-post="/api/users" hx-swap="none"
-                hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                <form hx-post="/api/users" hx-swap="none"
+                    hx-on::after-request="if(event.detail.successful) window.location.reload()">
 
-                <div style="margin-bottom: 1.5rem;">
-                    <label
-                        style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Username</label>
-                    <input type="text" name="username" required
-                        style="width: 100%; padding: 10px 12px; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
-                        onfocus="this.style.borderColor='#000'; this.style.boxShadow='0 0 0 1px #000';"
-                        onblur="this.style.borderColor='#EAEAEA'; this.style.boxShadow='none';">
-                </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Username</label>
+                        <input type="text" name="username" required
+                            style="width: 100%; padding: 10px 12px; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
+                            onfocus="this.style.borderColor='#000'; this.style.boxShadow='0 0 0 1px #000';"
+                            onblur="this.style.borderColor='#EAEAEA'; this.style.boxShadow='none';">
+                    </div>
 
-                <div style="margin-bottom: 1.5rem;">
-                    <label
-                        style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Password</label>
-                    <input type="password" name="password" required
-                        style="width: 100%; padding: 10px 12px; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
-                        onfocus="this.style.borderColor='#000'; this.style.boxShadow='0 0 0 1px #000';"
-                        onblur="this.style.borderColor='#EAEAEA'; this.style.boxShadow='none';">
-                </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Password</label>
+                        <input type="password" name="password" required
+                            style="width: 100%; padding: 10px 12px; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
+                            onfocus="this.style.borderColor='#000'; this.style.boxShadow='0 0 0 1px #000';"
+                            onblur="this.style.borderColor='#EAEAEA'; this.style.boxShadow='none';">
+                    </div>
 
-                <div style="margin-bottom: 2rem;">
-                    <label
-                        style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Role</label>
-                    <div x-data="{
-                        open: false,
-                        selected: 'watcher',
-                        label: 'Watcher (Read Only)',
-                        top: 0,
-                        left: 0,
-                        width: 0,
-                        options: [
-                            { val: 'watcher', lbl: 'Watcher (Read Only)', icon: 'eye' },
-                            { val: 'operator', lbl: 'Operator (Run Playbooks)', icon: 'play' },
-                            { val: 'admin', lbl: 'Admin (Full Access)', icon: 'shield' }
-                        ],
-                        toggle() {
-                            if (this.open) {
+                    <div style="margin-bottom: 2rem;">
+                        <label
+                            style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Role</label>
+                        <div x-data="{
+                            open: false,
+                            selected: 'watcher',
+                            label: 'Watcher (Read Only)',
+                            top: 0,
+                            left: 0,
+                            width: 0,
+                            options: [
+                                { val: 'watcher', lbl: 'Watcher (Read Only)', icon: 'eye' },
+                                { val: 'operator', lbl: 'Operator (Run Playbooks)', icon: 'play' },
+                                { val: 'admin', lbl: 'Admin (Full Access)', icon: 'shield' }
+                            ],
+                            toggle() {
+                                if (this.open) {
+                                    this.open = false;
+                                } else {
+                                    const rect = this.$refs.trigger.getBoundingClientRect();
+                                    this.top = rect.bottom + 4;
+                                    this.left = rect.left;
+                                    this.width = rect.width;
+                                    this.open = true;
+                                }
+                            },
+                            select(opt) {
+                                this.selected = opt.val;
+                                this.label = opt.lbl;
                                 this.open = false;
-                            } else {
-                                const rect = this.$refs.trigger.getBoundingClientRect();
-                                this.top = rect.bottom + 4;
-                                this.left = rect.left;
-                                this.width = rect.width;
-                                this.open = true;
                             }
-                        },
-                        select(opt) {
-                            this.selected = opt.val;
-                            this.label = opt.lbl;
-                            this.open = false;
-                        }
-                    }" @click.outside="open = false" @scroll.window="open = false" @resize.window="open = false"
-                        style="position: relative; width: 100%;">
+                        }" @click.outside="open = false" @scroll.window="open = false" @resize.window="open = false"
+                            style="position: relative; width: 100%;">
 
-                        <input type="hidden" name="role" :value="selected">
+                            <input type="hidden" name="role" :value="selected">
 
-                        <div x-ref="trigger" @click.stop="toggle()"
-                            style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0 12px; background: #fff; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; cursor: pointer; transition: border-color 0.15s ease;"
-                            :style="open ? 'border-color: #000; box-shadow: 0 0 0 1px #000;' : ''">
-                            <span x-text="label"></span>
-                            <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: #666;"></i>
-                        </div>
+                            <div x-ref="trigger" @click.stop="toggle()"
+                                style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0 12px; background: #fff; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; cursor: pointer; transition: border-color 0.15s ease;"
+                                :style="open ? 'border-color: #000; box-shadow: 0 0 0 1px #000;' : ''">
+                                <span x-text="label"></span>
+                                <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: #666;"></i>
+                            </div>
 
-                        <div x-show="open" x-init="lucide.createIcons()"
-                            :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px; background: white; border: 1px solid #EAEAEA; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; padding: 4px;`"
-                            x-cloak>
-                            <template x-for="opt in options" :key="opt.val">
-                                <div @click="select(opt)"
-                                    style="padding: 10px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px; transition: background 0.1s ease;"
-                                    :style="selected === opt.val ? 'background: #fafafa; font-weight: 500;' : ''"
-                                    onmouseover="this.style.background='#fafafa'"
-                                    onmouseout="if(this.dataset.selected !== 'true') this.style.background='transparent'">
-                                    <i :data-lucide="opt.icon" style="width: 14px; height: 14px; color: #666;"></i>
-                                    <span x-text="opt.lbl"></span>
-                                </div>
-                            </template>
+                            <div x-show="open" x-init="lucide.createIcons()"
+                                :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px; background: white; border: 1px solid #EAEAEA; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; padding: 4px;`"
+                                x-cloak>
+                                <template x-for="opt in options" :key="opt.val">
+                                    <div @click="select(opt)"
+                                        style="padding: 10px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px; transition: background 0.1s ease;"
+                                        :style="selected === opt.val ? 'background: #fafafa; font-weight: 500;' : ''"
+                                        onmouseover="this.style.background='#fafafa'"
+                                        onmouseout="if(this.dataset.selected !== 'true') this.style.background='transparent'">
+                                        <i :data-lucide="opt.icon" style="width: 14px; height: 14px; color: #666;"></i>
+                                        <span x-text="opt.lbl"></span>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <footer
-                    style="padding: 0; background: transparent; border: none; margin: 0; display: flex; justify-content: flex-end;">
-                    <button type="submit"
-                        style="width: auto; padding: 0 24px; background: #000; color: #fff; border: none; border-radius: 6px; height: 40px; font-weight: 500; cursor: pointer; transition: opacity 0.15s ease;"
-                        onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-                        Create User
-                    </button>
-                </footer>
-            </form>
-        </article>
-    </dialog>
+                    <footer
+                        style="padding: 0; background: transparent; border: none; margin: 0; display: flex; justify-content: flex-end;">
+                        <button type="submit"
+                            style="width: auto; padding: 0 24px; background: #000; color: #fff; border: none; border-radius: 6px; height: 40px; font-weight: 500; cursor: pointer; transition: opacity 0.15s ease;"
+                            onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                            Create User
+                        </button>
+                    </footer>
+                </form>
+            </article>
+        </dialog>
+    </div>
 
     <!-- Edit User Modal -->
-    <dialog :open="showEditModal" @click.self="showEditModal = false">
-        <article
-            style="min-width: 450px; padding: 24px; border-radius: 12px; border: 1px solid var(--ds-gray-200); box-shadow: var(--ds-shadow-large);">
-            <header
-                style="padding: 0; margin-bottom: 24px; border: none; background: transparent; display: flex; justify-content: space-between; align-items: center;">
-                <h5 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Edit User</h5>
-                <button type="button" @click="showEditModal = false"
-                    style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--ds-gray-600); transition: color 0.15s ease;">
-                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
-                </button>
-            </header>
-            <div id="edit-user-form-container">
-                <div style="padding: 2rem; text-align: center; color: var(--ds-gray-500); font-size: 14px;">
-                    Loading...
+    <div class="sible-modal-backdrop" x-show="showEditModal" x-transition.opacity @click.self="showEditModal = false"
+        style="display: none;">
+        <dialog :open="showEditModal" style="display: contents;">
+            <article class="modal-content" style="min-width: 450px; padding: 24px;" x-show="showEditModal"
+                x-transition.scale>
+                <header
+                    style="padding: 0; margin-bottom: 24px; border: none; background: transparent; display: flex; justify-content: space-between; align-items: center;">
+                    <h5 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Edit User</h5>
+                    <button type="button" @click="showEditModal = false"
+                        style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--ds-gray-600); transition: color 0.15s ease;">
+                        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                    </button>
+                </header>
+                <div id="edit-user-form-container">
+                    <div style="padding: 2rem; text-align: center; color: var(--ds-gray-500); font-size: 14px;">
+                        Loading...
+                    </div>
                 </div>
-            </div>
-        </article>
-    </dialog>
+            </article>
+        </dialog>
+    </div>
 </div>
 
 <style>
     /* Ensure modal backdrop looks good with Pico dialog */
-    dialog {
-        background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(2px);
-    }
-
     dialog article {
-        margin: 10vh auto;
+        margin: 0;
     }
 
     button.btn-icon {

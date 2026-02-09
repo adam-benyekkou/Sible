@@ -18,6 +18,7 @@
     fetchSecrets() {
         fetch('/api/inventory/secrets').then(r => r.json()).then(data => this.secrets = data);
     },
+    showModal: false,
     openModal() { 
         this.isEditing = false; 
         this.resetForm();
@@ -30,11 +31,11 @@
                 form.setAttribute('hx-post', '/api/inventory/hosts');
                 htmx.process(form);
             }
-            document.getElementById('inventory-modal').showModal(); 
+            this.showModal = true;
         });
     },
     closeModal() { 
-        document.getElementById('inventory-modal').close(); 
+        this.showModal = false;
         this.resetForm();
     },
     editHost(id, alias, hostname, user, port, group, keyPath, keySecret, passSecret) {
@@ -59,7 +60,7 @@
                 form.setAttribute('hx-put', `/api/inventory/hosts/${id}`);
                 htmx.process(form);
             }
-            document.getElementById('inventory-modal').showModal();
+            this.showModal = true;
         });
     },
     resetForm() {

@@ -887,28 +887,42 @@ tr.hover:hover td {
 }
 
 /* --- MODAL SYSTEM --- */
-.modal-backdrop {
-    display: none;
-    /* Alpine will toggle this */
+.sible-modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    justify-content: center;
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
     align-items: center;
+    justify-content: center;
 }
 
-/* When Alpine x-show is active, it sets display: block/flex. 
-   We want to enforce flex for centering. */
-.modal-backdrop[style*="display: block"] {
+/* Force flex display when shown by Alpine */
+.sible-modal-backdrop:not([style*="display: none"]) {
     display: flex !important;
 }
 
-/* SSH Modal specific centering wrapper */
+/* Use display: contents to let the article be centered by the backdrop's flexbox */
+.sible-modal-backdrop dialog {
+    display: contents !important;
+    position: static !important;
+}
+
+/* Ensure the modal content is properly styled as the flex child */
+.sible-modal-backdrop article.modal-content {
+    position: relative !important;
+    margin: 0 !important;
+    width: auto !important;
+    min-width: 500px;
+    max-width: 90vw;
+    z-index: 10000;
+}
+
+/* SSH Modal specific centering wrapper - Reverted to original name */
 .ssh-modal-wrapper {
     display: none;
     position: fixed;
@@ -927,17 +941,7 @@ tr.hover:hover td {
     display: flex !important;
 }
 
-dialog {
-    border: none;
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    width: auto;
-    max-width: none;
-    display: block;
-    position: relative;
-    z-index: 1001;
-}
+/* Global dialog overrides removed to avoid breaking other components */
 
 article.modal-content {
     background: #ffffff;
