@@ -22,7 +22,7 @@ def _run_migrations():
     
     migrations = [
         ("user", "timezone", "TEXT DEFAULT 'UTC'"),
-        ("user", "theme_preference", "TEXT DEFAULT 'light'"),
+        ("user", "theme", "TEXT DEFAULT 'light'"),
     ]
     
     try:

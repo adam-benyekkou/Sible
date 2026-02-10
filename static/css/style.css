@@ -886,6 +886,287 @@ tr.hover:hover td {
     opacity: 1;
 }
 
+/* Dark Theme Overrides */
+[data-theme='dark'] {
+    --pico-background-color: #1e1e2e;
+    /* Mocha Base */
+    --pico-card-background-color: #181825;
+    /* Mocha Mantle */
+    --pico-form-element-background-color: #11111b;
+    /* Mocha Crust */
+    --pico-color: #cdd6f4;
+    /* Mocha Text */
+    --pico-h1-color: #f5c2e7;
+    /* Mocha Pink */
+    --pico-h2-color: #f5c2e7;
+    --pico-h3-color: #f5c2e7;
+    --pico-muted-color: #7f849c;
+    /* Mocha Overlay1 */
+    --pico-primary: #b4befe;
+    /* Mocha Lavender */
+    --pico-primary-hover: #89b4fa;
+    /* Mocha Blue */
+    --pico-primary-inverse: #11111b;
+    --pico-border-color: #313244;
+    /* Mocha Surface0 */
+    --pico-form-element-border-color: #313244;
+    --pico-form-element-active-border-color: #b4befe;
+    /* Ansible Status Indicators */
+    --status-success: #a6e3a1;
+    /* Mocha Green */
+    --status-error: #f38ba8;
+    /* Mocha Red */
+    --status-changed: #fab387;
+    /* Mocha Peach */
+}
+
+/* Specific overrides for dark theme elements */
+[data-theme='dark'] .group-badge {
+    background: #313244;
+    /* Mocha Surface0 */
+    color: #cdd6f4;
+    /* Mocha Text */
+}
+
+[data-theme='dark'] button.primary {
+    background: var(--pico-primary);
+    border-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-theme='dark'] button.primary:hover {
+    background: var(--pico-primary-hover);
+    border-color: var(--pico-primary-hover);
+}
+
+[data-theme='dark'] button.secondary {
+    background: transparent;
+    border: 1px solid var(--pico-border-color);
+    color: var(--pico-primary);
+}
+
+[data-theme='dark'] button.secondary:hover {
+    background: rgba(180, 190, 254, 0.1);
+    /* Light Lavender hover */
+    border-color: var(--pico-primary-hover);
+}
+
+[data-theme='dark'] aside {
+    background: #181825;
+    /* Mocha Mantle */
+    border-right: 1px solid #313244;
+    /* Mocha Surface0 */
+}
+
+[data-theme='dark'] .nav-item {
+    color: var(--pico-muted-color);
+}
+
+[data-theme='dark'] .nav-item:hover,
+[data-theme='dark'] .nav-item.active {
+    color: var(--pico-color);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .nav-item.active {
+    border-left-color: var(--pico-primary);
+}
+
+[data-theme='dark'] details>summary,
+[data-theme='dark'] .sidebar-folder[open]>summary {
+    color: var(--pico-color) !important;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .playbook-item {
+    color: var(--pico-muted-color);
+}
+
+[data-theme='dark'] .playbook-item:hover,
+[data-theme='dark'] .playbook-item.active {
+    color: var(--pico-color);
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] .playbook-item.active {
+    box-shadow: 0 0 0 2px var(--pico-primary);
+}
+
+[data-theme='dark'] main {
+    background: var(--pico-background-color);
+}
+
+[data-theme='dark'] header.main-header {
+    background: rgba(255, 255, 255, 0.05);
+    /* Slight transparency */
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] th {
+    color: var(--pico-muted-color);
+    border-bottom: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] td {
+    border-bottom: 1px solid var(--pico-border-color);
+    color: var(--pico-color);
+}
+
+[data-theme='dark'] tr:last-child td {
+    border-bottom: none;
+}
+
+[data-theme='dark'] tr.hover:hover td {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .status-dot {
+    background-color: var(--pico-muted-color);
+}
+
+[data-theme='dark'] .status-dot.success,
+[data-theme='dark'] .status-dot.online {
+    background-color: var(--status-success);
+    box-shadow: 0 0 0 1px rgba(166, 227, 161, 0.2);
+    /* Mocha Green */
+}
+
+[data-theme='dark'] .status-dot.failed,
+[data-theme='dark'] .status-dot.offline {
+    background-color: var(--status-error);
+}
+
+[data-theme='dark'] .status-dot.running {
+    background-color: var(--pico-primary-hover);
+    /* Mocha Blue */
+}
+
+[data-theme='dark'] .content-area {
+    background: var(--pico-card-background-color);
+}
+
+[data-theme='dark'] .editor-pane,
+[data-theme='dark'] .code-editor-wrapper {
+    background: var(--pico-card-background-color);
+    border: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] .ace_gutter {
+    background: #181825 !important;
+    /* Mocha Mantle */
+    border-right: 1px solid #313244 !important;
+    /* Mocha Surface0 */
+    color: var(--pico-muted-color) !important;
+}
+
+[data-theme='dark'] .ace_marker-layer .ace_active-line {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme='dark'] .ace_marker-layer .ace_selection {
+    background: rgba(180, 190, 254, 0.2) !important;
+    /* Light Lavender selection */
+}
+
+[data-theme='dark'] .terminal-pane {
+    background: #181825 !important;
+    /* Mocha Mantle */
+    border: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] #terminal-container {
+    background: #181825 !important;
+    /* Mocha Mantle */
+    color: var(--pico-color);
+    border: none;
+}
+
+[data-theme='dark'] .log-meta {
+    color: var(--pico-primary);
+    /* Mocha Lavender */
+    border-bottom: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] .log-success {
+    color: var(--status-success);
+    /* Mocha Green */
+}
+
+[data-theme='dark'] .log-changed {
+    color: var(--status-changed);
+    /* Mocha Peach */
+}
+
+[data-theme='dark'] .log-error {
+    color: var(--status-error);
+    /* Mocha Red */
+}
+
+[data-theme='dark'] .log-debug {
+    color: var(--pico-muted-color);
+    /* Mocha Overlay1 */
+}
+
+[data-theme='dark'] #ssh-terminal-container {
+    background: #181825 !important;
+    /* Mocha Mantle */
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+    background: var(--pico-form-element-background-color) !important;
+    border: 1px solid var(--pico-form-element-border-color) !important;
+    color: var(--pico-color) !important;
+}
+
+[data-theme='dark'] input:focus,
+[data-theme='dark'] select:focus,
+[data-theme='dark'] textarea:focus {
+    border-color: var(--pico-primary) !important;
+}
+
+[data-theme='dark'] input:-webkit-autofill,
+[data-theme='dark'] textarea:-webkit-autofill,
+[data-theme='dark'] select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px var(--pico-form-element-background-color) inset !important;
+    -webkit-text-fill-color: var(--pico-color) !important;
+}
+
+[data-theme='dark'] input[type="file"]::file-selector-button {
+    background: var(--pico-primary);
+    border: 1px solid var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-theme='dark'] input[type="file"]::file-selector-button:hover {
+    background: var(--pico-primary-hover);
+    border-color: var(--pico-primary-hover);
+}
+
+[data-theme='dark'] .toast {
+    background: #181825;
+    /* Mocha Mantle */
+    border: 1px solid var(--pico-border-color);
+    color: var(--pico-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] #mobile-toggle {
+    background: #181825;
+    /* Mocha Mantle */
+    border: 1px solid var(--pico-border-color);
+    color: var(--pico-color);
+}
+
+[data-theme='dark'] #mobile-toggle:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* --- END OF STYLES --- */
+
 /* --- MODAL SYSTEM --- */
 .sible-modal-backdrop {
     position: fixed;

@@ -28,13 +28,21 @@
         <hr style="margin: 1.5rem 0;">
         <h4 style="margin-bottom: 0.5rem;">User Preferences</h4>
 
-        <label>
-            <strong>Theme</strong>
-            <select name="theme_preference">
-                <option value="light" {{ 'selected' if request.state.user.theme_preference=='light' }}>Light</option>
-                <option value="dark" {{ 'selected' if request.state.user.theme_preference=='dark' }}>Dark</option>
+        <div class="settings-group">
+            <label>Interface Theme</label>
+            <select name="theme" hx-post="/settings/theme" hx-trigger="change" onchange="applyTheme(this.value)">
+                <option value="light" {% if request.state.user.theme=='light' %}selected{% endif %}>Geist Light</option>
+                <option value="dark" {% if request.state.user.theme=='dark' %}selected{% endif %}>Catppuccin Dark
+                </option>
             </select>
-        </label>
+            <small>Choose between a light or dark interface.</small>
+        </div>
+
+        <script>
+            function applyTheme(val) {
+                document.documentElement.setAttribute('data-theme', val);
+            }
+        </script>
 
         <label>
             <strong>Timezone</strong>

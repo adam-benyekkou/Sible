@@ -166,7 +166,7 @@ async def save_settings_general(
     auth_username: str = Form("admin"),
     auth_password: str = Form(None),
     timezone: str = Form("UTC"),
-    theme_preference: str = Form("light"),
+    theme: str = Form("light"),
     logo: UploadFile = File(None),
     favicon: UploadFile = File(None),
     service: SettingsService = Depends(get_settings_service),
@@ -203,12 +203,31 @@ async def save_settings_general(
     user = db.get(User, current_user.id)
     if user:
         user.timezone = timezone
-        user.theme_preference = theme_preference
+        user.theme = theme
         db.add(user)
         db.commit()
     
     response = Response(status_code=200)
     trigger_toast(response, "Settings updated", "success")
+    return response
+
+@router.post("/settings/theme")
+async def update_theme(
+    request: Request,
+    theme: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    user = db.get(User, current_user.id)
+    if not user:
+        return Response(status_code=404)
+        
+    user.theme = theme
+    db.add(user)
+    db.commit()
+    
+    response = Response(status_code=200)
+    trigger_toast(response, f"Theme changed to {theme}", "success")
     return response
 
 @router.get("/settings/secrets")
