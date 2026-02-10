@@ -81,25 +81,17 @@ async def auth_middleware(request: Request, call_next):
     # Inject user into state for templates
     from app.core.security import get_user_from_token
     token = request.cookies.get("access_token")
-    user_data = None
+    user_obj = None
     if token:
-         if token.startswith("Bearer "):
+        if token.startswith("Bearer "):
             token = token[7:]
-         user_data = get_user_from_token(token)
+        user_data = get_user_from_token(token)
+        if user_data:
+            with Session(engine) as session:
+                user_obj = session.exec(select(User).where(User.username == user_data["username"])).first()
     
-    request.state.user = user_data
+    request.state.user = user_obj
 
-    response = await call_next(request)
-    return response
-
-    if not check_auth(request):
-        # HTMX requests should probably be redirected to login or show 401
-        if request.headers.get("HX-Request") or request.headers.get("HX-Target"):
-             response = Response(status_code=200)
-             response.headers["HX-Redirect"] = "/login"
-             return response
-        return RedirectResponse(url="/login")
-        
     response = await call_next(request)
     return response
 

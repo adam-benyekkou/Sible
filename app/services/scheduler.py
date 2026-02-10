@@ -103,7 +103,7 @@ class SchedulerService:
             jobs.append({
                 "id": job.id,
                 "name": job.name,
-                "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+                "next_run": job.next_run_time,
                 "next_run_human": SchedulerService.format_timedelta(job.next_run_time) if job.next_run_time else "Paused",
                 "args": job.args,
                 "cron": job.kwargs.get("cron_expr", "Unknown"),
@@ -171,7 +171,7 @@ class SchedulerService:
         return {
             "id": job.id,
             "name": job.name,
-            "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+            "next_run": job.next_run_time,
             "next_run_human": SchedulerService.format_timedelta(job.next_run_time) if job.next_run_time else "Paused",
             "args": job.args,
             "cron": job.kwargs.get("cron_expr", "* * * * *"),

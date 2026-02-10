@@ -1,3 +1,4 @@
+from typing import List, Dict, Optional
 from sqlmodel import Session, select
 from pathlib import Path
 from app.models import Host, EnvVar
@@ -137,6 +138,29 @@ class InventoryService:
         """
         is_online, _ = await check_ssh(hostname, port, timeout=3.0)
         return is_online
+
+    @staticmethod
+    def get_hosts_paginated(db: Session, page: int = 1, limit: int = 20, search: str = None) -> tuple[List[Host], int]:
+        offset = (page - 1) * limit
+        statement = select(Host).order_by(Host.alias)
+        
+        # Total count
+        from sqlmodel import func, or_
+        count_statement = select(func.count()).select_from(Host)
+        
+        if search:
+            search_filter = or_(
+                Host.alias.ilike(f"%{search}%"),
+                Host.hostname.ilike(f"%{search}%"),
+                Host.group_name.ilike(f"%{search}%")
+            )
+            statement = statement.where(search_filter)
+            count_statement = count_statement.where(search_filter)
+        
+        total_count = db.exec(count_statement).one()
+        hosts = db.exec(statement.offset(offset).limit(limit)).all()
+        return hosts, total_count
+
 
 
     @staticmethod

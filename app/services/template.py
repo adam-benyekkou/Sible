@@ -9,13 +9,13 @@ class TemplateService:
     BLUEPRINT_DIR = Path("app/blueprints")
 
     @staticmethod
-    def list_templates() -> List[Dict[str, str]]:
+    def list_templates(limit: int = 20, offset: int = 0) -> tuple[List[Dict[str, str]], int]:
         """
-        Scans all files in BLUEPRINT_DIR and returns metadata.
+        Scans all files in BLUEPRINT_DIR and returns paginated metadata.
         """
         templates = []
         if not TemplateService.BLUEPRINT_DIR.exists():
-            return []
+            return [], 0
 
         for root, _, files in os.walk(TemplateService.BLUEPRINT_DIR):
             for file in files:
@@ -34,7 +34,12 @@ class TemplateService:
                         "category": metadata.get("Category", "Uncategorized"),
                         "author": metadata.get("Author", "Unknown")
                     })
-        return templates
+        
+        # Sort by title
+        sorted_templates = sorted(templates, key=lambda x: x["title"].lower())
+        total_count = len(sorted_templates)
+        
+        return sorted_templates[offset : offset + limit], total_count
 
     @staticmethod
     def get_template_content(name_id: str) -> Optional[str]:

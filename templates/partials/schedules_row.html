@@ -39,7 +39,7 @@
     </td>
     <td>
         <span class="font-inter" style="font-feature-settings: 'tnum'; font-variant-numeric: tabular-nums;"
-            data-tooltip="{{ job.next_run }}">
+            data-tooltip="{{ job.next_run|format_datetime(request.state.user.timezone) if job.next_run else 'Paused' }}">
             {{ job.next_run_human }}
         </span>
     </td>

@@ -165,9 +165,12 @@ async def save_settings_general(
     auth_enabled: str = Form(None),
     auth_username: str = Form("admin"),
     auth_password: str = Form(None),
+    timezone: str = Form("UTC"),
+    theme_preference: str = Form("light"),
     logo: UploadFile = File(None),
     favicon: UploadFile = File(None),
     service: SettingsService = Depends(get_settings_service),
+    db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
 ):
     update_data = {
@@ -195,6 +198,14 @@ async def save_settings_general(
         update_data["favicon_path"] = fav_path
         
     service.update_settings(update_data)
+    
+    # Save user preferences
+    user = db.get(User, current_user.id)
+    if user:
+        user.timezone = timezone
+        user.theme_preference = theme_preference
+        db.add(user)
+        db.commit()
     
     response = Response(status_code=200)
     trigger_toast(response, "Settings updated", "success")

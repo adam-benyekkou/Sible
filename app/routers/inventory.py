@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, Depends, Form
 from app.templates import templates
 from sqlmodel import Session, select
 from app.dependencies import get_db, requires_role
-from app.models import Host, User
+from app.models import Host, User, FavoriteServer
 from app.schemas.host import HostCreate, HostUpdate
 from app.services.inventory import InventoryService
 from app.utils.htmx import trigger_toast
@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/inventory")
 async def get_inventory_page(
     request: Request,
-    current_user: User = Depends(requires_role(["admin", "operator"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
     content = InventoryService.get_inventory_content()
     context = {"request": request, "content": content}
@@ -75,14 +75,64 @@ async def ping_inventory(
 @router.get("/api/inventory/hosts")
 async def list_hosts(
     request: Request, 
+    page: int = 1,
+    search: str = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(requires_role(["admin", "operator"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
-    hosts = db.exec(select(Host)).all()
+    hosts, total_count = InventoryService.get_hosts_paginated(db, page=page, search=search)
+    
+    # Get user favorites
+    fav_ids = set()
+    if current_user:
+        favs = db.exec(select(FavoriteServer).where(FavoriteServer.user_id == current_user.id)).all()
+        fav_ids = {f.host_id for f in favs}
+    
+    import math
+    limit = 20
+    total_pages = math.ceil(total_count / limit)
+    has_next = page < total_pages
+    has_prev = page > 1
+    
     return templates.TemplateResponse("partials/inventory_table_rows.html", {
         "request": request,
-        "hosts": hosts
+        "hosts": hosts,
+        "page": page,
+        "search": search,
+        "total_pages": total_pages,
+        "has_next": has_next,
+        "has_prev": has_prev,
+        "total_count": total_count,
+        "fav_ids": fav_ids
     })
+
+@router.post("/api/inventory/hosts/{host_id}/favorite")
+async def toggle_favorite_host(
+    host_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+):
+    existing = db.exec(
+        select(FavoriteServer).where(
+            FavoriteServer.user_id == current_user.id,
+            FavoriteServer.host_id == host_id
+        )
+    ).first()
+    
+    if existing:
+        db.delete(existing)
+        db.commit()
+        response = Response(status_code=200)
+        trigger_toast(response, "Removed from favorites", "success")
+    else:
+        fav = FavoriteServer(user_id=current_user.id, host_id=host_id)
+        db.add(fav)
+        db.commit()
+        response = Response(status_code=200)
+        trigger_toast(response, "Added to favorites", "success")
+    
+    response.headers["HX-Trigger"] = "inventory-refresh"
+    return response
 
 @router.post("/api/inventory/hosts")
 async def create_host(

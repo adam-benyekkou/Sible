@@ -13,25 +13,106 @@ router = APIRouter()
 @router.get("/playbooks/dashboard")
 async def get_dashboard(
     request: Request,
+    page: int = 1,
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
-    playbooks = playbook_service.get_playbooks_metadata()
+    limit = 20
+    offset = (page - 1) * limit
+    playbooks, total_count = playbook_service.get_playbooks_metadata(user_id=current_user.id, limit=limit, offset=offset)
+    
+    import math
+    total_pages = math.ceil(total_count / limit)
+    has_next = page < total_pages
+    has_prev = page > 1
+    
     return templates.TemplateResponse("playbooks_dashboard.html", {
         "request": request,
-        "playbooks": playbooks
+        "playbooks": playbooks,
+        "page": page,
+        "total_pages": total_pages,
+        "has_next": has_next,
+        "has_prev": has_prev,
+        "total_count": total_count
     })
 
 @router.get("/api/playbooks/list")
 async def list_playbooks_api(
     request: Request,
+    page: int = 1,
     search: Optional[str] = Query(None),
-    playbook_service: PlaybookService = Depends(get_playbook_service)
+    playbook_service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
-    playbooks = playbook_service.get_playbooks_metadata(search=search)
+    limit = 20
+    offset = (page - 1) * limit
+    playbooks, total_count = playbook_service.get_playbooks_metadata(search=search, user_id=current_user.id, limit=limit, offset=offset)
+    
+    import math
+    total_pages = math.ceil(total_count / limit)
+    has_next = page < total_pages
+    has_prev = page > 1
+    
     return templates.TemplateResponse("partials/playbooks_table.html", {
         "request": request,
-        "playbooks": playbooks
+        "playbooks": playbooks,
+        "page": page,
+        "total_pages": total_pages,
+        "has_next": has_next,
+        "has_prev": has_prev,
+        "total_count": total_count,
+        "search": search
+    })
+
+@router.post("/api/playbooks/toggle-favorite")
+async def toggle_favorite(
+    request: Request,
+    playbook_path: str = Form(...),
+    playbook_service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+):
+    is_favorited = playbook_service.toggle_favorite(playbook_path, current_user.id)
+    
+    # Render updated heart icon
+    icon_content = templates.TemplateResponse("partials/favorite_icon.html", {
+        "request": request,
+        "playbook": {"path": playbook_path, "is_favorited": is_favorited}
+    }).body.decode()
+
+    # Also render favorites list for OOB update
+    all_playbooks, _ = playbook_service.get_playbooks_metadata(user_id=current_user.id)
+    favorites = [p for p in all_playbooks if p["is_favorited"]]
+    from collections import defaultdict
+    grouped = defaultdict(list)
+    for p in favorites:
+        grouped[p["folder"] or "Root"].append(p)
+    
+    sidebar_content = templates.TemplateResponse("partials/sidebar_favorites.html", {
+        "request": request,
+        "favorites_grouped": dict(grouped),
+        "oob": True
+    }).body.decode()
+
+    return Response(content=f"{icon_content}\n{sidebar_content}", media_type="text/html")
+
+@router.get("/api/sidebar/favorites")
+async def get_sidebar_favorites(
+    request: Request,
+    playbook_service: PlaybookService = Depends(get_playbook_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+):
+    all_playbooks, _ = playbook_service.get_playbooks_metadata(user_id=current_user.id)
+    favorites = [p for p in all_playbooks if p["is_favorited"]]
+    
+    # Group by folder
+    from collections import defaultdict
+    grouped = defaultdict(list)
+    for p in favorites:
+        grouped[p["folder"] or "Root"].append(p)
+    
+    return templates.TemplateResponse("partials/sidebar_favorites.html", {
+        "request": request,
+        "favorites_grouped": dict(grouped)
     })
 
 @router.delete("/api/playbooks/bulk")
@@ -180,6 +261,17 @@ async def run_playbook_endpoint(
         "tags": form.get("tags"),
         "verbosity": form.get("verbosity"),
         "extra_vars": form.get("extra_vars")
+    })
+
+@router.get("/api/playbooks/run-modal/{name:path}")
+async def get_run_modal(
+    name: str,
+    request: Request,
+    current_user: User = Depends(requires_role(["admin", "operator"]))
+):
+    return templates.TemplateResponse("partials/playbook_run_modal.html", {
+        "request": request,
+        "name": name
     })
 
 @router.post("/check/{name:path}")

@@ -1,19 +1,37 @@
 <tr class="playbook-row"
-    onclick="if(!event.target.closest('.breadcrumb-link')){ htmx.ajax('GET', '/playbooks/{{ playbook.path | safe }}', {target: '#main-content', pushUrl: true}) }"
+    onclick="if(!event.target.closest('.breadcrumb-link') && !event.target.closest('button')){ htmx.ajax('GET', '/playbooks/{{ playbook.path | safe }}', {target: '#main-content', pushUrl: true}) }"
     style="border-bottom: 1px solid #EAEAEA;">
-    <td style="padding: 20px 24px; vertical-align: middle;">
+    <td style="padding: 20px 0 20px 24px; vertical-align: middle; width: 80px;">
+        {% include "partials/favorite_icon.html" %}
+    </td>
+    <td style="padding: 20px 0; vertical-align: middle; width: 120px;">
         <div style="display: flex; align-items: center;">
             <span class="status-dot status-{{ playbook.status }}"></span>
+            {% if playbook.last_job_id and (playbook.status == 'failed' or playbook.status == 'success') %}
+            <button hx-get="/history/run/{{ playbook.last_job_id }}" hx-target="body" hx-swap="beforeend"
+                onclick="event.stopPropagation()" class="status-text-{{ playbook.status }}"
+                style="font-size: 13px; font-weight: 500; color: {% if playbook.status == 'failed' %}#ee0000{% else %}#0070f3{% endif %}; text-transform: capitalize; text-decoration: underline; text-underline-offset: 2px; background: none; border: none; padding: 0; cursor: pointer;">
+                {{ playbook.status }}
+            </button>
+            {% else %}
             <span class="status-text-{{ playbook.status }}"
                 style="font-size: 13px; font-weight: 500; color: #000; text-transform: capitalize;">
                 {{ playbook.status | replace('_', ' ') }}
             </span>
+            {% endif %}
         </div>
     </td>
     <td style="padding: 20px 0; vertical-align: middle;">
         <div style="display: flex; flex-direction: column;">
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
                 <span style="font-weight: 600; color: #000; font-size: 14px;">{{ playbook.name }}</span>
+                <div class="quick-actions" style="display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s;">
+                    <button class="action-btn" title="Run Playbook"
+                        hx-get="/api/playbooks/run-modal/{{ playbook.path | safe }}" hx-target="body"
+                        hx-swap="beforeend" onclick="event.stopPropagation()">
+                        <i data-lucide="play" style="width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
             </div>
             <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #999;">
                 {% if playbook.folder %}
@@ -28,9 +46,15 @@
         </div>
     </td>
     <td style="padding: 20px 0; vertical-align: middle;">
-        <div style="color: #666666; font-size: 14px; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-            title="{{ playbook.description }}">
-            {{ playbook.description }}
+        <div x-data="{ hoverTask: false }" style="position: relative;">
+            <div style="color: #666666; font-size: 14px; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: help;"
+                @mouseenter="hoverTask = true" @mouseleave="hoverTask = false">
+                {{ playbook.description }}
+            </div>
+            <div x-show="hoverTask" x-transition
+                style="position: absolute; top: 100%; left: 0; background: #FFF; border: 1px solid #EAEAEA; padding: 12px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 50; width: 320px; color: #000; font-size: 13px; line-height: 1.5;">
+                {{ playbook.description }}
+            </div>
         </div>
     </td>
     <td style="padding: 20px 0; vertical-align: middle;">
@@ -55,6 +79,11 @@
         </div>
     </td>
     <td style="padding: 20px 24px 20px 0; vertical-align: middle; text-align: right;">
-        <span style="font-size: 13px; color: #999;">{{ playbook.last_run }}</span>
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+            <span style="font-size: 13px; color: #000; font-weight: 500;">{{ playbook.last_run }}</span>
+            {% if playbook.duration %}
+            <span style="font-size: 11px; color: #999;">{{ playbook.duration }}</span>
+            {% endif %}
+        </div>
     </td>
 </tr>

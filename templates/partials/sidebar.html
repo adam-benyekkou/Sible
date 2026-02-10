@@ -22,6 +22,26 @@
 {% endfor %}
 {% endmacro %}
 
+{% if favorites %}
+<details class="sidebar-folder" open>
+    <summary class="folder-title">
+        <span class="folder-icon">
+            <i data-lucide="heart" style="fill: var(--sible-error); stroke: var(--sible-error);"></i>
+        </span>
+        Favorites
+    </summary>
+    <div class="folder-content">
+        {% for fav in favorites %}
+        <div class="playbook-item" @click="window.location.href='/inventory?host={{ fav.id }}'">
+            <span class="status-dot {{ fav.status or 'unknown' }}"></span>
+            {{ fav.alias }}
+        </div>
+        {% endfor %}
+    </div>
+</details>
+<div style="margin-bottom: 1rem; border-bottom: 1px solid var(--ds-gray-200);"></div>
+{% endif %}
+
 {% if not playbooks %}
 <div class="empty-state-message" style="padding: 2rem 1rem; text-align: center; color: var(--ds-gray-600);">
     <p style="font-size: 0.9rem; margin-bottom: 1rem;">No playbooks yet.</p>
@@ -35,9 +55,7 @@
 <details class="sidebar-folder" open>
     <summary class="folder-title">
         <span class="folder-icon">
-            <span class="folder-icon">
-                <i data-lucide="folder"></i>
-            </span>
+            <i data-lucide="folder"></i>
         </span>
         Playbooks
     </summary>

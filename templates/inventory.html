@@ -71,32 +71,44 @@
         <p class="color-muted font-sm" style="margin-bottom: 0;">Manage your managed servers and groups.</p>
     </div>
 
-    <!-- Actions exactly above the table -->
-    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 4px; align-items: center;">
-        <div role="group" style="width: auto; margin-bottom: 0;">
-            <button :class="viewMode === 'table' ? 'primary' : 'secondary'"
-                style="height: 28px; padding: 2px 12px; font-size: 12px; width: auto;"
-                @click="viewMode = 'table'">Table</button>
-            <button :class="viewMode === 'raw' ? 'primary' : 'secondary'"
-                style="height: 28px; padding: 2px 12px; font-size: 12px; width: auto;" @click="viewMode = 'raw'">Raw
-                File</button>
+    <!-- Actions & Filter Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
+        <div style="position: relative; flex: 1; max-width: 400px;">
+            <i data-lucide="search"
+                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #999; pointer-events: none;"></i>
+            <input type="text" name="search" id="inventory-search" placeholder="Search servers or groups..."
+                hx-get="/api/inventory/hosts" hx-trigger="keyup changed delay:500ms, inventory-refresh from:body"
+                hx-target="#inventory-table-body"
+                style="padding-left: 36px; height: 40px; width: 100%; font-size: 14px; margin: 0; border: 1px solid #EAEAEA; border-radius: 6px; background: #FFF; color: #000;">
         </div>
 
-        {% if request.state.user.role == 'admin' %}
-        <button class="secondary" hx-post="/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
-            hx-indicator="#ping-loading"
-            style="white-space: nowrap; height: 28px; padding: 2px 12px; font-size: 12px; display: inline-flex; align-items: center;">
-            <i data-lucide="refresh-cw" style="width: 12px; height: 12px; margin-right: 4px;"></i> Ping All
-        </button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <div role="group" style="width: auto; margin-bottom: 0;">
+                <button :class="viewMode === 'table' ? 'primary' : 'secondary'"
+                    style="height: 40px; padding: 0 16px; font-size: 14px; width: auto;"
+                    @click="viewMode = 'table'">Table</button>
+                <button :class="viewMode === 'raw' ? 'primary' : 'secondary'"
+                    style="height: 40px; padding: 0 16px; font-size: 14px; width: auto;" @click="viewMode = 'raw'">Raw
+                    File</button>
+            </div>
 
-        <template x-if="viewMode === 'table'">
-            <button class="primary" @click="openModal()"
-                style="white-space: nowrap; height: 28px; padding: 2px 12px; font-size: 12px; display: inline-flex; align-items: center;">
-                <i data-lucide="plus"
-                    style="width: 12px; height: 12px; color: white; stroke: white; margin-right: 4px;"></i> Add Server
+            {% if request.state.user.role == 'admin' %}
+            <button class="secondary" hx-post="/inventory/ping" hx-target="#ping-result" hx-swap="innerHTML"
+                hx-indicator="#ping-loading"
+                style="white-space: nowrap; height: 40px; padding: 0 16px; font-size: 14px; display: inline-flex; align-items: center;">
+                <i data-lucide="refresh-cw" style="width: 14px; height: 14px; margin-right: 8px;"></i> Ping All
             </button>
-        </template>
-        {% endif %}
+
+            <template x-if="viewMode === 'table'">
+                <button class="primary" @click="openModal()"
+                    style="white-space: nowrap; height: 40px; padding: 0 16px; font-size: 14px; display: inline-flex; align-items: center;">
+                    <i data-lucide="plus"
+                        style="width: 14px; height: 14px; color: white; stroke: white; margin-right: 8px;"></i> Add
+                    Server
+                </button>
+            </template>
+            {% endif %}
+        </div>
     </div>
 
     <div id="ping-loading" class="htmx-indicator" style="margin-bottom: 0.5rem; font-size: 12px;">
@@ -120,7 +132,8 @@
                         <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
-                <tbody hx-get="/api/inventory/hosts" hx-trigger="load, inventory-refresh from:body">
+                <tbody id="inventory-table-body" hx-get="/api/inventory/hosts"
+                    hx-trigger="load, inventory-refresh from:body">
                     <!-- Loaded via HTMX -->
                     <tr>
                         <td colspan="6" style="padding: 24px; text-align: center; color: var(--ds-gray-600);">Loading

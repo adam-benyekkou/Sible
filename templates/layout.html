@@ -111,9 +111,9 @@
             {% endif %}
         </nav>
         <hr>
-        <nav class="playbook-list" hx-get="/partials/sidebar" hx-trigger="load, sidebar-refresh from:body">
+        <nav class="playbook-list" hx-get="/api/sidebar/favorites" hx-trigger="load, sidebar-refresh from:body">
             <!-- Items via HTMX -->
-            <div aria-busy="true">Loading playbooks...</div>
+            <div aria-busy="true" style="padding: 1rem; color: #999; font-size: 13px;">Loading favorites...</div>
         </nav>
 
         <hr>

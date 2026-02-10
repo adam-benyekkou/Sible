@@ -18,9 +18,23 @@ from app.schemas.template import TemplateCreate, TemplateUpdate
 async def templates_index(request: Request):
     return templates.TemplateResponse("templates_index.html", {"request": request})
 
-@router.get("/api/templates", response_model=List[dict])
-def list_templates():
-    return TemplateService.list_templates()
+@router.get("/api/templates")
+def list_templates(page: int = 1):
+    limit = 20
+    offset = (page - 1) * limit
+    templates_list, total_count = TemplateService.list_templates(limit=limit, offset=offset)
+    
+    import math
+    total_pages = math.ceil(total_count / limit)
+    
+    return {
+        "templates": templates_list,
+        "page": page,
+        "total_pages": total_pages,
+        "total_count": total_count,
+        "has_next": page < total_pages,
+        "has_prev": page > 1
+    }
 
 @router.get("/api/templates/{name_id:path}/content")
 def get_template_content(name_id: str):

@@ -2,7 +2,7 @@
 <tr id="run-row-{{ run.id }}" class="history-row">
     <!-- Date -->
     <td style="padding: 12px; border-bottom: 1px solid #eaeaea; font-size: 14px; color: #111;">
-        {{ run.start_time.strftime('%Y-%m-%d %H:%M') }}
+        {{ run.start_time|format_datetime(request.state.user.timezone) }}
     </td>
 
     <!-- Playbook Link -->

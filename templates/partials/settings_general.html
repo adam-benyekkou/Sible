@@ -25,7 +25,30 @@
             {% endif %}
         </label>
 
+        <hr style="margin: 1.5rem 0;">
+        <h4 style="margin-bottom: 0.5rem;">User Preferences</h4>
 
+        <label>
+            <strong>Theme</strong>
+            <select name="theme_preference">
+                <option value="light" {{ 'selected' if request.state.user.theme_preference=='light' }}>Light</option>
+                <option value="dark" {{ 'selected' if request.state.user.theme_preference=='dark' }}>Dark</option>
+            </select>
+        </label>
+
+        <label>
+            <strong>Timezone</strong>
+            <select name="timezone">
+                {% set tz_list = [
+                'UTC', 'UTC+1', 'UTC+2', 'UTC+3', 'UTC+4', 'UTC+5', 'UTC+6', 'UTC+7', 'UTC+8', 'UTC+9', 'UTC+10',
+                'UTC+11', 'UTC+12',
+                'UTC-1', 'UTC-2', 'UTC-3', 'UTC-4', 'UTC-5', 'UTC-6', 'UTC-7', 'UTC-8', 'UTC-9', 'UTC-10', 'UTC-11'
+                ] %}
+                {% for tz in tz_list %}
+                <option value="{{ tz }}" {{ 'selected' if request.state.user.timezone==tz }}>{{ tz }}</option>
+                {% endfor %}
+            </select>
+        </label>
 
         <div style="margin-top: 2rem; text-align: right;">
             <button type="submit" class="primary" style="width: auto;">Save General Settings</button>

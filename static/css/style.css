@@ -948,6 +948,48 @@ article.modal-content {
     animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+
+/* Quick Action Menu & Playbook Row Hover */
+.playbook-row {
+    transition: background-color 0.2s;
+}
+
+.playbook-row:hover {
+    background-color: var(--ds-gray-100) !important;
+}
+
+.playbook-row:hover .quick-actions {
+    opacity: 1 !important;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: #e8e8e8;
+    color: #000;
+}
+
+.action-btn i {
+    width: 14px;
+    height: 14px;
+}
+
+/* Status Text Links */
+.status-text-failed:hover {
+    color: #b00000 !important;
+}
+
 @keyframes modalScaleIn {
     from {
         opacity: 0;

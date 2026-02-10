@@ -80,6 +80,23 @@
         </table>
     </div>
 
+    <!-- Pagination -->
+    <div class="card"
+        style="margin-top: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center;"
+        x-show="pagination.totalPages > 1">
+        <div style="font-size: 13px; color: #666;">
+            Page <span style="font-weight: 500; color: #000;" x-text="pagination.page"></span> of <span
+                x-text="pagination.totalPages"></span>
+            <span style="color: #999; margin-left: 8px;">(<span x-text="pagination.totalCount"></span> templates)</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="secondary" @click="fetchTemplates(pagination.page - 1)" :disabled="!pagination.hasPrev"
+                style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; cursor: pointer;">Previous</button>
+            <button class="secondary" @click="fetchTemplates(pagination.page + 1)" :disabled="!pagination.hasNext"
+                style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; cursor: pointer;">Next</button>
+        </div>
+    </div>
+
 </div>
 
 {% include "partials/template_editor_modal.html" %}
@@ -89,6 +106,7 @@
         Alpine.data('templatesManager', () => ({
             templates: [],
             searchQuery: '',
+            pagination: { page: 1, totalPages: 1, totalCount: 0, hasNext: false, hasPrev: false },
 
             get filteredTemplates() {
                 if (!this.searchQuery) return this.templates;
@@ -101,11 +119,9 @@
             },
 
             init() {
-                this.fetchTemplates();
-                // Listen for save events to refresh
-                window.addEventListener('template-saved', () => this.fetchTemplates());
+                this.fetchTemplates(1);
+                window.addEventListener('template-saved', () => this.fetchTemplates(this.pagination.page));
 
-                // Re-initialize icons when filtering
                 this.$watch('searchQuery', () => {
                     this.$nextTick(() => {
                         lucide.createIcons();
@@ -113,11 +129,19 @@
                 });
             },
 
-            async fetchTemplates() {
+            async fetchTemplates(page = 1) {
                 try {
-                    const res = await fetch('/api/templates');
+                    const res = await fetch(`/api/templates?page=${page}`);
                     if (res.ok) {
-                        this.templates = await res.json();
+                        const data = await res.json();
+                        this.templates = data.templates;
+                        this.pagination = {
+                            page: data.page,
+                            totalPages: data.total_pages,
+                            totalCount: data.total_count,
+                            hasNext: data.has_next,
+                            hasPrev: data.has_prev
+                        };
                         this.$nextTick(() => {
                             lucide.createIcons();
                         });

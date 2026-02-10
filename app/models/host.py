@@ -1,7 +1,11 @@
 from typing import Optional
 from sqlmodel import Field, SQLModel
 
+from pydantic import ConfigDict
+
 class Host(SQLModel, table=True):
+    model_config = ConfigDict(extra="allow")
+    
     id: Optional[int] = Field(default=None, primary_key=True)
     alias: str = Field(index=True)  # Friendly name
     hostname: str = Field(index=True)  # IP or FQDN

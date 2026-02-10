@@ -4,7 +4,7 @@ from sqlmodel import Session, select, desc
 import re
 import yaml
 from app.core.config import get_settings
-from app.models import JobRun
+from app.models import JobRun, FavoritePlaybook
 from datetime import datetime
 import os
 
@@ -93,10 +93,18 @@ class PlaybookService:
             return True
         except OSError: return False
 
-    def get_playbooks_metadata(self, search: Optional[str] = None) -> List[dict]:
+    def get_playbooks_metadata(self, search: Optional[str] = None, user_id: Optional[int] = None, limit: int = 20, offset: int = 0) -> tuple[List[dict], int]:
         if not settings.PLAYBOOKS_DIR.exists():
-            return []
+            return [], 0
             
+        # Fetch user favorites if user_id is provided
+        favorites = set()
+        if user_id:
+            fav_objs = self.db.exec(
+                select(FavoritePlaybook).where(FavoritePlaybook.user_id == user_id)
+            ).all()
+            favorites = {f.playbook_path for f in fav_objs}
+
         playbooks = []
         for file_path in settings.PLAYBOOKS_DIR.rglob("*"):
             if file_path.is_file() and file_path.suffix.lower() in {".yaml", ".yml"}:
@@ -126,6 +134,8 @@ class PlaybookService:
                 folder_parts = rel_path.split("/")
                 folder_prefix = " / ".join(folder_parts[:-1]) if len(folder_parts) > 1 else ""
 
+                duration = self._format_duration(last_job) if last_job else ""
+
                 playbooks.append({
                     "name": file_path.stem,
                     "path": rel_path,
@@ -134,10 +144,56 @@ class PlaybookService:
                     "last_modified": last_modified,
                     "status": last_job.status if last_job else "never_run",
                     "last_run": self._get_relative_time(last_job.start_time) if last_job else "Never executed",
-                    "author": last_job.username if last_job and last_job.username else "System"
+                    "duration": duration,
+                    "last_job_id": last_job.id if last_job else None,
+                    "author": last_job.username if last_job and last_job.username else "System",
+                    "is_favorited": rel_path in favorites
                 })
         
-        return sorted(playbooks, key=lambda x: x["name"].lower())
+        # Sort
+        sorted_playbooks = sorted(playbooks, key=lambda x: x["name"].lower())
+        total_count = len(sorted_playbooks)
+        
+        # Paginate
+        paginated_playbooks = sorted_playbooks[offset : offset + limit]
+        
+        return paginated_playbooks, total_count
+
+    def toggle_favorite(self, playbook_path: str, user_id: int) -> bool:
+        """Toggles favorite status. Returns True if now favorited, False if removed."""
+        existing = self.db.exec(
+            select(FavoritePlaybook)
+            .where(FavoritePlaybook.user_id == user_id)
+            .where(FavoritePlaybook.playbook_path == playbook_path)
+        ).first()
+
+        if existing:
+            self.db.delete(existing)
+            self.db.commit()
+            return False
+        else:
+            new_fav = FavoritePlaybook(user_id=user_id, playbook_path=playbook_path)
+            self.db.add(new_fav)
+            self.db.commit()
+            return True
+
+    def _format_duration(self, job: JobRun) -> str:
+        if job.status == "running":
+            return "Running..."
+        if not job.end_time:
+            return ""
+        
+        diff = job.end_time - job.start_time
+        seconds = int(diff.total_seconds())
+        if seconds < 60:
+            return f"{seconds}s"
+        minutes = seconds // 60
+        rem_seconds = seconds % 60
+        if minutes < 60:
+            return f"{minutes}m {rem_seconds}s"
+        hours = minutes // 60
+        rem_minutes = minutes % 60
+        return f"{hours}h {rem_minutes}m"
 
     def _get_relative_time(self, dt: datetime) -> str:
         diff = datetime.utcnow() - dt
