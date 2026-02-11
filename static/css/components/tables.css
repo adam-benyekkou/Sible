@@ -1,0 +1,96 @@
+/* ==========================================================================
+   SIBLE DESIGN SYSTEM — Tables (components/tables.css)
+   Table base styles, playbook rows, action buttons.
+   ========================================================================== */
+
+/* --- Base Table --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    color: var(--ds-gray-600);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ds-gray-200);
+}
+
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #fafafa;
+    color: var(--ds-gray-1000);
+    font-size: 0.875rem;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr.hover:hover td {
+    background: #fafafa;
+}
+
+/* --- Dark Theme: Tables --- */
+[data-theme='dark'] th {
+    color: var(--pico-muted-color);
+    border-bottom: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] td {
+    border-bottom: 1px solid var(--pico-border-color);
+    color: var(--pico-color);
+}
+
+[data-theme='dark'] tr:last-child td {
+    border-bottom: none;
+}
+
+[data-theme='dark'] tr.hover:hover td {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* --- Playbook Row & Quick Actions --- */
+.playbook-row {
+    transition: background-color 0.2s;
+}
+
+.playbook-row:hover {
+    background-color: var(--surface-secondary) !important;
+}
+
+.playbook-row:hover .quick-actions {
+    opacity: 1 !important;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: var(--surface-primary);
+    color: var(--text-primary);
+}
+
+.action-btn i {
+    width: 14px;
+    height: 14px;
+}
+
+/* Status Text Links */
+.status-text-failed:hover {
+    color: var(--sible-error) !important;
+}

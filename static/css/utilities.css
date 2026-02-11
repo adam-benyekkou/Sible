@@ -1,0 +1,76 @@
+/* ==========================================================================
+   SIBLE DESIGN SYSTEM — Utilities (utilities.css)
+   Utility classes for layout, text, spacing. Loaded last for override power.
+   ========================================================================== */
+
+.w-100 {
+    width: 100%;
+}
+
+.d-none {
+    display: none !important;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+
+.color-muted,
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.bg-secondary {
+    background: var(--surface-secondary) !important;
+}
+
+.border-subtle {
+    border: 1px solid var(--border-subtle) !important;
+}
+
+.font-sm {
+    font-size: 0.85rem;
+}
+
+.font-bold {
+    font-weight: 600 !important;
+}
+
+.text-success {
+    color: var(--sible-success) !important;
+}
+
+.text-error {
+    color: var(--sible-error) !important;
+}

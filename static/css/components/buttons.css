@@ -1,0 +1,174 @@
+/* ==========================================================================
+   SIBLE DESIGN SYSTEM — Buttons (components/buttons.css)
+   All button variants: primary, secondary, danger, icon, focus states.
+   ========================================================================== */
+
+button {
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: none !important;
+    outline: none !important;
+    letter-spacing: -0.02em;
+}
+
+button:focus,
+button:active,
+[role="group"] button:focus,
+[role="group"] button:active,
+[role="group"] :focus,
+.nav-item:focus,
+.nav-item:active,
+.playbook-item:focus,
+.playbook-item:active,
+a:focus,
+a:active {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+button.primary:focus {
+    background: #000;
+    border-color: #000;
+}
+
+[role="group"] button.primary:active,
+button.primary:active {
+    background: #444 !important;
+    border-color: #444 !important;
+}
+
+[role="group"] button.secondary:active,
+button.secondary:active {
+    background: var(--ds-gray-200) !important;
+    border-color: var(--ds-gray-200) !important;
+}
+
+/* Primary Button (Black Solid) */
+button.primary,
+button[type="submit"],
+.btn-new {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+}
+
+button.primary:hover,
+button[type="submit"]:hover,
+.btn-new:hover {
+    background: #333;
+    border-color: #333;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* Aggressive fix for all button icons */
+button.primary svg,
+button.primary [data-lucide],
+button.primary .lucide,
+button.primary i {
+    stroke: currentColor !important;
+    color: inherit !important;
+}
+
+[data-theme='dark'] button.primary {
+    color: #000000 !important;
+}
+
+/* Force ALL elements inside the SVG to Black and improve visibility */
+[data-theme='dark'] button.primary svg,
+[data-theme='dark'] button.primary [data-lucide],
+[data-theme='dark'] button.primary .lucide {
+    stroke: #000000 !important;
+    stroke-width: 2.5px !important;
+}
+
+[data-theme='dark'] button.primary svg *,
+[data-theme='dark'] button.primary [data-lucide] *,
+[data-theme='dark'] button.primary .lucide * {
+    stroke: #000000 !important;
+}
+
+/* Secondary Button (White with Border) */
+button.secondary,
+button.outline {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    color: #000000;
+}
+
+button.secondary:hover,
+button.outline:hover {
+    background: #fafafa;
+    border-color: #000;
+    color: #000;
+}
+
+/* Danger Button */
+button.danger {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    color: var(--sible-error);
+}
+
+button.danger:hover {
+    background: #fff5f5;
+    border-color: var(--sible-error);
+}
+
+/* Icon Button (Square) */
+button.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #eaeaea;
+    background: #ffffff;
+    color: var(--ds-gray-1000);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.btn-icon:hover {
+    background: #fafafa;
+    border-color: #000;
+    color: #000;
+}
+
+/* Specific trigger highlight */
+.terminal-trigger:hover i,
+.terminal-trigger:active i {
+    stroke: #000 !important;
+    stroke-width: 2.5px;
+}
+
+/* --- Dark Theme: Buttons --- */
+[data-theme='dark'] button.primary {
+    background: var(--pico-primary);
+    border-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-theme='dark'] button.primary:hover {
+    background: var(--pico-primary-hover);
+    border-color: var(--pico-primary-hover);
+}
+
+[data-theme='dark'] button.secondary {
+    background: transparent;
+    border: 1px solid var(--pico-border-color);
+    color: var(--pico-primary);
+}
+
+[data-theme='dark'] button.secondary:hover {
+    background: rgba(180, 190, 254, 0.1);
+    border-color: var(--pico-primary-hover);
+}

@@ -1,0 +1,63 @@
+/* ==========================================================================
+   SIBLE DESIGN SYSTEM — Modals (components/modals.css)
+   Modal backdrop, dialog, SSH modal wrapper, modal content.
+   ========================================================================== */
+
+.sible-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Force flex display when shown by Alpine */
+.sible-modal-backdrop:not([style*="display: none"]) {
+    display: flex !important;
+}
+
+/* Use display: contents to let the article be centered by the backdrop's flexbox */
+.sible-modal-backdrop dialog {
+    display: contents !important;
+    position: static !important;
+}
+
+/* Ensure the modal content is properly styled as the flex child */
+.sible-modal-backdrop article.modal-content {
+    position: relative !important;
+    margin: 0 !important;
+    width: auto !important;
+    min-width: 500px;
+    max-width: 90vw;
+    z-index: 10000;
+}
+
+/* SSH Modal specific centering wrapper */
+.ssh-modal-wrapper {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+article.modal-content {
+    background: var(--surface-primary);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+    animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}

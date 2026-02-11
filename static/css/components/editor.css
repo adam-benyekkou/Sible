@@ -1,0 +1,81 @@
+/* ==========================================================================
+   SIBLE DESIGN SYSTEM — Editor & Terminal (components/editor.css)
+   Terminal container, log levels, SSH terminal.
+   ========================================================================== */
+
+/* --- Ansible Log Styling (Geist) --- */
+#terminal-container {
+    padding: 16px;
+    font-family: 'Geist Mono', 'SF Mono', 'Menlo', monospace;
+    font-size: 13px;
+    color: var(--ds-gray-1000);
+    background-color: #ffffff;
+    overflow-y: auto;
+    height: 100%;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* Log Levels */
+.log-meta {
+    color: #000000;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid var(--ds-gray-200);
+    padding-bottom: 2px;
+}
+
+.log-success {
+    color: #10B981;
+}
+
+.log-changed {
+    color: #F59E0B;
+}
+
+.log-error {
+    color: #EE0000;
+    font-weight: 500;
+}
+
+.log-debug {
+    color: #666666;
+}
+
+/* SSH Terminal Container */
+#ssh-terminal-container {
+    background: #ffffff !important;
+}
+
+/* --- Dark Theme: Editor & Terminal --- */
+[data-theme='dark'] #terminal-container {
+    background: #181825 !important;
+    color: var(--pico-color);
+    border: none;
+}
+
+[data-theme='dark'] .log-meta {
+    color: var(--pico-primary);
+    border-bottom: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] .log-success {
+    color: var(--status-success);
+}
+
+[data-theme='dark'] .log-changed {
+    color: var(--status-changed);
+}
+
+[data-theme='dark'] .log-error {
+    color: var(--status-error);
+}
+
+[data-theme='dark'] .log-debug {
+    color: var(--pico-muted-color);
+}
+
+[data-theme='dark'] #ssh-terminal-container {
+    background: #181825 !important;
+}

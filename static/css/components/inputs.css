@@ -1,0 +1,201 @@
+/* ==========================================================================
+   SIBLE DESIGN SYSTEM — Inputs (components/inputs.css)
+   Input, select, textarea, file inputs, autofill, Geist custom select.
+   ========================================================================== */
+
+/* --- Base Inputs --- */
+input,
+select,
+textarea {
+    background: var(--ds-background-200) !important;
+    border: 1px solid #eaeaea !important;
+    color: #000000 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease;
+}
+
+input[type="file"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Force Light Grey on Autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px var(--ds-background-200) inset !important;
+    -webkit-text-fill-color: var(--ds-gray-1000) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+input[type="file"]::file-selector-button {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-right: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    vertical-align: middle;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #333;
+    border-color: #333;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #000 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* --- Geist Custom Select --- */
+.geist-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.geist-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 32px;
+    padding: 0 8px 0 12px;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #000;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.geist-select-trigger:hover {
+    border-color: #888;
+}
+
+.geist-select-trigger:focus,
+.geist-select-trigger[aria-expanded="true"] {
+    border-color: #000000;
+    outline: none;
+}
+
+.geist-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    min-width: 220px;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 4px;
+    display: none;
+    /* Hidden by default, toggled by Alpine */
+}
+
+.geist-select-header {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    padding: 8px 12px 4px;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.geist-select-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #000;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.geist-select-option:hover {
+    background: #fafafa;
+}
+
+.geist-select-option.selected {
+    font-weight: 500;
+    background: #fafafa;
+}
+
+.geist-select-option .check-icon {
+    margin-left: auto;
+    opacity: 0;
+    stroke: #000;
+}
+
+.geist-select-option.selected .check-icon {
+    opacity: 1;
+}
+
+/* --- Dark Theme: Inputs --- */
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+    background: var(--pico-form-element-background-color) !important;
+    border: 1px solid var(--pico-form-element-border-color) !important;
+    color: var(--pico-color) !important;
+}
+
+[data-theme='dark'] input:focus,
+[data-theme='dark'] select:focus,
+[data-theme='dark'] textarea:focus {
+    border-color: var(--pico-primary) !important;
+}
+
+[data-theme='dark'] input:-webkit-autofill,
+[data-theme='dark'] textarea:-webkit-autofill,
+[data-theme='dark'] select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px var(--pico-form-element-background-color) inset !important;
+    -webkit-text-fill-color: var(--pico-color) !important;
+}
+
+/* Make file inputs transparent and borderless */
+input[type="file"],
+[data-theme='dark'] input[type="file"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+[data-theme='dark'] input[type="file"]::file-selector-button {
+    background: var(--pico-primary);
+    border: 1px solid var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-theme='dark'] input[type="file"]::file-selector-button:hover {
+    background: var(--pico-primary-hover);
+    border-color: var(--pico-primary-hover);
+}

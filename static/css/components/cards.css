@@ -1,0 +1,12 @@
+/* ==========================================================================
+   SIBLE DESIGN SYSTEM — Cards (components/cards.css)
+   Card containers and server cards.
+   ========================================================================== */
+
+.card,
+.server-card {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: none;
+}
