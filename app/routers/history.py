@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, Response, Depends
+from typing import List, Optional, Any
 from app.templates import templates
 from app.core.config import get_settings
 from app.dependencies import get_history_service, requires_role

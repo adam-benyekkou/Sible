@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Response
 from fastapi.responses import HTMLResponse
 from app.templates import templates
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel
 from app.services.template import TemplateService
 from app.models import User

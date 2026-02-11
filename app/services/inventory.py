@@ -6,6 +6,7 @@ import shutil
 import asyncio
 import sys
 import os
+import shlex
 import logging
 import uuid
 from app.utils.network import check_ssh
@@ -159,7 +160,8 @@ class InventoryService:
                 drive = abs_p.drive.strip(':').lower()
                 parts = list(abs_p.parts[1:])
                 wsl_path = f"/mnt/{drive}/" + "/".join(parts)
-                cmd = [wsl_bin, "bash", "-c", f"ansible all -m ping -i '{wsl_path}'"]
+                # Sanitize using shlex.quote for the shell command inside WSL
+                cmd = [wsl_bin, "bash", "-c", f"ansible all -m ping -i {shlex.quote(wsl_path)}"]
              else: return "Ansible not found. If using Windows, please run Sible inside WSL or install Ansible locally."
         elif not ansible_bin: return "Ansible not found. Please install it to use ping."
         else: cmd = ["ansible", "all", "-m", "ping", "-i", str(InventoryService.INVENTORY_FILE)]

@@ -5,6 +5,8 @@ import shutil
 import sys
 import asyncio
 import logging
+import shlex
+import html
 from datetime import datetime
 from sqlmodel import Session, select
 from app.models import JobRun, EnvVar
@@ -131,7 +133,7 @@ class RunnerService:
                 container_workdir = settings.DOCKER_WORKSPACE_PATH
                 
                 if galaxy:
-                    inner_cmd = f"cd '{container_workdir}' && ansible-galaxy install -r '{galaxy_req_file}' -p ./roles"
+                    inner_cmd = f"cd {shlex.quote(container_workdir)} && ansible-galaxy install -r {shlex.quote(galaxy_req_file)} -p ./roles"
                 else:
                     try:
                         rel_playbook = playbook_path.resolve().relative_to(base.resolve())
@@ -139,14 +141,14 @@ class RunnerService:
                     except ValueError:
                          container_playbook_path = f"{container_workdir}/{playbook_path.name}"
                     
-                    inner_cmd = f"ansible-playbook '{container_playbook_path}' -i '{container_workdir}/{inventory_file}'"
+                    inner_cmd = f"ansible-playbook {shlex.quote(container_playbook_path)} -i {shlex.quote(container_workdir + '/' + inventory_file)}"
                     if check_mode: inner_cmd += " --check"
-                    if limit: inner_cmd += f" --limit '{limit}'"
-                    if tags: inner_cmd += f" --tags '{tags}'"
+                    if limit: inner_cmd += f" --limit {shlex.quote(limit)}"
+                    if tags: inner_cmd += f" --tags {shlex.quote(tags)}"
                     if verbosity > 0: inner_cmd += f" -{'v' * verbosity}"
                     if extra_vars:
                         import json
-                        inner_cmd += f" -e '{json.dumps(extra_vars)}'"
+                        inner_cmd += f" -e {shlex.quote(json.dumps(extra_vars))}"
  
                 cmd = [
                     docker_bin, "run", "--rm",
@@ -161,7 +163,25 @@ class RunnerService:
                 cmd.append(settings.DOCKER_IMAGE)
                 cmd.extend(["sh", "-c", inner_cmd])
                 
-                logger.debug(f"Constructed Docker command: {' '.join(cmd)}")
+                def mask_cmd(c):
+                    safe_c = []
+                    it = iter(c)
+                    for part in it:
+                        safe_c.append(part)
+                        if part == "-e":
+                            val = next(it, None)
+                            if val:
+                                k = val.split("=")[0]
+                                if "key" in k.lower() or "secret" in k.lower() or "pass" in k.lower() or "token" in k.lower():
+                                    safe_c.append(f"{k}=********")
+                                else:
+                                    safe_c.append(val)
+                        elif part == "-v":
+                             next(it, None)
+                             safe_c.append("********:********")
+                    return safe_c
+
+                logger.debug(f"Constructed Docker command: {' '.join(mask_cmd(cmd))}")
                 return cmd, None
 
         # 2. Try native host execution as fallback
@@ -192,7 +212,7 @@ class RunnerService:
  
                 if galaxy:
                      wsl_cwd = to_wsl_path(galaxy_cwd or base)
-                     bash_cmd = f"cd '{wsl_cwd}' && ansible-galaxy install -r '{galaxy_req_file}' -p ./roles"
+                     bash_cmd = f"cd {shlex.quote(wsl_cwd)} && ansible-galaxy install -r {shlex.quote(galaxy_req_file)} -p ./roles"
                 else:
                     wsl_playbook_path = to_wsl_path(playbook_path)
                     wsl_inventory_path = to_wsl_path(base / inventory_file)
@@ -201,18 +221,16 @@ class RunnerService:
                     if env_vars:
                         for k, v in env_vars.items():
                             if k.startswith(("ANSIBLE_", "SIB_")) or len(str(v)) < 100:
-                                 safe_v = str(v).replace("'", "'\\''")
-                                 env_prefix += f"{k}='{safe_v}' "
+                                 env_prefix += f"{k}={shlex.quote(str(v))} "
                     
-                    bash_cmd = f"{env_prefix}ansible-playbook '{wsl_playbook_path}' -i '{wsl_inventory_path}'"
+                    bash_cmd = f"{env_prefix}ansible-playbook {shlex.quote(wsl_playbook_path)} -i {shlex.quote(wsl_inventory_path)}"
                     if check_mode: bash_cmd += " --check"
-                    if limit: bash_cmd += f" --limit '{limit}'"
-                    if tags: bash_cmd += f" --tags '{tags}'"
+                    if limit: bash_cmd += f" --limit {shlex.quote(limit)}"
+                    if tags: bash_cmd += f" --tags {shlex.quote(tags)}"
                     if verbosity > 0: bash_cmd += f" -{'v' * verbosity}"
                     if extra_vars:
                         import json
-                        ev_json = json.dumps(extra_vars).replace("'", "'\\''")
-                        bash_cmd += f" -e '{ev_json}'"
+                        bash_cmd += f" -e {shlex.quote(json.dumps(extra_vars))}"
                 
                 return [wsl_bin, "bash", "-c", bash_cmd], None
                 
@@ -240,7 +258,8 @@ class RunnerService:
         elif "changed: [" in line or "changed=" in line: css_class = "log-changed"
         elif "fatal:" in line or "failed=" in line or "unreachable=" in line: css_class = "log-error"
         elif "skipping:" in line: css_class = "log-debug"
-        return f'<div class="{css_class}">{line}</div>' if css_class else f'<div>{line}</div>'
+        escaped_line = html.escape(line)
+        return f'<div class="{css_class}">{escaped_line}</div>' if css_class else f'<div>{escaped_line}</div>'
  
     async def run_playbook_headless(
         self, 

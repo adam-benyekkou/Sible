@@ -1,7 +1,6 @@
 FROM python:3.11-slim
 
 # Install system dependencies
-# - ansible-core needs ssh-client, etc.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ssh-client \
     sshpass \
@@ -14,24 +13,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get update && apt-get install -y docker-ce-cli \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install Python dependencies as root
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Ansible
-RUN pip install --no-cache-dir ansible-core
+# Create a non-root user with home directory
+RUN groupadd -r sible && useradd -r -m -g sible -u 1000 sible
 
-# Copy Application
-COPY . /sible
+# Setup application directory
 WORKDIR /sible
+COPY --chown=sible:sible . .
 
-# Create a user to run as (optional, but good practice, though for Docker socket access root is often easier in MVP)
-# For MVP we stick to root to avoid permission issues with mounted volumes for now.
+# Ensure permissions for playbooks and inventory
+RUN mkdir -p /sible/playbooks /sible/inventory /sible/.jobs \
+    && chown -R sible:sible /sible
 
 # Expose port
 EXPOSE 8000
 
+# Switch to non-root user
+USER sible
+
 # Run
-RUN pip install websockets
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

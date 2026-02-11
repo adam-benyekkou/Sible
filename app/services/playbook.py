@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Any
 from sqlmodel import Session, select, desc
 import re
 import yaml
@@ -59,9 +59,10 @@ class PlaybookService:
         if not name.endswith((".yaml", ".yml")):
             return None
         try:
-            base = self.base_dir
+            base = self.base_dir.resolve()
             target_path = (base / name).resolve()
-            if not str(target_path).startswith(str(base.resolve())):
+            # Ensure the resolved path is within the base directory
+            if not os.path.commonpath([str(base), str(target_path)]) == str(base):
                 return None
             return target_path
         except Exception:

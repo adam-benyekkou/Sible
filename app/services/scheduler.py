@@ -3,11 +3,11 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from typing import Any, Optional
+from sqlmodel import Session, select
 import logging
 from datetime import datetime
 import math
 from app.core.database import engine
-from sqlmodel import Session
 from app.services.runner import RunnerService
 
 logger = logging.getLogger(__name__)

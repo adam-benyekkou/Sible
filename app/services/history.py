@@ -1,4 +1,6 @@
 from typing import Any, Optional
+from sqlmodel import Session, select, desc, delete
+from app.models import JobRun
 
 class HistoryService:
     """Manages job execution logs, history retrieval, and automated retention policies.
