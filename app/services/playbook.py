@@ -11,28 +11,77 @@ import os
 settings = get_settings()
 
 class PlaybookService:
+    """Manages Ansible playbook files, metadata, and directory structures.
+
+    This service handles filesystem operations for playbooks, extracts
+    metadata (descriptions, variables), and manages user favorites and
+    execution history snapshots for the UI.
+    """
     def __init__(self, db: Session):
+        """Initializes the service.
+
+        Args:
+            db: Database session for metadata and history queries.
+        """
         self.db = db
 
+    @property
+    def base_dir(self) -> Path:
+        """Resolves the physical root directory for all playbooks.
+
+        Why: Sible supports configurable playbook locations. This property
+        ensures all filesystem operations are relative to the user's
+        workspace setting.
+
+        Returns:
+            Path object pointing to the playbooks root.
+        """
+        from app.models import AppSettings
+        db_settings = self.db.get(AppSettings, 1)
+        path_str = db_settings.playbooks_path if db_settings else "/app/playbooks"
+        return Path(path_str)
+
     def _validate_path(self, name: str) -> Optional[Path]:
+        """Validates a playbook path to prevent directory traversal attacks.
+
+        Why: Since playbooks are stored on the filesystem, we must ensure
+        that user-provided names don't escape the base directory using '../'
+        or absolute paths.
+
+        Args:
+            name: The relative path to the playbook.
+
+        Returns:
+            Resolved absolute Path if valid and safe, else None.
+        """
         if not re.match(r'^[a-zA-Z0-9_\-\.\/ ]+$', name):
             return None
         if not name.endswith((".yaml", ".yml")):
             return None
         try:
-            target_path = (settings.PLAYBOOKS_DIR / name).resolve()
-            if not str(target_path).startswith(str(settings.PLAYBOOKS_DIR.resolve())):
+            base = self.base_dir
+            target_path = (base / name).resolve()
+            if not str(target_path).startswith(str(base.resolve())):
                 return None
             return target_path
         except Exception:
             return None
 
-    def list_playbooks(self) -> List[dict]:
-        if not settings.PLAYBOOKS_DIR.exists():
-            settings.PLAYBOOKS_DIR.mkdir(parents=True, exist_ok=True)
+    def list_playbooks(self) -> list[dict[str, Any]]:
+        """Generates a recursive tree structure of the playbooks directory.
+
+        Why: Powers the sidebar file browser, allowing users to navigate
+        nested playbook structures.
+
+        Returns:
+            A nested list structure suitable for tree-view rendering.
+        """
+        base = self.base_dir
+        if not base.exists():
+            base.mkdir(parents=True, exist_ok=True)
             return []
             
-        def build_tree(current_path: Path, relative_root: Path = settings.PLAYBOOKS_DIR) -> List[dict]:
+        def build_tree(current_path: Path, relative_root: Path) -> List[dict]:
             items = []
             if not current_path.exists(): return []
             entries = sorted(list(current_path.iterdir()), key=lambda e: (not e.is_dir(), e.name.lower()))
@@ -58,15 +107,32 @@ class PlaybookService:
                         "status": run.status if run else None
                     })
             return items
-        return build_tree(settings.PLAYBOOKS_DIR)
+        return build_tree(base, base)
 
     def get_playbook_content(self, name: str) -> Optional[str]:
+        """Reads the raw content of a playbook file.
+
+        Args:
+            name: Relative path to the playbook.
+
+        Returns:
+            File content as string, or None if invalid/missing.
+        """
         file_path = self._validate_path(name)
         if not file_path or not file_path.exists():
             return None
         return file_path.read_text(encoding="utf-8")
 
     def save_playbook_content(self, name: str, content: str) -> bool:
+        """Overwrites a playbook file with new content.
+
+        Args:
+            name: Relative path to the playbook.
+            content: New YAML content.
+
+        Returns:
+            True if successful, False otherwise.
+        """
         file_path = self._validate_path(name)
         if not file_path: return False
         try:
@@ -76,6 +142,14 @@ class PlaybookService:
         except OSError: return False
 
     def create_playbook(self, name: str) -> bool:
+        """Initializes a new playbook file with a boilerplate template.
+
+        Args:
+            name: Desired relative path (with or without extension).
+
+        Returns:
+            True if created, False if already exists or path invalid.
+        """
         if not name.endswith((".yaml", ".yml")): name += ".yaml"
         file_path = self._validate_path(name)
         if not file_path or file_path.exists(): return False
@@ -86,6 +160,14 @@ class PlaybookService:
         except OSError: return False
 
     def delete_playbook(self, name: str) -> bool:
+        """Deletes a playbook file from disk.
+
+        Args:
+            name: Relative path to the playbook.
+
+        Returns:
+            True if deleted, False otherwise.
+        """
         file_path = self._validate_path(name)
         if not file_path or not file_path.exists(): return False
         try:
@@ -93,8 +175,29 @@ class PlaybookService:
             return True
         except OSError: return False
 
-    def get_playbooks_metadata(self, search: Optional[str] = None, user_id: Optional[int] = None, limit: int = 20, offset: int = 0) -> tuple[List[dict], int]:
-        if not settings.PLAYBOOKS_DIR.exists():
+    def get_playbooks_metadata(
+        self, 
+        search: Optional[str] = None, 
+        user_id: Optional[int] = None, 
+        limit: int = 20, 
+        offset: int = 0
+    ) -> tuple[list[dict[str, Any]], int]:
+        """Retrieves an enriched list of playbooks with history and favorites.
+
+        Why: Powers the Dashboard/Template Library view. It combines
+        filesystem data with database history to show who ran what and when.
+
+        Args:
+            search: Fuzzy filter for name/description.
+            user_id: Current user ID for resolving favorite status.
+            limit: Page size.
+            offset: Page offset.
+
+        Returns:
+            A tuple of (metadata_list, total_filtered_count).
+        """
+        base = self.base_dir
+        if not base.exists():
             return [], 0
             
         # Fetch user favorites if user_id is provided
@@ -106,9 +209,9 @@ class PlaybookService:
             favorites = {f.playbook_path for f in fav_objs}
 
         playbooks = []
-        for file_path in settings.PLAYBOOKS_DIR.rglob("*"):
+        for file_path in base.rglob("*"):
             if file_path.is_file() and file_path.suffix.lower() in {".yaml", ".yml"}:
-                rel_path = str(file_path.relative_to(settings.PLAYBOOKS_DIR)).replace("\\", "/")
+                rel_path = str(file_path.relative_to(base)).replace("\\", "/")
                 content = self.get_playbook_content(rel_path) or ""
                 description = self._extract_description(content)
                 
@@ -227,7 +330,19 @@ class PlaybookService:
         parent = file_path.parent
         return (parent / "requirements.yml").exists() or (parent / "requirements.yaml").exists()
 
-    def get_playbook_variables(self, name: str) -> List[str]:
+    def get_playbook_variables(self, name: str) -> list[str]:
+        """Detects required input variables by parsing prompts and templates.
+
+        Why: Sible displays a dynamic form before execution. This method
+        finds custom variables within the YAML (vars_prompt) and Jinja2
+        expressions ({{ var }}) so the user can provide values.
+
+        Args:
+            name: Relative path to the playbook.
+
+        Returns:
+            Sorted list of unique variable names.
+        """
         content = self.get_playbook_content(name)
         if not content: return []
         

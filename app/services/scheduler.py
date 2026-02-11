@@ -2,7 +2,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.services.runner import RunnerService
+from typing import Any, Optional
 import logging
 from datetime import datetime
 import math
@@ -19,9 +19,11 @@ jobstores = {
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)
 
-async def periodic_status_refresh():
-    """
-    Wrapper for periodic inventory status refresh with fresh session.
+async def periodic_status_refresh() -> None:
+    """Wrapper for periodic inventory status refresh with fresh session.
+
+    Why: Ensures that the host reachability status (ping) in the Dashboard
+    stays accurate over time without requiring user-initiated pings.
     """
     from app.services.inventory import InventoryService
     from app.core.database import engine
@@ -30,9 +32,12 @@ async def periodic_status_refresh():
         await InventoryService.refresh_all_statuses(session)
 
 
-async def execute_playbook_job(playbook_name: str, **kwargs):
-    """
-    The function triggering the actual playbook execution.
+async def execute_playbook_job(playbook_name: str, **kwargs: Any) -> None:
+    """The function triggering the actual playbook execution for a scheduled job.
+
+    Why: This function bridge the APScheduler call to the Sible RunnerService,
+    ensuring that jobs execute in a "headless" mode without a WebSocket
+    attached, but still recording history in the database.
     """
     logger.info(f"Scheduler: Starting job for {playbook_name}")
     target = kwargs.get("target")
@@ -57,6 +62,12 @@ async def execute_playbook_job(playbook_name: str, **kwargs):
     logger.info(f"Scheduler: Job {playbook_name} finished with status {status}. RC: {result['rc']}")
 
 class SchedulerService:
+    """Manages background task scheduling using APScheduler.
+
+    This service handles recurring jobs like health checks and scheduled
+    Ansible playbook executions. It persists job state to a local SQLite
+    database to ensure schedules survive application restarts.
+    """
     @staticmethod
     def start():
         if not scheduler.running:
@@ -76,7 +87,23 @@ class SchedulerService:
         scheduler.shutdown()
 
     @staticmethod
-    def add_playbook_job(playbook_name: str, cron_expression: str, target: str = None, extra_vars: str = None):
+    def add_playbook_job(
+        playbook_name: str, 
+        cron_expression: str, 
+        target: Optional[str] = None, 
+        extra_vars: Optional[str] = None
+    ) -> Optional[str]:
+        """Schedules a new playbook execution using a CRON expression.
+
+        Args:
+            playbook_name: Path to the target playbook.
+            cron_expression: Standard 5-field CRON string.
+            target: Optional limit (host/group) for the run.
+            extra_vars: JSON string of variables to pass to Ansible.
+
+        Returns:
+            The unique job ID if successfully scheduled, else None.
+        """
         try:
             job = scheduler.add_job(
                 execute_playbook_job,
@@ -92,7 +119,12 @@ class SchedulerService:
             return None
 
     @staticmethod
-    def list_jobs():
+    def list_jobs() -> list[dict[str, Any]]:
+        """Retrieves all scheduled playbook jobs.
+
+        Returns:
+            A list of dictionary summaries for each active or paused job.
+        """
         jobs = []
         for job in scheduler.get_jobs():
             if job.id == "refresh_inventory_status":
@@ -120,8 +152,21 @@ class SchedulerService:
         except Exception:
             return False
 
-    @staticmethod
-    def update_job(job_id: str, cron_expression: str = None, target: str = None):
+    def update_job(
+        job_id: str, 
+        cron_expression: Optional[str] = None, 
+        target: Optional[str] = None
+    ) -> bool:
+        """Updates the schedule or target for an existing job.
+
+        Args:
+            job_id: The ID of the job to modify.
+            cron_expression: New CRON schedule if provided.
+            target: New execution limit if provided.
+
+        Returns:
+            True if updated successfully, False on error.
+        """
         try:
             kwargs = {}
             if cron_expression:
@@ -161,7 +206,15 @@ class SchedulerService:
             return False
 
     @staticmethod
-    def get_job_info(job_id: str):
+    def get_job_info(job_id: str) -> Optional[dict[str, Any]]:
+        """Retrieves detailed information for a specific job.
+
+        Args:
+            job_id: The job identifier.
+
+        Returns:
+            A dictionary of job details, or None if not found.
+        """
         job = scheduler.get_job(job_id)
         if not job:
             return None
@@ -180,7 +233,15 @@ class SchedulerService:
         }
 
     @staticmethod
-    def format_timedelta(dt: datetime) -> str:
+    def format_timedelta(dt: Optional[datetime]) -> str:
+        """Converts a future datetime into a human-readable relative string.
+
+        Args:
+            dt: The future datetime to format.
+
+        Returns:
+            A string like "In 5 mins" or "In 2 days".
+        """
         if not dt: return "Paused"
         now = datetime.now(dt.tzinfo)
         diff = dt - now

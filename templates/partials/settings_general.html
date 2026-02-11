@@ -26,6 +26,24 @@
         </label>
 
         <hr style="margin: 1.5rem 0;">
+        <h4 style="margin-bottom: 0.5rem;">Infrastructure Configuration</h4>
+
+        <label>
+            <strong>Playbooks Path</strong>
+            <div style="position: relative;">
+                <input type="text" name="playbooks_path" value="{{ settings.playbooks_path|default('/app/playbooks') }}"
+                    placeholder="/absolute/path/to/playbooks" hx-post="/settings/validate-path"
+                    hx-trigger="keyup changed delay:500ms" hx-target="next .path-validation"
+                    style="padding-left: 2.5rem;">
+                <i data-lucide="folder" class="w-4 h-4"
+                    style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); opacity: 0.6; pointer-events: none;"></i>
+            </div>
+            <div class="path-validation"></div>
+            <small>Absolute path where Sible will look for Ansible playbooks. (e.g.,
+                <code>/app/playbooks</code>)</small>
+        </label>
+
+        <hr style="margin: 1.5rem 0;">
         <h4 style="margin-bottom: 0.5rem;">User Preferences</h4>
 
         <div class="settings-group">

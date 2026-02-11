@@ -1,7 +1,10 @@
 from sqlmodel import SQLModel, create_engine
 from app.core.config import get_settings
+import logging
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
+
 connect_args = {"check_same_thread": False}
 engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
 
@@ -23,6 +26,7 @@ def _run_migrations():
     migrations = [
         ("user", "timezone", "TEXT DEFAULT 'UTC'"),
         ("user", "theme", "TEXT DEFAULT 'light'"),
+        ("appsettings", "playbooks_path", "TEXT DEFAULT '/playbooks'"),
     ]
     
     try:
@@ -35,6 +39,6 @@ def _run_migrations():
                 pass  # Column already exists
         conn.commit()
         conn.close()
-    except Exception:
-        pass  # Non-SQLite or other error, skip
+    except Exception as e:
+        logger.error(f"Migration error: {e}")
 

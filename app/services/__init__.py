@@ -6,4 +6,3 @@ from .notification import NotificationService
 from .scheduler import SchedulerService
 from .linter import LinterService
 from .auth import AuthService
-from .git import GitService

@@ -16,7 +16,19 @@ router = APIRouter()
 async def root(
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Renders the main landing page (Dashboard).
+
+    Why: Shows a filtered list of favorite hosts for a personalized
+    entry point into the infrastructure management UI.
+
+    Args:
+        request: Request object.
+        current_user: Authenticated user.
+
+    Returns:
+        TemplateResponse for the index page.
+    """
     from app.core.database import engine
     from sqlmodel import Session, select
     with Session(engine) as session:
@@ -39,7 +51,17 @@ async def get_sidebar(
     request: Request,
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Renders the global sidebar partial with dynamic favorites and playbooks.
+
+    Args:
+        request: Request object.
+        service: Playbook service for listing files.
+        current_user: Authenticated user.
+
+    Returns:
+        HTML partial for the sidebar.
+    """
     # Get user favorites for sidebar
     from app.core.database import engine
     from sqlmodel import Session, select

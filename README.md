@@ -25,6 +25,7 @@
 - **Custom Branding**: Upload your own Logo and Favicon via the UI.
 - **Scheduling**: Built-in Cron scheduler with Queue management.
 - **Status Indicators**: Visual feedback (Green/Red dots) in the sidebar for the last run status.
+- **Custom Playbook Path**: Define an absolute path for playbooks, ideal for mounting external repositories into Docker.
 - **Single Container**: Deploys as a single Docker container using SQLite.
 
 ## Authentication (Optional)
@@ -81,9 +82,19 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
+### 3. Custom Playbooks Path
+
+If you mount an external directory into the container (e.g., via Docker volumes), you can configure Sible to look for playbooks in that specific path.
+
+1. Go to **Settings > General**.
+2. Locate the **Infrastructure Configuration** section.
+3. Enter the absolute path within the container (e.g., `/mnt/infrastructure/playbooks`).
+4. Sible will validate the path in real-time.
+5. Click **Save General Settings**.
+
 ## Directory Structure
 
-Mount your existing playbooks folder to `/playbooks`.
+Mount your existing playbooks folder to `/app/playbooks` (default) or any custom path of your choice.
 
 ```text
 /playbooks

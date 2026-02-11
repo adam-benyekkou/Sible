@@ -11,7 +11,18 @@ router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
 
 @router.websocket("/ws/ssh/{host_id}")
-async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int):
+@router.websocket("/ws/ssh/{host_id}")
+async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
+    """Provides a bi-directional WebSocket-to-SSH terminal bridge.
+
+    Why: Uses asyncssh and binary WebSocket messages to provide a low-latency
+    interactive terminal in the browser. Handles terminal resizing and
+    supports both file-based and secret-stored (database) SSH keys.
+
+    Args:
+        websocket: The inbound WebSocket connection.
+        host_id: The ID of the host to connect to.
+    """
     logger.info(f"DEBUG: SSH WebSocket endpoint hit for host_id: {host_id}")
     # 1. Accept the WebSocket handshake immediately
     await websocket.accept()

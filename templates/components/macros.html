@@ -1,0 +1,34 @@
+{% macro status_badge(status) %}
+{% if status == 'online' or status == 'success' %}
+<span class="badge badge-success">
+    <i data-lucide="check-circle"></i>
+    {{ status|capitalize }}
+</span>
+{% elif status == 'offline' or status == 'failed' %}
+<span class="badge badge-error">
+    <i data-lucide="x-circle"></i>
+    {{ status|capitalize }}
+</span>
+{% elif status == 'running' %}
+<span class="badge badge-warning">
+    <i data-lucide="loader" class="spin"></i>
+    {{ status|capitalize }}
+</span>
+{% else %}
+<span class="badge badge-secondary">
+    <i data-lucide="help-circle"></i>
+    {{ status|capitalize if status else 'Unknown' }}
+</span>
+{% endif %}
+{% endmacro %}
+
+{% macro action_button(hx_get=None, hx_post=None, hx_delete=None, icon=None, label=None, class="secondary small",
+target=None, confirm=None) %}
+<button class="{{ class }}" {% if hx_get %} hx-get="{{ hx_get }}" {% endif %} {% if hx_post %} hx-post="{{ hx_post }}"
+    {% endif %} {% if hx_delete %} hx-delete="{{ hx_delete }}" {% endif %} {% if target %} hx-target="{{ target }}" {%
+    endif %} {% if confirm %} hx-confirm="{{ confirm }}" {% endif %}
+    style="display: inline-flex; align-items: center; gap: 4px;">
+    {% if icon %}<i data-lucide="{{ icon }}"></i>{% endif %}
+    {% if label %}<span>{{ label }}</span>{% endif %}
+</button>
+{% endmacro %}

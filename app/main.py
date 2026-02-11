@@ -1,29 +1,33 @@
 import asyncio
 import sys
+import logging
 
 # Windows subprocess support requires ProactorEventLoop
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    print("Sible: Windows Proactor Event Loop Policy set.")
 
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
-import traceback
 
 from app.core.config import get_settings
+from app.core.logging import setup_logging
 from app.core.database import create_db_and_tables
-from app.core.security import check_auth
-from app.services import RunnerService, SchedulerService, SettingsService, AuthService, PlaybookService
+from app.core.security import check_auth, get_user_from_token
+from app.services import RunnerService, SchedulerService, AuthService, PlaybookService
 from app.models import User
 from app.core.onboarding import seed_onboarding_data
 from app.core.database import engine
 from sqlmodel import Session, select
 
 # Import Routers
-from app.routers import playbooks, history, settings as settings_router, websocket, scheduler as scheduler_router, core, inventory as inventory_router, ssh as ssh_router, templates as templates_router, auth as auth_router, users as users_router, git as git_router
+from app.routers import playbooks, history, settings as settings_router, websocket, scheduler as scheduler_router, core, inventory as inventory_router, ssh as ssh_router, templates as templates_router, auth as auth_router, users as users_router
+
+settings = get_settings()
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 
@@ -31,9 +35,20 @@ settings_conf = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Manages Sible application lifecycle events.
 
+    On Startup:
+    - Creates database tables if missing.
+    - Cleans up orphaned or dead job processes.
+    - Applies global log retention policies.
+    - Seeds default admin user and onboarding examples.
+    - Starts the background task scheduler.
 
+    On Shutdown:
+    - Stops the scheduler and cleans up resources.
+    """
     # Startup
+    logger.info("Sible starting up...")
     create_db_and_tables()
     
     # Cleanup jobs needs DB session
@@ -46,27 +61,45 @@ async def lifespan(app: FastAPI):
         
         # Ensure Admin User
         auth_service = AuthService(session)
-        if not auth_service.authenticate_user("admin", "admin"): # Check if default exists/works? No, check existence by username
-            stmt = select(User).where(User.username == "admin")
-            admin_exists = session.exec(stmt).first()
-            if not admin_exists:
-                 print("Creating default admin user...")
-                 auth_service.create_user("admin", "admin", "admin")
+        stmt = select(User).where(User.username == "admin")
+        admin_exists = session.exec(stmt).first()
+        if not admin_exists:
+             logger.info("Creating default admin user...")
+             auth_service.create_user("admin", "admin", "admin")
         
         # Seed Onboarding Data
         seed_onboarding_data(session, PlaybookService(session))
 
     SchedulerService.start()
+    logger.info("Sible started successfully.")
     
     yield
     # Shutdown
+    logger.info("Sible shutting down...")
     SchedulerService.shutdown()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.VERSION,
+    lifespan=lifespan
+)
 
 # Auth Middleware
 @app.middleware("http")
-async def auth_middleware(request: Request, call_next):
+async def auth_middleware(request: Request, call_next) -> Response:
+    """Redirects unauthenticated users to login and injects user context.
+
+    Why: Uses HttpOnly JWT cookies for session security. HTMX requests
+    are handled with special headers to trigger client-side redirects
+    without reloading the entire page.
+
+    Args:
+        request: FastAPI request.
+        call_next: Next handler in chain.
+
+    Returns:
+        Final application response.
+    """
     # Exclude static files, login/logout, and WebSockets from authentication redirect.
     # WebSockets are authenticated internally in their own endpoints.
     if (request.url.path.startswith("/static") or 
@@ -117,4 +150,3 @@ app.include_router(ssh_router.router)
 app.include_router(templates_router.router)
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
-app.include_router(git_router.router)

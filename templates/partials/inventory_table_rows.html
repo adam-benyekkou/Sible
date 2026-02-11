@@ -1,3 +1,4 @@
+{% from "components/macros.html" import status_badge %}
 {% for host in hosts %}
 <tr>
     <td style="font-weight: 600; color: var(--text-primary);">{{ host.alias }}</td>
@@ -13,23 +14,10 @@
     </td>
     <td>
         <div style="display: flex; align-items: center; gap: 8px;">
-            {% if host.status == 'online' %}
-            <span
-                style="width: 8px; height: 8px; background: var(--sible-success); border-radius: 50%; display: inline-block;"></span>
-            <span style="font-size: 0.85rem; color: var(--text-secondary);">Online</span>
-            {% if host.latency %}
+            {{ status_badge(host.status) }}
+            {% if host.latency and host.status == 'online' %}
             <span style="font-size: 0.75rem; color: var(--text-muted);">({{ host.latency|round(1) }}ms)</span>
             {% endif %}
-            {% elif host.status == 'offline' %}
-            <span
-                style="width: 8px; height: 8px; background: var(--sible-error); border-radius: 50%; display: inline-block;"></span>
-            <span style="font-size: 0.85rem; color: var(--text-secondary);">Offline</span>
-            {% else %}
-            <span
-                style="width: 8px; height: 8px; background: var(--border-subtle); border-radius: 50%; display: inline-block;"></span>
-            <span style="font-size: 0.85rem; color: var(--text-muted);">Unknown</span>
-            {% endif %}
-
         </div>
     </td>
     <td style="text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 4px;">

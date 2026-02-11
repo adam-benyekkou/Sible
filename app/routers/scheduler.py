@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Request, Response, Form, Depends
+from fastapi.responses import HTMLResponse
+from typing import Any, Optional, List
 from app.templates import templates
 from app.core.config import get_settings
 from app.services import SchedulerService
@@ -10,12 +12,22 @@ from app.utils.htmx import trigger_toast
 settings = get_settings()
 router = APIRouter()
 
-@router.get("/schedules")
+@router.get("/schedules", response_class=HTMLResponse)
 async def get_queue_view(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Renders the main scheduled jobs (queue) management page.
+
+    Args:
+        request: FastAPI request.
+        db: Database session.
+        current_user: Authenticated operator+.
+
+    Returns:
+        TemplateResponse for the schedules page.
+    """
     from app.models import Host
     jobs = SchedulerService.list_jobs()
     
@@ -34,10 +46,25 @@ async def get_queue_view(
 async def create_schedule(
     playbook: str = Form(...), 
     cron: str = Form(...),
-    target: str = Form(default=None),
-    extra_vars: str = Form(default=None),
-    current_user: object = Depends(requires_role(["admin"]))
-):
+    target: Optional[str] = Form(default=None),
+    extra_vars: Optional[str] = Form(default=None),
+    current_user: Any = Depends(requires_role(["admin"]))
+) -> Response:
+    """Creates a new scheduled job for a playbook.
+
+    Why: Validates the cron expression via APScheduler to ensure the job
+    can be properly persisted and triggered. Returns a toast on error.
+
+    Args:
+        playbook: Path to the target playbook.
+        cron: Standard cron expression.
+        target: Optional host/group limit.
+        extra_vars: Optional JSON string of variables.
+        current_user: Admin access required.
+
+    Returns:
+        Response with success/failure toast and modal close trigger.
+    """
     job_id = SchedulerService.add_playbook_job(playbook, cron, target=target, extra_vars=extra_vars)
     response = Response(status_code=200)
     if job_id:
@@ -51,8 +78,17 @@ async def create_schedule(
 @router.delete("/schedule/{job_id}")
 async def delete_schedule(
     job_id: str,
-    current_user: object = Depends(requires_role(["admin"]))
-):
+    current_user: Any = Depends(requires_role(["admin"]))
+) -> Response:
+    """Permanently removes a scheduled job from the queue.
+
+    Args:
+        job_id: Unique identifier for the APScheduler job.
+        current_user: Admin access required.
+
+    Returns:
+        Response with status toast.
+    """
     success = SchedulerService.remove_job(job_id)
     response = Response(status_code=200)
     if success:
@@ -65,11 +101,24 @@ async def delete_schedule(
 async def update_schedule(
     job_id: str, 
     request: Request, 
-    cron: str = Form(default=None),
-    target: str = Form(default=None),
+    cron: Optional[str] = Form(default=None),
+    target: Optional[str] = Form(default=None),
     db: Session = Depends(get_db),
-    current_user: object = Depends(requires_role(["admin"]))
-):
+    current_user: Any = Depends(requires_role(["admin"]))
+) -> Response:
+    """Updates the recurrence or target of an existing scheduled job.
+
+    Args:
+        job_id: Target job ID.
+        request: Request object.
+        cron: New cron expression.
+        target: New host/group limit.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        TemplateResponse for the updated row with OOB triggers.
+    """
     import logging
     logger = logging.getLogger("uvicorn.error")
     logger.info(f"Update schedule request for {job_id}. Cron: '{cron}'")
@@ -119,8 +168,19 @@ async def pause_schedule(
     job_id: str,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: object = Depends(requires_role(["admin"]))
-):
+    current_user: Any = Depends(requires_role(["admin"]))
+) -> Response:
+    """Temporarily halts the execution of a scheduled job.
+
+    Args:
+        job_id: Target job ID.
+        request: Request object.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        Updated row fragment showing the 'Paused' status.
+    """
     success = SchedulerService.pause_job(job_id)
     if not success:
         return Response(status_code=400)
@@ -139,8 +199,19 @@ async def resume_schedule(
     job_id: str,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: object = Depends(requires_role(["admin"]))
-):
+    current_user: Any = Depends(requires_role(["admin"]))
+) -> Response:
+    """Resumes a previously paused scheduled job.
+
+    Args:
+        job_id: Target job ID.
+        request: Request object.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        Updated row fragment showing the active status.
+    """
     success = SchedulerService.resume_job(job_id)
     if not success:
         return Response(status_code=400)
@@ -160,7 +231,18 @@ async def get_job_row(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Returns the HTML fragment for a single job row.
+
+    Args:
+        job_id: Target job ID.
+        request: Request object.
+        db: Database session.
+        current_user: Authenticated operator+.
+
+    Returns:
+        Row template response.
+    """
     from app.services.inventory import InventoryService
     job = SchedulerService.get_job_info(job_id)
     if not job: return Response("")
@@ -185,7 +267,18 @@ async def get_job_row_edit(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Renders the inline edit form or modal for a scheduled job.
+
+    Args:
+        job_id: Target job ID.
+        request: Request object.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        TemplateResponse for the edit modal content.
+    """
     from app.models import Host
     job = SchedulerService.get_job_info(job_id)
     if not job: return Response(status_code=404)

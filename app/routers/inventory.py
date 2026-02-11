@@ -12,11 +12,20 @@ router = APIRouter()
 
 # --- Page Routes ---
 
-@router.get("/inventory")
+@router.get("/inventory", response_class=HTMLResponse)
 async def get_inventory_page(
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Renders the main inventory management page.
+
+    Args:
+        request: FastAPI request object.
+        current_user: Authenticated user with at least watcher role.
+
+    Returns:
+        TemplateResponse for the inventory page.
+    """
     content = InventoryService.get_inventory_content()
     context = {"request": request, "content": content}
     return templates.TemplateResponse("inventory.html", context)
@@ -25,7 +34,19 @@ async def get_inventory_page(
 async def save_inventory_content(
     request: Request,
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Saves raw INI content from the editor to the physical inventory file.
+
+    Why: Allows power users to bulk-edit the inventory bypassing the DB UI,
+    which is then synced back to the DB via a client-side HTMX trigger.
+
+    Args:
+        request: Request containing form data 'content'.
+        current_user: Admin access required for direct file edits.
+
+    Returns:
+        Response with a toast notification trigger.
+    """
     form = await request.form()
     content = form.get("content")
     if content is None:
@@ -56,7 +77,20 @@ async def ping_inventory(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Triggers an Ansible ping across all inventory hosts.
+
+    Why: Refreshes the database 'status' field for all hosts and provides
+    the raw Ansible CLI output for debugging connectivity issues.
+
+    Args:
+        request: FastAPI request.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        HTMLResponse containing the formatted CLI output and a table refresh trigger.
+    """
     # Perform status refresh (updates DB)
     await InventoryService.refresh_all_statuses(db)
     
@@ -79,7 +113,22 @@ async def list_hosts(
     search: str = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Returns a paginated HTML table of hosts.
+
+    Why: Provides a searchable, paginated view of infrastructure components
+    optimized for HTMX partial updates.
+
+    Args:
+        request: Request object.
+        page: Current page number.
+        search: Optional fuzzy filter for alias/hostname.
+        db: Database session.
+        current_user: Authenticated user.
+
+    Returns:
+        TemplateResponse for the table rows partial.
+    """
     hosts, total_count = InventoryService.get_hosts_paginated(db, page=page, search=search)
     
     # Get user favorites
@@ -111,7 +160,17 @@ async def toggle_favorite_host(
     host_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Toggles a host as a 'favorite' for the current user.
+
+    Args:
+        host_id: Target host ID.
+        db: Database session.
+        current_user: Authenticated user.
+
+    Returns:
+        Response with success toast and refresh trigger.
+    """
     existing = db.exec(
         select(FavoriteServer).where(
             FavoriteServer.user_id == current_user.id,
@@ -145,7 +204,26 @@ async def create_host(
     group_name: str = Form("all"),
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Adds a new host to the database and syncs it to the Ansible inventory.
+
+    Why: Sible enforces sanitization of names to ensure Ansible CLI
+    compatibility when the DB is exported to INI format.
+
+    Args:
+        request: Request object.
+        alias: Human-readable name (sanitized for Ansible).
+        hostname: SSH destination.
+        ssh_user: SSH username.
+        ssh_port: SSH port.
+        ssh_key_secret: Reference to an EnvVar secret.
+        group_name: Ansible group assignment.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        Response with status and refresh trigger.
+    """
     # Validating connection is good, but blocking creation is bad UX.
     # We will just create it and let the status check handle it later.
     # is_valid = await InventoryService.verify_connection(hostname, ssh_user, ssh_port)
@@ -187,7 +265,23 @@ async def update_host(
     group_name: str = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Updates an existing host record and triggers a filesystem sync.
+
+    Args:
+        request: Request containing potential multipart form data.
+        host_id: Target host ID.
+        alias: New alias.
+        hostname: New destination.
+        ssh_user: New user.
+        ssh_port: New port.
+        group_name: New group.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        Response with success notification.
+    """
     host = db.get(Host, host_id)
     if not host:
         return Response(status_code=404)
@@ -235,7 +329,20 @@ async def import_inventory(
     request: Request, 
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Synchronizes host records in the database with the physical INI file.
+
+    Why: Allows "File-first" workflows where users edit files directly
+    on disk and want the UI to reflect those changes.
+
+    Args:
+        request: FastAPI request.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        Response indicating import result.
+    """
     """
     Called when 'Save' is clicked in the raw editor to update DB from File.
     """
@@ -308,7 +415,18 @@ async def get_host_card(
     host_id: int, 
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Renders a detailed information card for a specific host.
+
+    Args:
+        request: Request object.
+        host_id: Host ID.
+        db: Database session.
+        current_user: Authenticated operator+.
+
+    Returns:
+        TemplateResponse for the server card component.
+    """
     from app.models.host import Host
     host = db.get(Host, host_id)
     if not host:

@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status, Form, Response
+from typing import List, Optional, Any
 from sqlmodel import Session, select
 from app.dependencies import get_db, get_current_user, requires_role
 from app.models import User
@@ -23,9 +23,18 @@ class UserRead(BaseModel):
 async def list_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> List[User]:
+    """Lists all registered users.
+
+    Args:
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        List of user records.
+    """
     users = db.exec(select(User)).all()
-    return users
+    return list(users)
 
 @router.post("/", response_model=UserRead)
 async def create_user(
@@ -34,7 +43,19 @@ async def create_user(
     role: UserRole = Form(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> User:
+    """Creates a new user with hashed password.
+
+    Args:
+        username: Unique login name.
+        password: Plaintext password (will be hashed).
+        role: Primary authorization level.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        The newly created user record.
+    """
     # Check if user exists
     existing = db.exec(select(User).where(User.username == username)).first()
     if existing:
@@ -52,21 +73,30 @@ async def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> dict[str, str]:
+    """Deletes a user account.
+
+    Why: Hardcoded protection for the 'admin' user and preventing self-deletion
+    ensures the core administrative account remains intact.
+
+    Args:
+        user_id: Target user PK.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        JSON confirmation message.
+    """
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    if user.username == "admin":  # Prevent deleting main admin? Or at least self?
-         # Check if it's the LAST admin maybe? For now just prevent "admin" username deletion if hardcoded
-         if user.username == "admin":
-             raise HTTPException(status_code=400, detail="Cannot delete the default admin user")
+    if user.username == "admin":
+        raise HTTPException(status_code=400, detail="Cannot delete the default admin user")
     
     if user.id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot delete yourself")
         
-    db.delete(user)
-    db.commit()
     db.delete(user)
     db.commit()
     return {"message": "User deleted"}
@@ -79,20 +109,33 @@ class UserUpdate(BaseModel):
 @router.put("/{user_id}", response_model=UserRead)
 async def update_user(
     user_id: int,
-    username: str = Form(None),
-    password: str = Form(None),
-    role: UserRole = Form(None),
+    username: Optional[str] = Form(None),
+    password: Optional[str] = Form(None),
+    role: Optional[UserRole] = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> User:
+    """Updates user profile information.
+
+    Args:
+        user_id: Target user PK.
+        username: Optional new unique name.
+        password: Optional new plaintext password.
+        role: Optional new authorization role.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        The updated user record.
+    """
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
     if user.username == "admin" and current_user.username != "admin": 
          if role and role != UserRole.ADMIN:
-             raise HTTPException(status_code=400, detail="Cannot downgrade default admin user")
-             
+              raise HTTPException(status_code=400, detail="Cannot downgrade default admin user")
+              
     # Handle username change
     if username and username != user.username:
         # Check uniqueness

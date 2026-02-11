@@ -3,13 +3,14 @@ from fastapi.responses import RedirectResponse
 from typing import Optional
 from app.core.database import engine
 from sqlmodel import Session, select
-import traceback
-
+import logging
 
 from jose import jwt, JWTError
 from app.core.config import get_settings
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
+
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 
@@ -67,8 +68,7 @@ def check_auth(request: Request) -> bool:
             
         return get_user_from_token(token) is not None
     except Exception as e:
-        print(f"Auth Check Error: {e}")
-        traceback.print_exc()
+        logger.error(f"Auth Check Error: {e}")
         return False
 
 

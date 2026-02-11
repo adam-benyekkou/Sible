@@ -29,10 +29,6 @@
                 Secrets
             </a>
 
-            <a href="/settings/gitops" class="settings-nav-item {{ 'active' if active_tab == 'gitops' else '' }}">
-                GitOps
-            </a>
-
             <a href="/settings/notifications"
                 class="settings-nav-item {{ 'active' if active_tab == 'notifications' else '' }}">
                 Notifications
@@ -63,8 +59,6 @@
         {% include "partials/settings_secrets.html" %}
         {% elif active_tab == 'users' %}
         {% include "partials/settings_users.html" %}
-        {% elif active_tab == 'gitops' %}
-        {% include "partials/settings_gitops.html" %}
         {% endif %}
 
     </main>

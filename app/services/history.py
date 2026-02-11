@@ -1,12 +1,37 @@
-from sqlmodel import Session, select, desc, delete
-from app.models import JobRun
-from typing import List, Optional
+from typing import Any, Optional
 
 class HistoryService:
+    """Manages job execution logs, history retrieval, and automated retention policies.
+
+    This service provides methods to query past job runs with filtering/pagination
+    and implements the logic for pruning old data to maintain database performance
+    and storage efficiency.
+    """
     def __init__(self, db: Session):
         self.db = db
 
-    def get_recent_runs(self, limit: int = 50, offset: int = 0, search: str = None, status: str = None) -> tuple[List[JobRun], int]:
+    def get_recent_runs(
+        self, 
+        limit: int = 50, 
+        offset: int = 0, 
+        search: Optional[str] = None, 
+        status: Optional[str] = None
+    ) -> tuple[list[JobRun], int, list[Any]]:
+        """Retrieves a paginated list of recent job runs with filters.
+
+        Why: Powers the main History table in the UI, allowing users to
+        audit past executions and find specific failures.
+
+        Args:
+            limit: Maximum number of runs to return (page size).
+            offset: Number of runs to skip (for pagination).
+            search: Optional fuzzy search term for the playbook name.
+            status: Optional exact status filter (e.g., 'success', 'failed').
+
+        Returns:
+            A tuple of (list_of_jobruns, total_filtered_count, list_of_all_users).
+        """
+        from app.models import User
         query = select(JobRun).order_by(desc(JobRun.start_time))
         if search:
             query = query.where(JobRun.playbook.ilike(f"%{search}%"))
@@ -24,9 +49,25 @@ class HistoryService:
         return self.db.exec(query.offset(offset).limit(limit)).all(), total_count, users
 
     def get_run(self, run_id: int) -> Optional[JobRun]:
+        """Fetches a specific job run by its primary key.
+
+        Args:
+            run_id: The unique ID of the job run.
+
+        Returns:
+            The JobRun object if found, else None.
+        """
         return self.db.get(JobRun, run_id)
 
     def delete_run(self, run_id: int) -> bool:
+        """Permanently deletes a single job execution record.
+
+        Args:
+            run_id: The ID of the run to delete.
+
+        Returns:
+            True if deleted, False if not found.
+        """
         run = self.get_run(run_id)
         if run:
             self.db.delete(run)
@@ -34,7 +75,16 @@ class HistoryService:
             return True
         return False
 
-    def delete_all_runs(self, search: str = None, status: str = None):
+    def delete_all_runs(self, search: str = None, status: str = None) -> None:
+        """Bulk deletes job runs matching the specified filters.
+
+        Why: Allows users to clear out large volumes of log data (e.g., all
+        successful runs) in a single action.
+
+        Args:
+            search: Optional playbook name filter.
+            status: Optional status filter.
+        """
         statement = delete(JobRun)
         if search:
             statement = statement.where(JobRun.playbook.ilike(f"%{search}%"))
@@ -43,7 +93,17 @@ class HistoryService:
         self.db.exec(statement)
         self.db.commit()
 
-    def get_playbook_runs(self, playbook_name: str, limit: int = 50, offset: int = 0) -> tuple[List[JobRun], int]:
+    def get_playbook_runs(self, playbook_name: str, limit: int = 50, offset: int = 0) -> tuple[list[JobRun], int, list[Any]]:
+        """Retrieves history specific to a single playbook.
+
+        Args:
+            playbook_name: Exactly matching playbook path.
+            limit: Page size.
+            offset: Skip count.
+
+        Returns:
+            A tuple of (list_of_jobruns, total_count, all_users).
+        """
         statement = select(JobRun).where(JobRun.playbook == playbook_name).order_by(desc(JobRun.start_time))
         
         # Get total count
@@ -56,16 +116,26 @@ class HistoryService:
 
         return self.db.exec(statement.offset(offset).limit(limit)).all(), total_count, users
 
-    def delete_playbook_runs(self, playbook_name: str):
+    def delete_playbook_runs(self, playbook_name: str) -> None:
+        """Deletes all execution records for a specific playbook.
+
+        Args:
+            playbook_name: The target playbook path.
+        """
         statement = delete(JobRun).where(JobRun.playbook == playbook_name)
         self.db.exec(statement)
         self.db.commit()
 
-    def apply_retention_policies(self, playbook_name: Optional[str] = None):
-        """
-        Enforce retention policies:
-        1. Remove logs older than X days.
-        2. Keep at most Y most recent logs per playbook.
+    def apply_retention_policies(self, playbook_name: Optional[str] = None) -> None:
+        """Enforces data retention limits by age and record count.
+
+        Why: Prevents the database from growing indefinitely. It prioritizes
+        keeping recent logs while purging stale data based on global or 
+        per-playbook configurations.
+
+        Args:
+            playbook_name: If provided, only prunes logs for this specific
+                playbook. Otherwise, prunes all playbooks.
         """
         from app.models import AppSettings, PlaybookConfig
         from datetime import datetime, timedelta

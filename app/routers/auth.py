@@ -9,7 +9,15 @@ from datetime import timedelta
 router = APIRouter(tags=["auth"])
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
+async def login_page(request: Request) -> Response:
+    """Renders the login page.
+
+    Args:
+        request: FastAPI request.
+
+    Returns:
+        TemplateResponse for the login page.
+    """
     return templates.TemplateResponse("login.html", {"request": request})
 
 @router.post("/api/auth/login")
@@ -19,7 +27,22 @@ async def login_api(
     username: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
-):
+) -> Response:
+    """Handles user login and issues an HttpOnly JWT cookie.
+
+    Why: Uses HttpOnly cookies to prevent XSS attacks while maintaining a
+    stateless authentication flow. Redirects to the dashboard on success.
+
+    Args:
+        request: FastAPI request.
+        response: Response object to attach the cookie to.
+        username: Provided username.
+        password: Provided raw password.
+        db: Database session.
+
+    Returns:
+        RedirectResponse on success, or 401 Unauthorized with login template.
+    """
     service = AuthService(db)
     user = service.authenticate_user(username, password)
     if not user:
@@ -42,7 +65,15 @@ async def login_api(
     return redirect
 
 @router.get("/api/auth/logout")
-async def logout(response: Response):
+async def logout(response: Response) -> Response:
+    """Logs out the user by deleting the session cookie.
+
+    Args:
+        response: Response object.
+
+    Returns:
+        RedirectResponse to the login page.
+    """
     redirect = RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
     redirect.delete_cookie("access_token")
     return redirect

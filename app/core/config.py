@@ -5,6 +5,7 @@ from pathlib import Path
 
 class Settings(BaseSettings):
     APP_NAME: str = "Sible"
+    VERSION: str = "1.0.0"
     BASE_DIR: Path = Path(__file__).resolve().parent.parent.parent
     PLAYBOOKS_DIR: Path = BASE_DIR / "playbooks"
     STATIC_DIR: Path = BASE_DIR / "static"

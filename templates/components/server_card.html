@@ -1,3 +1,4 @@
+{% from "components/macros.html" import status_badge %}
 <article class="server-card card server-card-transition" hx-get="/api/inventory/host/{{ host.id }}/card"
     hx-trigger="every 60s" hx-swap="outerHTML">
 
@@ -8,16 +9,8 @@
                 style="font-size: 0.8rem; color: var(--text-muted); background: transparent; padding: 0;">{{ host.hostname }}</code>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 6px;">
-            <span class="status-dot {{ host.status if host.status in ['online', 'offline'] else '' }}"
-                style="width: 8px; height: 8px;"></span>
-            <span
-                class="font-sm font-bold {{ 'text-success' if host.status == 'online' else 'text-error' if host.status == 'offline' else 'color-muted' }}"
-                style="text-transform: capitalize;">
-
-                {{ host.status|default('unknown') }}
-            </span>
-
+        <div style="display: flex; gap: 8px;">
+            {{ status_badge(host.status) }}
         </div>
     </div>
 
@@ -38,7 +31,6 @@
         style="margin-top: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
         <span
             style="background: var(--surface-secondary); color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; width: fit-content;">
-
             {{ host.group_name }}
         </span>
 
@@ -48,7 +40,6 @@
             <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
         </button>
         {% endif %}
-
     </div>
 
 </article>

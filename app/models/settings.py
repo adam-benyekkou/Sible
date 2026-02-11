@@ -19,15 +19,12 @@ class AppSettings(SQLModel, table=True):
     notify_on_failure: bool = Field(default=True)
     logo_path: Optional[str] = Field(default=None)
     favicon_path: Optional[str] = Field(default=None)
+    playbooks_path: str = Field(default="/app/playbooks")
     
     # Authentication
     auth_enabled: bool = Field(default=True)
     auth_username: str = Field(default="admin")
     auth_password: str = Field(default="admin")
-
-    # GitOps
-    git_repository_url: Optional[str] = Field(default=None)
-    git_ssh_key: Optional[str] = Field(default=None)
 
 class EnvVar(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

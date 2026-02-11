@@ -10,13 +10,24 @@ import json
 
 settings = get_settings()
 router = APIRouter()
-@router.get("/playbooks/dashboard")
+@router.get("/playbooks/dashboard", response_class=HTMLResponse)
 async def get_dashboard(
     request: Request,
     page: int = 1,
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Renders the main playbook dashboard.
+
+    Args:
+        request: FastAPI request.
+        page: Current page number.
+        playbook_service: Injected service for metadata.
+        current_user: Authenticated user.
+
+    Returns:
+        TemplateResponse for the dashboard.
+    """
     limit = 20
     offset = (page - 1) * limit
     playbooks, total_count = playbook_service.get_playbooks_metadata(user_id=current_user.id, limit=limit, offset=offset)
@@ -43,7 +54,22 @@ async def list_playbooks_api(
     search: Optional[str] = Query(None),
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Returns a paginated list of playbooks as an HTML table fragment.
+
+    Why: Supports HTMX-based infinity scroll or pagination in the dashboard,
+    offloading filtering (search) to the PlaybookService.
+
+    Args:
+        request: Request object.
+        page: Page to retrieve.
+        search: Optional fuzzy filter for playbook names.
+        playbook_service: Injected service.
+        current_user: Authenticated user.
+
+    Returns:
+        Partial template for the table rows.
+    """
     limit = 20
     offset = (page - 1) * limit
     playbooks, total_count = playbook_service.get_playbooks_metadata(search=search, user_id=current_user.id, limit=limit, offset=offset)
@@ -70,7 +96,21 @@ async def toggle_favorite(
     playbook_path: str = Form(...),
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Toggles a playbook's favorite status and returns updated UI components.
+
+    Why: Returns two fragments (icon and sidebar) for HTMX Out-of-Band (OOB) updates,
+    ensuring the UI stays in sync without a full page reload.
+
+    Args:
+        request: Request object.
+        playbook_path: Path to the playbook.
+        playbook_service: Injected service.
+        current_user: Current user.
+
+    Returns:
+        Response containing concatenated HTML fragments.
+    """
     is_favorited = playbook_service.toggle_favorite(playbook_path, current_user.id)
     
     # Render updated heart icon
@@ -100,7 +140,17 @@ async def get_sidebar_favorites(
     request: Request,
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Renders the sidebar fragment containing favorited playbooks.
+
+    Args:
+        request: Request object.
+        playbook_service: Injected service.
+        current_user: Current user.
+
+    Returns:
+        TemplateResponse for the sidebar favorites.
+    """
     all_playbooks, _ = playbook_service.get_playbooks_metadata(user_id=current_user.id)
     favorites = [p for p in all_playbooks if p["is_favorited"]]
     
@@ -120,7 +170,17 @@ async def delete_playbooks_bulk(
     names: List[str] = Query(...),
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> Response:
+    """Bulk deletes selected playbooks from the filesystem.
+
+    Args:
+        names: List of paths to delete.
+        playbook_service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        No Content response with HTMX trigger for refresh.
+    """
     success = playbook_service.delete_playbooks_bulk(names)
     if success:
         return Response(status_code=204, headers={"HX-Trigger": "sidebar-refresh, playbooks-refresh"})
@@ -134,7 +194,21 @@ async def get_playbook_variables_form(
     request: Request,
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Extracts variables from a playbook and returns an HTML form.
+
+    Why: Sible parses playbook YAML to find 'vars' and placeholders,
+    dynamically generating form inputs for the run modal.
+
+    Args:
+        name: Playbook path.
+        request: Request object.
+        service: Injected service.
+        current_user: Operator or admin.
+
+    Returns:
+        Partial template for the variable input form.
+    """
     from app.services.settings import SettingsService
     settings_service = SettingsService(service.db)
     env_vars = settings_service.get_env_vars()
@@ -154,7 +228,18 @@ async def get_playbook_view(
     request: Request, 
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Renders the playbook editor view or returns the partial editor fragment.
+
+    Args:
+        name: Relative path to the playbook.
+        request: Request object.
+        service: Injected service.
+        current_user: Authenticated user.
+
+    Returns:
+        Full page or partial editor template.
+    """
     content = service.get_playbook_content(name)
     if content is None:
         return Response(content="<p>File not found</p>", media_type="text/html")
@@ -177,7 +262,18 @@ async def save_playbook(
     request: Request, 
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Saves the modified content of a playbook.
+
+    Args:
+        name: Playbook path.
+        request: Request containing 'content' form data.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        Response with success/error toast.
+    """
     form = await request.form()
     content = form.get("content")
     if content is None:
@@ -200,7 +296,17 @@ async def create_playbook(
     request: Request,
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Creates a new empty playbook based on an HTMX prompt.
+
+    Args:
+        request: Request with 'HX-Prompt' header.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        Response with refresh trigger and toast.
+    """
     name = request.headers.get("HX-Prompt")
     if not name:
         response = Response(status_code=200)
@@ -228,7 +334,17 @@ async def delete_playbook(
     name: str,
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Deletes a playbook from the filesystem.
+
+    Args:
+        name: Playbook path.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        Content fragment with refresh trigger and toast.
+    """
     success = service.delete_playbook(name)
     if not success:
         response = Response(status_code=200)
@@ -251,7 +367,20 @@ async def run_playbook_endpoint(
     name: str, 
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Initiates a playbook run and renders the terminal connector UI.
+
+    Why: This endpoint captures run parameters (limit, tags, vars) and
+    prepares the UI to establish an SSE connection for log streaming.
+
+    Args:
+        name: Playbook path.
+        request: Request with form parameters.
+        current_user: Operator or admin.
+
+    Returns:
+        Partial template for the terminal connector.
+    """
     form = await request.form()
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
@@ -268,7 +397,17 @@ async def get_run_modal(
     name: str,
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Returns the partial HTML for the execution configuration modal.
+
+    Args:
+        name: Path to the target playbook.
+        request: Request object.
+        current_user: Authenticated operator+.
+
+    Returns:
+        Modal template response.
+    """
     return templates.TemplateResponse("partials/playbook_run_modal.html", {
         "request": request,
         "name": name
@@ -279,7 +418,17 @@ async def check_playbook_endpoint(
     name: str, 
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Initiates an Ansible check run (dry-run).
+
+    Args:
+        name: Playbook path.
+        request: Request object.
+        current_user: Authenticated operator+.
+
+    Returns:
+        Partial template for the terminal connector in check mode.
+    """
     form = await request.form()
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
@@ -296,7 +445,17 @@ async def stop_playbook_endpoint(
     name: str,
     service: RunnerService = Depends(get_runner_service),
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Attempts to terminate a running playbook process.
+
+    Args:
+        name: Path to the running playbook.
+        service: Injected runner service.
+        current_user: Authenticated operator+.
+
+    Returns:
+        Response with termination status toast.
+    """
     success = service.stop_playbook(name)
     if success:
         response = Response(status_code=200)
@@ -310,7 +469,16 @@ async def stop_playbook_endpoint(
 async def lint_playbook(
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> List[Any]:
+    """Lints raw playbook content using ansible-lint if available.
+
+    Args:
+        request: Request with 'content' form field.
+        current_user: Authenticated operator+.
+
+    Returns:
+        List of linting errors or empty list.
+    """
     form = await request.form()
     content = form.get("content")
     if not content: return []
@@ -322,7 +490,18 @@ async def install_requirements_endpoint(
     request: Request,
     service: RunnerService = Depends(get_runner_service),
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Triggers 'ansible-galaxy install' for a playbook's requirements.
+
+    Args:
+        name: Playbook path.
+        request: Request object.
+        service: Injected service.
+        current_user: Authenticated operator+.
+
+    Returns:
+        Terminal connector UI fragment for SSE streaming.
+    """
     return templates.TemplateResponse("partials/terminal_connect.html", {
         "request": request,
         "name": name,
@@ -339,7 +518,20 @@ async def use_template(
     request: Request,
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Instantiates a template into a new playbook.
+
+    Why: Allows users to bootstrap new playbooks from pre-defined patterns
+    (e.g., standard patching or user creation).
+
+    Args:
+        request: Request with 'path' query parameter for the template.
+        service: Injected service for saving the new file.
+        current_user: Admin access required.
+
+    Returns:
+        No Content response with HTMX redirect to the new playbook.
+    """
     """
     Instantiates a template into a new playbook.
     Query params: ?path=system/update.yaml
@@ -387,7 +579,20 @@ async def create_playbook_api(
     payload: CreatePlaybookRequest,
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """API endpoint to create a playbook with folder support and optional templates.
+
+    Why: Provides a more robust alternative to the simple prompt-based creation,
+    supporting nested directories and template selection in a single call.
+
+    Args:
+        payload: Pydantic model with name, folder, and template info.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        Response with HTMX redirect to the new playbook editor.
+    """
     """
     Creates a new playbook with optional folder and template.
     """

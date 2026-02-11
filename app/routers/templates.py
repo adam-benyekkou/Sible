@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Response
 from fastapi.responses import HTMLResponse
 from app.templates import templates
 from typing import List, Optional
 from pydantic import BaseModel
 from app.services.template import TemplateService
+from app.models import User
 from app.core.security import get_current_user
 from app.dependencies import requires_role
 
@@ -15,11 +16,27 @@ router = APIRouter(
 from app.schemas.template import TemplateCreate, TemplateUpdate
 
 @router.get("/templates", response_class=HTMLResponse)
-async def templates_index(request: Request):
+async def templates_index(request: Request) -> Response:
+    """Renders the Template Library management page.
+
+    Args:
+        request: Request object.
+
+    Returns:
+        TemplateResponse for the templates index.
+    """
     return templates.TemplateResponse("templates_index.html", {"request": request})
 
 @router.get("/api/templates")
-def list_templates(page: int = 1):
+def list_templates(page: int = 1) -> dict[str, Any]:
+    """Lists templates with pagination support.
+
+    Args:
+        page: Current page number.
+
+    Returns:
+        JSON with template list and pagination metadata.
+    """
     limit = 20
     offset = (page - 1) * limit
     templates_list, total_count = TemplateService.list_templates(limit=limit, offset=offset)
@@ -37,7 +54,15 @@ def list_templates(page: int = 1):
     }
 
 @router.get("/api/templates/{name_id:path}/content")
-def get_template_content(name_id: str):
+def get_template_content(name_id: str) -> dict[str, str]:
+    """Retrieves the raw content of a specific template.
+
+    Args:
+        name_id: Template filename/path.
+
+    Returns:
+        JSON with template content.
+    """
     content = TemplateService.get_template_content(name_id)
     if content is None:
         raise HTTPException(status_code=404, detail="Template not found")
@@ -46,8 +71,17 @@ def get_template_content(name_id: str):
 @router.post("/api/templates")
 def create_template(
     template: TemplateCreate,
-    current_user: object = Depends(requires_role(["admin"]))
-):
+    current_user: User = Depends(requires_role(["admin"]))
+) -> dict[str, str]:
+    """Creates a new template record.
+
+    Args:
+        template: Pydantic model for creation.
+        current_user: Admin access required.
+
+    Returns:
+        JSON confirmation message.
+    """
     if TemplateService.get_template_content(template.name) is not None:
          raise HTTPException(status_code=400, detail="Template already exists")
          
@@ -60,8 +94,18 @@ def create_template(
 def update_template(
     name_id: str, 
     template: TemplateUpdate,
-    current_user: object = Depends(requires_role(["admin"]))
-):
+    current_user: User = Depends(requires_role(["admin"]))
+) -> dict[str, str]:
+    """Updates an existing template's content.
+
+    Args:
+        name_id: Target template name.
+        template: Pydantic model for update.
+        current_user: Admin access required.
+
+    Returns:
+        JSON confirmation message.
+    """
     # Verify existence
     if TemplateService.get_template_content(name_id) is None:
          raise HTTPException(status_code=404, detail="Template not found")
@@ -74,8 +118,17 @@ def update_template(
 @router.delete("/api/templates/{name_id:path}")
 def delete_template(
     name_id: str,
-    current_user: object = Depends(requires_role(["admin"]))
-):
+    current_user: User = Depends(requires_role(["admin"]))
+) -> dict[str, str]:
+    """Deletes a template from the library.
+
+    Args:
+        name_id: Target template name.
+        current_user: Admin access required.
+
+    Returns:
+        JSON confirmation message.
+    """
     if TemplateService.get_template_content(name_id) is None:
          raise HTTPException(status_code=404, detail="Template not found")
          

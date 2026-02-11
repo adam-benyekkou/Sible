@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, Response, Form, File, UploadFile, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
-from typing import Optional
+from typing import Optional, Any, List
 from app.templates import templates
 from app.core.config import get_settings
 from app.dependencies import get_settings_service, get_playbook_service, get_notification_service, get_db, requires_role, get_current_user
@@ -11,12 +11,23 @@ from app.models import PlaybookConfig, User
 import shutil
 from sqlmodel import Session, select
 import json
+from app.utils.path import validate_path
 
 settings_conf = get_settings()
 router = APIRouter()
 
 # Helper to render the common settings shell with active tab
-async def render_settings_page(request: Request, active_tab: str, context: dict = {}):
+async def render_settings_page(request: Request, active_tab: str, context: dict[str, Any] = {}) -> Response:
+    """Helper to render the common settings shell with active tab.
+
+    Args:
+        request: FastAPI request.
+        active_tab: ID for the active sidebar navigation item.
+        context: Additional data for the child templates.
+
+    Returns:
+        TemplateResponse for the settings layout.
+    """
     settings = get_settings_conf() # use the loaded config or service
     # We need to make sure we have the basics for the sidebar or common elements
     # Currently layout.html handles most. settings.html handles the sidebar.
@@ -32,7 +43,15 @@ def get_settings_conf():
     return get_settings()
 
 @router.get("/settings")
-async def get_settings_root(request: Request):
+async def get_settings_root(request: Request) -> RedirectResponse:
+    """Redirects the root /settings path to general settings.
+
+    Args:
+        request: FastAPI request.
+
+    Returns:
+        307 Temporary Redirect to /settings/general.
+    """
     return RedirectResponse(url="/settings/general")
 
 @router.get("/settings/general")
@@ -40,7 +59,17 @@ async def get_settings_general(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Renders the general configuration page (App name, Auth, Paths).
+
+    Args:
+        request: Request object.
+        service: Injected settings service.
+        current_user: Admin access required.
+
+    Returns:
+        TemplateResponse for general settings.
+    """
     settings = service.get_settings()
     context = {"settings": settings}
     
@@ -54,7 +83,17 @@ async def get_settings_secrets(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Renders the environment variables and secrets management page.
+
+    Args:
+        request: Request object.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        TemplateResponse for secrets management (full or partial).
+    """
     env_vars = service.get_env_vars()
     context = {"env_vars": env_vars}
 
@@ -70,7 +109,17 @@ async def get_settings_users(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> Response:
+    """Renders the user management table.
+
+    Args:
+        request: Request object.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        TemplateResponse for user management.
+    """
     # Security: Only admins can access
     users = db.exec(select(User)).all()
     context = {"users": users}
@@ -86,7 +135,18 @@ async def get_user_edit_form(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> Response:
+    """Returns the edit form for a specific user in a modal.
+
+    Args:
+        request: Request object.
+        user_id: Target user PK.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        Form partial template.
+    """
     user = db.get(User, user_id)
     if not user:
         return Response("User not found", status_code=404)
@@ -103,7 +163,22 @@ async def get_settings_retention(
     playbook_service: PlaybookService = Depends(get_playbook_service),
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator"]))
-):
+) -> Response:
+    """Renders the log retention and cleanup policy page.
+
+    Why: Sible supports both global and per-playbook retention rules.
+    This page aggregates these policies and allows pinpointing overrides.
+
+    Args:
+        request: Request object.
+        service: Settings service.
+        playbook_service: Playbook service for directory listing.
+        db: Database session.
+        current_user: Operator or admin.
+
+    Returns:
+        TemplateResponse for retention settings.
+    """
     settings = service.get_settings()
     
     # Get flat list of playbooks from tree
@@ -152,21 +227,46 @@ async def get_settings_retention(
 async def save_settings_general(
     request: Request,
     app_name: str = Form(...),
-    auth_enabled: str = Form(None),
+    auth_enabled: Optional[str] = Form(None),
     auth_username: str = Form("admin"),
-    auth_password: str = Form(None),
+    auth_password: Optional[str] = Form(None),
     timezone: str = Form("UTC"),
     theme: str = Form("light"),
-    logo: UploadFile = File(None),
-    favicon: UploadFile = File(None),
+    logo: Optional[UploadFile] = File(None),
+    favicon: Optional[UploadFile] = File(None),
+    playbooks_path: str = Form("/app/playbooks"),
     service: SettingsService = Depends(get_settings_service),
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Saves general application settings and updates user preferences.
+
+    Why: Handles file uploads for logos/favicons and ensures that the
+    application name and auth settings are persistently stored in the DB.
+
+    Args:
+        request: Request object.
+        app_name: Custom application title.
+        auth_enabled: Whether password auth is required.
+        auth_username: Default admin username.
+        auth_password: New password (if provided).
+        timezone: Global display timezone.
+        theme: UI theme (light/dark).
+        logo: Uploaded logo image.
+        favicon: Uploaded favicon image.
+        playbooks_path: Physical path to Ansible playbooks.
+        service: Settings service.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        Response with success toast.
+    """
     update_data = {
         "app_name": app_name,
         "auth_enabled": auth_enabled == "on",
-        "auth_username": auth_username
+        "auth_username": auth_username,
+        "playbooks_path": playbooks_path
     }
     
     if auth_password and auth_password.strip():
@@ -201,13 +301,51 @@ async def save_settings_general(
     trigger_toast(response, "Settings updated", "success")
     return response
 
+@router.post("/settings/validate-path")
+async def validate_playbooks_path(
+    request: Request,
+    playbooks_path: str = Form(...),
+    current_user: User = Depends(requires_role(["admin"]))
+) -> Response:
+    """Validates if a filesystem path is readable/writable for Sible.
+
+    Args:
+        request: Request object.
+        playbooks_path: Path string to check.
+        current_user: Admin access required.
+
+    Returns:
+        HTML fragment with success or error message.
+    """
+    error = validate_path(playbooks_path)
+    if error:
+        return HTMLResponse(
+            content=f'<div class="text-error text-xs mt-1 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> {error}</div>',
+            status_code=200
+        )
+    return HTMLResponse(
+        content='<div class="text-success text-xs mt-1 flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Path is valid and accessible</div>',
+        status_code=200
+    )
+
 @router.post("/settings/theme")
 async def update_theme(
     request: Request,
     theme: str = Form(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+) -> Response:
+    """Updates the UI theme preference for the current user.
+
+    Args:
+        request: Request object.
+        theme: New theme choice.
+        db: Database session.
+        current_user: Authenticated user.
+
+    Returns:
+        Response with success toast.
+    """
     user = db.get(User, current_user.id)
     if not user:
         return Response(status_code=404)
@@ -220,27 +358,33 @@ async def update_theme(
     trigger_toast(response, f"Theme changed to {theme}", "success")
     return response
 
-@router.get("/settings/secrets")
-async def get_settings_secrets(
-    request: Request,
-    service: SettingsService = Depends(get_settings_service),
-    current_user: User = Depends(requires_role(["admin"]))
-):
-    env_vars = service.get_env_vars()
-    return templates.TemplateResponse("partials/settings_secrets.html", {
-        "request": request,
-        "env_vars": env_vars
-    })
+# REDUNDANT ENDPOINT REMOVED (Handled in @router.get("/settings/secrets") above)
 
 @router.post("/settings/secrets")
 async def create_env_var(
     request: Request, 
     key: str = Form(...), 
     value: str = Form(...), 
-    is_secret: str = Form(None), # Deprecated, always True
+    is_secret: Optional[str] = Form(None),
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Creates a new environment variable or secret.
+
+    Why: Sible treats all manual variables as secrets (encrypted) by default
+    to ensure security during Ansible executions.
+
+    Args:
+        request: Request object.
+        key: Variable name (e.g., ANSIBLE_SSH_PASS).
+        value: Variable value.
+        is_secret: (Legacy) Boolean string.
+        service: Settings service.
+        current_user: Admin access required.
+
+    Returns:
+        Empty response with refresh trigger and success toast.
+    """
     # Normalize newlines and strip whitespace for secrets
     value = value.replace("\r\n", "\n").strip()
     service.create_env_var(key, value, True)
@@ -254,7 +398,17 @@ async def delete_env_var(
     env_id: int,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Deletes an environment variable.
+
+    Args:
+        env_id: PK of the variable.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        Success toast or 404.
+    """
     key = service.delete_env_var(env_id)
     if key:
         response = Response(status_code=200)
@@ -268,7 +422,18 @@ async def get_settings_secrets_edit(
     env_id: int,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Returns the edit form for a secret in a table row.
+
+    Args:
+        request: Request object.
+        env_id: variable PK.
+        service: Settings service.
+        current_user: Admin access required.
+
+    Returns:
+        Row fragment for editing.
+    """
     env_var = service.get_env_var(env_id)
     if not env_var:
         return Response(status_code=404)
@@ -282,11 +447,25 @@ async def update_env_var(
     request: Request, 
     env_id: int, 
     key: str = Form(...), 
-    value: str = Form(""), 
-    is_secret: str = Form(None), # Deprecated, always True
+    value: Optional[str] = Form(""), 
+    is_secret: Optional[str] = Form(None),
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Updates an existing environment variable.
+
+    Args:
+        request: Request object.
+        env_id: target PK.
+        key: New key name.
+        value: New value.
+        is_secret: (Legacy).
+        service: Settings service.
+        current_user: Admin access required.
+
+    Returns:
+        Updated table row fragment.
+    """
     # Normalize newlines and strip whitespace for secrets
     if value:
         value = value.replace("\r\n", "\n").strip()
@@ -306,7 +485,17 @@ async def get_secrets_list(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Returns the partial HTML list of secrets.
+
+    Args:
+        request: Request object.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        List fragment.
+    """
     env_vars = service.get_env_vars()
     return templates.TemplateResponse("partials/secrets_list.html", {
         "request": request,
@@ -317,49 +506,7 @@ async def get_secrets_list(
 
 
 
-@router.get("/settings/retention_tab")
-async def get_settings_retention_tab(
-    request: Request,
-    service: SettingsService = Depends(get_settings_service),
-    playbook_service: PlaybookService = Depends(get_playbook_service),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(requires_role(["admin", "operator"]))
-):
-    settings = service.get_settings()
-    
-    # Get flat list of playbooks from tree
-    def flatten_playbooks(items):
-        flat = []
-        for item in items:
-            if item["type"] == "file":
-                flat.append(item)
-            elif item["type"] == "directory":
-                flat.extend(flatten_playbooks(item["children"]))
-        return flat
-
-    playbooks_tree = playbook_service.list_playbooks()
-    all_playbooks = flatten_playbooks(playbooks_tree)
-    
-    # Get overrides
-    configs = {c.playbook_name: c for c in db.exec(select(PlaybookConfig)).all()}
-    
-    # Prepare data for template
-    pb_list = []
-    for pb in all_playbooks:
-        path = pb["path"]
-        conf = configs.get(path)
-        pb_list.append({
-            "name": path,
-            "retention": conf.retention_days if conf else None,
-            "max_runs": conf.max_runs if conf else None
-        })
-        
-    return templates.TemplateResponse("partials/settings_retention.html", {
-        "request": request,
-        "global_retention": settings.global_retention_days,
-        "global_max_runs": settings.global_max_runs,
-        "playbooks": pb_list
-    })
+# REDUNDANT ENDPOINT REMOVED (Handled in @router.get("/settings/retention") above)
 
 @router.post("/settings/retention")
 async def save_retention_settings(
@@ -367,7 +514,18 @@ async def save_retention_settings(
     service: SettingsService = Depends(get_settings_service),
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Saves global and per-playbook log retention policies.
+
+    Args:
+        request: Request containing dynamic form keys for overrides.
+        service: Settings service.
+        db: Database session.
+        current_user: Admin access required.
+
+    Returns:
+        Response with success toast.
+    """
     form = await request.form()
     global_retention = form.get("global_retention")
     global_max_runs = form.get("global_max_runs")
@@ -445,7 +603,19 @@ async def get_settings_notifications(
     service: SettingsService = Depends(get_settings_service),
     ps: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Renders the notifications configuration page.
+
+    Args:
+        request: Request object.
+        db: Database session.
+        service: Settings service.
+        ps: Playbook service.
+        current_user: Admin access required.
+
+    Returns:
+        TemplateResponse for notification settings.
+    """
     settings = service.get_settings()
     
     def flatten_playbooks(items):
@@ -482,7 +652,19 @@ async def save_notification_settings(
     service: SettingsService = Depends(get_settings_service),
     ps: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Saves notification triggers (Apprise) and per-playbook overrides.
+
+    Args:
+        request: Request containing dropdown/checkbox states.
+        db: Database session.
+        service: Settings service.
+        ps: Playbook service.
+        current_user: Admin access required.
+
+    Returns:
+        Response with success toast.
+    """
     form = await request.form()
     apprise_url = form.get("apprise_url")
     
@@ -555,7 +737,17 @@ async def test_notification(
     request: Request,
     service: NotificationService = Depends(get_notification_service),
     current_user: User = Depends(requires_role(["admin"]))
-):
+) -> Response:
+    """Triggers a test notification via the configured Apprise URL.
+
+    Args:
+        request: Request object.
+        service: Notification service.
+        current_user: Admin access required.
+
+    Returns:
+        Response with success/error toast.
+    """
     try:
         service.send_notification("This is a test notification from Sible!", title="Sible Test")
         response = Response(status_code=200)
@@ -564,43 +756,6 @@ async def test_notification(
         response = Response(status_code=200)
         trigger_toast(response, f"Failed to send: {str(e)}", "error")
     return response
-@router.get("/settings/gitops", response_class=HTMLResponse)
-async def settings_gitops_page(
-    request: Request, 
-    user: dict = Depends(get_current_user),
-    service: SettingsService = Depends(get_settings_service)
-):
-    requires_role("admin")(user)
-    settings = service.get_settings()
-    # Mask the key for display
-    display_settings = {
-        "git_repository_url": settings.git_repository_url,
-        "git_ssh_key": "********" if settings.git_ssh_key else ""
-    }
-    return await render_settings_page(request, "gitops", {"settings": display_settings})
-
-@router.post("/api/settings/gitops")
-async def update_gitops_settings(
-    request: Request,
-    git_repository_url: Optional[str] = Form(None),
-    git_ssh_key: Optional[str] = Form(None),
-    user: dict = Depends(get_current_user),
-    settings_service: SettingsService = Depends(get_settings_service)
-):
-    requires_role("admin")(user)
-    
-    update_data = {
-        "git_repository_url": git_repository_url
-    }
-
-    # Only update key if it's provided and not the mask
-    if git_ssh_key and git_ssh_key != "********":
-        git_ssh_key = git_ssh_key.replace("\r\n", "\n").strip()
-        update_data["git_ssh_key"] = git_ssh_key
-        
-    try:
-        settings_service.update_settings(update_data)
-        
-        return trigger_toast(Response(), "GitOps configuration saved.", "success")
-    except Exception as e:
-        return trigger_toast(Response(), f"Error saving settings: {e}", "error")
+@router.get("/settings/gitops", response_class=RedirectResponse)
+async def settings_gitops_page():
+    return RedirectResponse(url="/settings/general", status_code=301)

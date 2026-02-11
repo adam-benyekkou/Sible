@@ -13,11 +13,28 @@ router = APIRouter()
 async def get_history_page(
     request: Request,
     page: int = 1,
-    search: str = None,
-    status: str = None,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Renders the execution history page with filters and pagination.
+
+    Why: Provides a central audit trail for all playbook executions,
+    supporting fuzzy search and status-based filtering for easier
+    troubleshooting.
+
+    Args:
+        request: FastAPI request.
+        page: Page number for historical records.
+        search: Fuzzy search for playbook names.
+        status: Exact status filter (success, failed, running).
+        service: Injected HistoryService.
+        current_user: Authenticated user (watcher+).
+
+    Returns:
+        Full page or partial table template response.
+    """
     limit = 20
     offset = (page - 1) * limit
     runs, total_count, users = service.get_recent_runs(limit=limit, offset=offset, search=search, status=status)
@@ -61,7 +78,17 @@ async def delete_all_history(
     request: Request,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> Response:
+    """Bulk deletes history records matching the current UI filters.
+
+    Args:
+        request: Request containing query params or form data for filters.
+        service: Injected HistoryService.
+        current_user: Admin access required.
+
+    Returns:
+        Response with refresh trigger.
+    """
     # HTMX hx-delete might send params in query or body depending on hx-include behavior
     search = request.query_params.get("search")
     status = request.query_params.get("status")
@@ -85,7 +112,17 @@ async def delete_run(
     run_id: int,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> Response:
+    """Permanently deletes a single specific job run record.
+
+    Args:
+        run_id: Primary key of the job run.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        Response with status 200 or 404.
+    """
     success = service.delete_run(run_id)
     if success:
         return Response(status_code=200)
@@ -97,7 +134,18 @@ async def get_run_details(
     request: Request,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
-):
+) -> Response:
+    """Returns the log output and metadata for a specific run in a modal.
+
+    Args:
+        run_id: Target run ID.
+        request: Request object.
+        service: Injected service.
+        current_user: Authenticated user.
+
+    Returns:
+        Partial template for the log viewer modal.
+    """
     run = service.get_run(run_id)
     if not run: return Response("Run not found", status_code=404)
     return templates.TemplateResponse("partials/log_viewer_modal.html", {"request": request, "run": run})
@@ -144,7 +192,17 @@ async def delete_playbook_history(
     name: str,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))
-):
+) -> Response:
+    """Bulk deletes all history for a specific playbook.
+
+    Args:
+        name: Relative path to the playbook.
+        service: Injected service.
+        current_user: Admin access required.
+
+    Returns:
+        Response with toast and refresh trigger.
+    """
     service.delete_playbook_runs(name)
     response = Response(status_code=200)
     trigger_toast(response, f"History for {name} cleared", "success")
