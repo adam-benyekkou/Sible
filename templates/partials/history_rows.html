@@ -9,7 +9,8 @@
 
     <!-- Playbook Link -->
     <td style="padding: 12px; border-bottom: 1px solid var(--border-subtle);">
-        <a href="#" hx-get="/playbook/{{ run.playbook }}" hx-target="#main-content" hx-swap="innerHTML"
+        <a href="#"
+            onclick="event.preventDefault(); htmx.ajax('GET', '/playbooks/{{ run.playbook }}', {target: '#main-content', swap: 'innerHTML', values: {}, headers: {'HX-Request': 'true'}}); history.pushState({}, '', '/playbooks/{{ run.playbook }}');"
             style="color: var(--text-primary); text-decoration: none; font-weight: 500; font-size: 14px;"
             onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
             {{ run.playbook }}
