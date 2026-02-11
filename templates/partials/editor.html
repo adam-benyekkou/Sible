@@ -342,8 +342,8 @@
             // Theme Handling
             function updateTheme() {
                 const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                // Tomorrow Night Eighties is a reliable dark base which we override via CSS for Catppuccin
-                editor.setTheme(isDark ? "ace/theme/tomorrow_night_eighties" : "ace/theme/chrome");
+                // Catppuccin Mocha dark theme
+                editor.setTheme(isDark ? "ace/theme/catppuccin_mocha" : "ace/theme/chrome");
             }
             updateTheme();
 

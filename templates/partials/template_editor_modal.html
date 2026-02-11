@@ -106,7 +106,7 @@
                     if (!this.editor) {
                         this.editor = ace.edit("template-editor");
                         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                        this.editor.setTheme(isDark ? "ace/theme/tomorrow_night_eighties" : "ace/theme/chrome");
+                        this.editor.setTheme(isDark ? "ace/theme/catppuccin_mocha" : "ace/theme/chrome");
                         this.editor.session.setMode("ace/mode/yaml");
                         this.editor.setOptions({
                             fontSize: "14px",
