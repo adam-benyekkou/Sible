@@ -9,4 +9,6 @@
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     box-shadow: none;
+    margin: 0;
+    overflow: hidden;
 }
