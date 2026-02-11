@@ -9,7 +9,7 @@
         <div style="display: flex; align-items: center; min-width: 100px;">
             {% if playbook.last_job_id and (playbook.status == 'failed' or playbook.status == 'success') %}
             <button class="status-btn"
-                @click="htmx.ajax('GET', '/playbook/{{ playbook.name }}/logs', {target: '#modal-container', swap: 'innerHTML'})"
+                @click.stop="htmx.ajax('GET', '/history/run/{{ playbook.last_job_id }}', {target: 'body', swap: 'beforeend'})"
                 title="View Last Logs">
                 <span class="badge {{ 'badge-failed' if playbook.status == 'failed' else 'badge-success' }}">
                     {{ playbook.status }}

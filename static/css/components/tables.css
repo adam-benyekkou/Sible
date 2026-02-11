@@ -56,6 +56,7 @@ tr.hover:hover td {
 
 /* --- Playbook Row & Quick Actions --- */
 .playbook-row {
+    cursor: pointer;
     transition: background-color 0.2s;
 }
 
