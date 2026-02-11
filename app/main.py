@@ -40,6 +40,10 @@ async def lifespan(app: FastAPI):
     with Session(engine) as session:
         RunnerService(session).cleanup_started_jobs()
         
+        # Apply global retention policies on startup
+        from app.services.history import HistoryService
+        HistoryService(session).apply_retention_policies()
+        
         # Ensure Admin User
         auth_service = AuthService(session)
         if not auth_service.authenticate_user("admin", "admin"): # Check if default exists/works? No, check existence by username

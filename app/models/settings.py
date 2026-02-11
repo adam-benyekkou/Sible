@@ -3,8 +3,10 @@ from typing import Optional
 
 class PlaybookConfig(SQLModel, table=True):
     playbook_name: str = Field(primary_key=True)
-    retention_days: int = Field(default=30)
-    max_runs: Optional[int] = Field(default=50)
+    retention_days: Optional[int] = Field(default=None)
+    max_runs: Optional[int] = Field(default=None)
+    notify_on_success: Optional[bool] = Field(default=None)
+    notify_on_failure: Optional[bool] = Field(default=None)
 
 
 class AppSettings(SQLModel, table=True):

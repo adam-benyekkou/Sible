@@ -35,7 +35,9 @@
                     <th>Title</th>
                     <th>Category</th>
                     <th>Author</th>
-                    <th style="text-align: right;">Actions</th>
+                    <th
+                        style="padding: 12px 16px; text-align: right; width: 1%; white-space: nowrap; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--ds-gray-600); font-weight: 600;">
+                        Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -61,9 +63,9 @@
                             <span class="color-muted" style="font-size: 13px;"
                                 x-text="template.author || 'Unknown'"></span>
                         </td>
-                        <td style="text-align: right;">
-                            <div class="flex gap-2" x-show="window.currentUserRole === 'admin'"
-                                style="display: flex; justify-content: flex-end; gap: 4px;">
+                        <td style="padding: 12px 16px; text-align: right; width: 1%; white-space: nowrap;">
+                            <div x-show="window.currentUserRole === 'admin'"
+                                style="display: flex !important; flex-direction: row !important; justify-content: flex-end !important; gap: 8px !important; flex-wrap: nowrap !important; margin-right: -6px;">
                                 <button class="action-btn" @click="editTemplate(template)" title="Edit">
                                     <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
                                 </button>

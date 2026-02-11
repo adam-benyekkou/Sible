@@ -41,6 +41,9 @@
     --pico-form-element-border-color: var(--border-subtle);
     --pico-form-element-background-color: var(--surface-secondary);
     --pico-form-element-active-background-color: var(--surface-primary);
+    --pico-primary: var(--ds-gray-1000);
+    --pico-primary-hover: #333;
+    --pico-primary-inverse: #ffffff;
     --pico-primary-background: var(--text-primary);
     --pico-primary-border: var(--text-primary);
     --pico-primary-hover-background: #333;

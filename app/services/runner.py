@@ -266,7 +266,11 @@ class RunnerService:
             job.exit_code = process.returncode
             self.db.add(job); self.db.commit()
             
-            self.notification_service.send_playbook_notification(playbook_name, job.status)
+            # Apply retention policies
+            from app.services.history import HistoryService
+            HistoryService(self.db).apply_retention_policies(playbook_name)
+            
+            self.notification_service.send_playbook_notification(playbook_name, job)
             return {'success': process.returncode == 0, 'output': output, 'rc': process.returncode}
         except Exception as e:
             msg = str(e)
@@ -406,7 +410,12 @@ class RunnerService:
                     job.log_output = "\n".join(log_buffer)
                     job.exit_code = process.returncode
                     self.db.add(job); self.db.commit()
-                    self.notification_service.send_playbook_notification(playbook_name, job.status)
+                    
+                    # Apply retention policies
+                    from app.services.history import HistoryService
+                    HistoryService(self.db).apply_retention_policies(playbook_name)
+                    
+                    self.notification_service.send_playbook_notification(playbook_name, job)
             except Exception as e:
                 import traceback
                 traceback.print_exc()

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Response, Form, File, UploadFile, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from typing import Optional
 from app.templates import templates
 from app.core.config import get_settings
@@ -129,8 +129,10 @@ async def get_settings_retention(
         conf = configs.get(path)
         pb_list.append({
             "name": path,
-            "retention": conf.retention_days if conf else None,
-            "max_runs": conf.max_runs if conf else None
+            "retention": conf.retention_days if (conf and conf.retention_days is not None) else None,
+            "max_runs": conf.max_runs if (conf and conf.max_runs is not None) else None,
+            "notify_on_success": conf.notify_on_success if conf else None,
+            "notify_on_failure": conf.notify_on_failure if conf else None
         })
         
     context = {
@@ -143,18 +145,6 @@ async def get_settings_retention(
         return templates.TemplateResponse("partials/settings_retention.html", {"request": request, **context})
 
     return await render_settings_page(request, "retention", context)
-
-@router.get("/settings/notifications")
-async def get_settings_notifications(
-    request: Request,
-    service: SettingsService = Depends(get_settings_service),
-    current_user: User = Depends(requires_role(["admin"]))
-):
-    settings = service.get_settings()
-    context = {"settings": settings}
-    
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse("partials/settings_notifications.html", {"request": request, **context})
 
     return await render_settings_page(request, "notifications", context)
 
@@ -388,6 +378,7 @@ async def save_retention_settings(
     if update_data: service.update_settings(update_data)
     
     overrides = {}
+    
     for key, value in form.items():
         if key.startswith("retention_"):
             name = key.replace("retention_", "")
@@ -397,19 +388,50 @@ async def save_retention_settings(
             name = key.replace("max_runs_", "")
             if name not in overrides: overrides[name] = {}
             overrides[name]['max_runs'] = value
-            
-    for pb_name, values in overrides.items():
-        retention_val = values.get('retention')
-        max_runs_val = values.get('max_runs')
+        elif key.startswith("max_runs_"):
+            name = key.replace("max_runs_", "")
+            if name not in overrides: overrides[name] = {}
+            overrides[name]['max_runs'] = value
+
+    # We also need to handle cases where the keys are MISSING
+    def flatten_playbooks(items):
+        flat = []
+        for item in items:
+            if item["type"] == "file": flat.append(item["path"])
+            elif item["type"] == "directory": flat.extend(flatten_playbooks(item["children"]))
+        return flat
+
+    from app.dependencies import get_playbook_service
+    ps = get_playbook_service()
+    all_pb_names = flatten_playbooks(ps.list_playbooks())
+
+    for pb_name in all_pb_names:
+        p_data = overrides.get(pb_name, {})
+        retention_val = p_data.get('retention')
+        max_runs_val = p_data.get('max_runs')
+        
         p_conf = db.get(PlaybookConfig, pb_name)
-        if (retention_val and retention_val.strip()) or (max_runs_val and max_runs_val.strip()):
+        
+        # We save if ANY field is set (not None/Empty)
+        # Note: Retention and Max Runs are strings from the form
+        has_retention = retention_val and retention_val.strip()
+        has_max_runs = max_runs_val and max_runs_val.strip()
+        
+        if has_retention or has_max_runs:
             if not p_conf: p_conf = PlaybookConfig(playbook_name=pb_name)
-            if retention_val and retention_val.strip(): p_conf.retention_days = int(retention_val)
-            if max_runs_val and max_runs_val.strip(): p_conf.max_runs = int(max_runs_val)
+            
+            if has_retention: p_conf.retention_days = int(retention_val)
+            else: p_conf.retention_days = None
+            
+            if has_max_runs: p_conf.max_runs = int(max_runs_val)
             else: p_conf.max_runs = None
+            
             db.add(p_conf)
         else:
-                if p_conf: db.delete(p_conf)
+            # If it has notification overrides, we don't delete it here
+            # We only delete if it exists AND everything is empty
+            if p_conf and not (p_conf.notify_on_success is not None or p_conf.notify_on_failure is not None):
+                db.delete(p_conf)
     db.commit()
     
     response = Response(status_code=200)
@@ -419,31 +441,110 @@ async def save_retention_settings(
 @router.get("/settings/notifications")
 async def get_settings_notifications(
     request: Request,
+    db: Session = Depends(get_db),
     service: SettingsService = Depends(get_settings_service),
+    ps: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
 ):
     settings = service.get_settings()
-    return templates.TemplateResponse("partials/settings_notifications.html", {
-        "request": request,
-        "settings": settings
-    })
+    
+    def flatten_playbooks(items):
+        flat = []
+        for item in items:
+            if item["type"] == "file": flat.append(item["path"])
+            elif item["type"] == "directory": flat.extend(flatten_playbooks(item["children"]))
+        return flat
+    
+    pb_names = flatten_playbooks(ps.list_playbooks())
+    playbooks_data = []
+    for name in pb_names:
+        config = db.get(PlaybookConfig, name)
+        playbooks_data.append({
+            "name": name,
+            "notify_on_success": config.notify_on_success if config else None,
+            "notify_on_failure": config.notify_on_failure if config else None,
+        })
+    
+    context = {
+        "settings": settings,
+        "playbooks": playbooks_data
+    }
+    
+    if request.headers.get("HX-Request"):
+        return templates.TemplateResponse("partials/settings_notifications.html", {"request": request, **context})
+
+    return await render_settings_page(request, "notifications", context)
 
 @router.post("/settings/notifications")
 async def save_notification_settings(
     request: Request,
+    db: Session = Depends(get_db),
     service: SettingsService = Depends(get_settings_service),
+    ps: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
 ):
     form = await request.form()
     apprise_url = form.get("apprise_url")
-    notify_on_success = form.get("notify_on_success") == "on"
-    notify_on_failure = form.get("notify_on_failure") == "on"
+    
+    # Global triggers (now dropdowns)
+    global_success = form.get("notify_on_success") == "true"
+    global_failure = form.get("notify_on_failure") == "true"
     
     service.update_settings({
         "apprise_url": apprise_url,
-        "notify_on_success": notify_on_success,
-        "notify_on_failure": notify_on_failure
+        "notify_on_success": global_success,
+        "notify_on_failure": global_failure
     })
+    
+    # Per-playbook overrides
+    overrides = {}
+    for key, value in form.items():
+        if key.startswith("notify_success_"):
+            name = key.replace("notify_success_", "")
+            if name not in overrides: overrides[name] = {}
+            val = value.strip()
+            overrides[name]['notify_on_success'] = True if val == "true" else False if val == "false" else None
+        elif key.startswith("notify_failure_"):
+            name = key.replace("notify_failure_", "")
+            if name not in overrides: overrides[name] = {}
+            val = value.strip()
+            overrides[name]['notify_on_failure'] = True if val == "true" else False if val == "false" else None
+
+    # Sync overrides to database
+    def flatten_playbooks(items):
+        flat = []
+        for item in items:
+            if item["type"] == "file": flat.append(item["path"])
+            elif item["type"] == "directory": flat.extend(flatten_playbooks(item["children"]))
+        return flat
+        
+    all_pb_names = flatten_playbooks(ps.list_playbooks())
+    
+    for pb_name in all_pb_names:
+        p_data = overrides.get(pb_name, {})
+        notify_success = p_data.get('notify_on_success')
+        notify_failure = p_data.get('notify_on_failure')
+        
+        p_conf = db.get(PlaybookConfig, pb_name)
+        
+        # We only care about notification values here
+        if notify_success is not None or notify_failure is not None:
+            if not p_conf: p_conf = PlaybookConfig(playbook_name=pb_name)
+            p_conf.notify_on_success = notify_success
+            p_conf.notify_on_failure = notify_failure
+            db.add(p_conf)
+        else:
+            # If notification overrides are gone, but retention exists, don't delete!
+            if p_conf:
+                p_conf.notify_on_success = None
+                p_conf.notify_on_failure = None
+                # Only delete if NOTHING is left
+                if p_conf.retention_days is None and p_conf.max_runs is None:
+                    db.delete(p_conf)
+                else:
+                    db.add(p_conf)
+                    
+    db.commit()
     
     response = Response(status_code=200)
     trigger_toast(response, "Notification settings saved", "success")

@@ -1,0 +1,1561 @@
+/* SIBLE DESIGN SYSTEM (Geist Light / Clear Aesthetic) */
+
+/* Alpine.js cloak - hide elements until Alpine initializes */
+[x-cloak] {
+    display: none !important;
+}
+
+:root {
+    /* --- GLOBAL VARIABLES (Geist Light) --- */
+    --ds-background-100: #ffffff;
+    --ds-background-200: #fafafa;
+    --ds-gray-100: #f5f5f5;
+    --ds-gray-200: #eaeaea;
+    --ds-gray-alpha-400: rgba(0, 0, 0, 0.05);
+
+    /* Text Colors */
+    --ds-gray-1000: #000000;
+    --ds-gray-900: #171717;
+    --ds-gray-600: #666666;
+
+    /* Semantic Mappings */
+    --surface-primary: var(--ds-background-100);
+    --surface-secondary: var(--ds-background-200);
+    --border-subtle: var(--ds-gray-200);
+    --text-primary: var(--ds-gray-1000);
+    --text-secondary: var(--ds-gray-900);
+    --text-muted: var(--ds-gray-600);
+
+    /* Sible Identity (Status) */
+    --status-success: #10b981;
+    --status-error: #ee0000;
+    --status-warning: #f5a623;
+    --sible-success: var(--status-success);
+    --sible-error: var(--status-error);
+    --sible-warning: var(--status-warning);
+
+    /* Pico Overrides */
+    --pico-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --pico-background-color: var(--surface-primary);
+    --pico-color: var(--text-primary);
+    --pico-border-radius: 6px;
+    --pico-form-element-border-color: var(--border-subtle);
+    --pico-form-element-background-color: var(--surface-secondary);
+    --pico-form-element-active-background-color: var(--surface-primary);
+    --pico-primary-background: var(--text-primary);
+    --pico-primary-border: var(--text-primary);
+    --pico-primary-hover-background: #333;
+    --pico-primary-inverse: #ffffff;
+    --pico-primary-focus: rgba(0, 0, 0, 0.05);
+    --pico-selection-background: rgba(0, 0, 0, 0.1);
+    --pico-selection-color: inherit;
+    --pico-muted-color: var(--text-muted);
+    --pico-line-height: 1.5;
+    --pico-font-size: 100%;
+
+    /* Layout Tokens */
+    --sidebar-width: 250px;
+    --header-height: 64px;
+    --spacing-md: 24px;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: var(--pico-font-family);
+    background-color: var(--ds-background-100);
+    color: var(--pico-color);
+    letter-spacing: -0.02em;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Helper for full height */
+.h-100 {
+    height: 100% !important;
+}
+
+.flex-col {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.flex-row {
+    display: flex !important;
+    flex-direction: row !important;
+}
+
+.flex-1 {
+    flex: 1 !important;
+    min-height: 0;
+}
+
+/* Main Content Scroll Area - Prevents layout shift */
+#main-content {
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    color: var(--ds-gray-1000);
+}
+
+/* Links */
+a {
+    color: var(--ds-gray-1000);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+a:hover {
+    color: #000;
+    text-decoration: none;
+}
+
+/* --- COMPONENTS --- */
+
+/* Segmented Control Removed */
+
+/* Group Badge */
+.group-badge {
+    background: #f5f5f5;
+    color: #444444;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+/* Buttons */
+button {
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: none !important;
+    outline: none !important;
+    letter-spacing: -0.02em;
+}
+
+button:focus,
+button:active,
+[role="group"] button:focus,
+[role="group"] button:active,
+[role="group"] :focus,
+.nav-item:focus,
+.nav-item:active,
+.playbook-item:focus,
+.playbook-item:active,
+a:focus,
+a:active {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Aggressive Global Reset for Blue Highlights */
+*:focus,
+*:active,
+*:focus-visible {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+button.primary:focus {
+    background: #000;
+    border-color: #000;
+}
+
+[role="group"] button.primary:active,
+button.primary:active {
+    background: #444 !important;
+    border-color: #444 !important;
+}
+
+[role="group"] button.secondary:active,
+button.secondary:active {
+    background: var(--ds-gray-200) !important;
+    border-color: var(--ds-gray-200) !important;
+}
+
+/* Primary Button (Black Solid) */
+button.primary,
+button[type="submit"],
+.btn-new {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+}
+
+button.primary:hover,
+button[type="submit"]:hover,
+.btn-new:hover {
+    background: #333;
+    border-color: #333;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* Aggressive fix for all button icons */
+button.primary svg,
+button.primary [data-lucide],
+button.primary .lucide,
+button.primary i {
+    stroke: currentColor !important;
+    color: inherit !important;
+}
+
+[data-theme='dark'] button.primary {
+    color: #000000 !important;
+    /* Explicit Black */
+}
+
+/* Force ALL elements inside the SVG to Black and improve visibility */
+[data-theme='dark'] button.primary svg,
+[data-theme='dark'] button.primary [data-lucide],
+[data-theme='dark'] button.primary .lucide {
+    stroke: #000000 !important;
+    stroke-width: 2.5px !important;
+    /* Slightly thicker for maximum visibility */
+}
+
+[data-theme='dark'] button.primary svg *,
+[data-theme='dark'] button.primary [data-lucide] *,
+[data-theme='dark'] button.primary .lucide * {
+    stroke: #000000 !important;
+}
+
+/* Secondary Button (White with Border) */
+button.secondary,
+button.outline {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    color: #000000;
+}
+
+button.secondary:hover,
+button.outline:hover {
+    background: #fafafa;
+    border-color: #000;
+    color: #000;
+}
+
+/* Danger Button */
+button.danger {
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    color: var(--sible-error);
+}
+
+button.danger:hover {
+    background: #fff5f5;
+    border-color: var(--sible-error);
+}
+
+/* Icon Button (Square) */
+button.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #eaeaea;
+    background: #ffffff;
+    color: var(--ds-gray-1000);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.btn-icon:hover {
+    background: #fafafa;
+    border-color: #000;
+    color: #000;
+}
+
+/* Specific trigger highlight */
+.terminal-trigger:hover i,
+.terminal-trigger:active i {
+    stroke: #000 !important;
+    stroke-width: 2.5px;
+    /* Make the <_ pop more */
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+    background: var(--ds-background-200) !important;
+    border: 1px solid #eaeaea !important;
+    color: #000000 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease;
+}
+
+input[type="file"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Force Light Grey on Autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px var(--ds-background-200) inset !important;
+    -webkit-text-fill-color: var(--ds-gray-1000) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+input[type="file"]::file-selector-button {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-right: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    vertical-align: middle;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: #333;
+    border-color: #333;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #000 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Cards & Containers */
+.card,
+.server-card {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+
+/* Sidebar */
+aside {
+    width: var(--sidebar-width);
+    background: #fafafa;
+    border-right: 1px solid #eaeaea;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+/* Sidebar Folder - Force Black on Open/Focus */
+details>summary {
+    list-style: none;
+    outline: none;
+    cursor: pointer;
+    color: var(--ds-gray-600);
+    transition: color 0.15s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 6px 0;
+    user-select: none;
+}
+
+details[open]>summary,
+details>summary:focus,
+details>summary:active,
+details>summary:hover,
+.folder-title:hover {
+    color: var(--ds-gray-1000) !important;
+    outline: none !important;
+}
+
+details>summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Nav Items (Vertical List) */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    color: #666666;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 2px;
+    border-left: 2px solid transparent;
+    transition: all 0.15s ease;
+    border-radius: 0;
+}
+
+.nav-item:hover {
+    color: #000000;
+    background: #fafafa;
+    /* Subtle background on hover only */
+}
+
+.nav-item.active {
+    color: #000000;
+    border-left-color: #000000;
+    background: transparent;
+}
+
+.nav-item i {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2px;
+}
+
+.sidebar-btn-container {
+    margin-bottom: 8px;
+    /* Matches list item spacing */
+}
+
+.sidebar-folder summary {
+    list-style: none;
+    /* Hide default arrow */
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--ds-gray-600);
+    /* Muted by default */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.sidebar-folder summary:hover,
+.sidebar-folder[open]>summary {
+    color: var(--ds-gray-1000);
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.sidebar-folder summary::-webkit-details-marker {
+    display: none;
+}
+
+.playbook-item {
+    display: flex;
+    /* Ensure flex for alignment */
+    align-items: center;
+    /* Vertically align dot and text */
+    padding: 6px 12px;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: var(--ds-gray-600);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+    gap: 8px;
+    /* Space between dot and text */
+}
+
+.playbook-item:hover {
+    color: var(--ds-gray-1000);
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.playbook-item.active {
+    background: #ffffff;
+    color: #000000;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* Slight lift for active item */
+    border: 1px solid #eaeaea;
+}
+
+/* Content Area */
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--ds-background-100);
+}
+
+header.main-header {
+    height: var(--header-height);
+    border-bottom: 1px solid var(--ds-gray-200);
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+}
+
+/* Tables (Inventory) */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    color: var(--ds-gray-600);
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ds-gray-200);
+}
+
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #fafafa;
+    /* Very subtle row separator */
+    color: var(--ds-gray-1000);
+    font-size: 0.875rem;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr.hover:hover td {
+    background: #fafafa;
+}
+
+/* Status Dots */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--ds-gray-200);
+    display: inline-block;
+}
+
+.status-dot.success,
+.status-dot.online {
+    background-color: var(--sible-success);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.status-dot.failed,
+.status-dot.offline {
+    background-color: var(--sible-error);
+}
+
+.status-dot.running {
+    background-color: #0070f3;
+    animation: pulse 1.5s infinite;
+}
+
+/* Editor & Terminal Layout */
+.content-area {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.editor-pane {
+    flex: 6;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: var(--surface-primary);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+/* Reusable Editor Wrapper */
+.code-editor-wrapper {
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    background: var(--surface-primary);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+/* Geist Clear Ace Editor Theme Overrides */
+.ace_editor {
+    font-family: 'Geist Mono', 'SF Mono', monospace !important;
+}
+
+.ace_gutter {
+    background: var(--surface-secondary) !important;
+    border-right: 1px solid var(--border-subtle) !important;
+    color: var(--text-muted) !important;
+}
+
+.ace_marker-layer .ace_active-line {
+    background: var(--surface-secondary) !important;
+}
+
+.ace_marker-layer .ace_selection {
+    background: #d7eaff !important;
+}
+
+#editor {
+    height: 100%;
+    width: 100%;
+}
+
+.terminal-pane {
+    flex: 4;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--surface-secondary);
+    display: flex;
+    flex-direction: column;
+    box-shadow: none;
+}
+
+/* #terminal-container is now handled at bottom of file for specific log styling */
+
+/* Utilities */
+.w-100 {
+    width: 100%;
+}
+
+.d-none {
+    display: none !important;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+
+.color-muted,
+.text-muted {
+    color: var(--text-muted);
+}
+
+/* --- UTILITY CLASSES FOR THEME CONSISTENCY --- */
+/* --- BADGE SYSTEM --- */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    min-width: 70px;
+    height: 24px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.badge-success,
+.status-success-badge {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--status-success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-failed,
+.status-failed-badge {
+    background-color: rgba(238, 0, 0, 0.1);
+    color: var(--status-error);
+    border: 1px solid rgba(238, 0, 0, 0.2);
+}
+
+.badge-secondary {
+    background-color: var(--ds-gray-alpha-400);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+}
+
+.status-btn {
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    padding: 0;
+    display: inline-flex;
+    text-decoration: none;
+}
+
+.status-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .status-btn:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .badge-success,
+[data-theme='dark'] .status-success-badge {
+    background-color: rgba(166, 227, 161, 0.1);
+    border-color: rgba(166, 227, 161, 0.2);
+}
+
+[data-theme='dark'] .badge-failed,
+[data-theme='dark'] .status-failed-badge {
+    background-color: rgba(243, 139, 168, 0.1);
+    border-color: rgba(243, 139, 168, 0.2);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.bg-secondary {
+    background: var(--surface-secondary) !important;
+}
+
+.border-subtle {
+    border: 1px solid var(--border-subtle) !important;
+}
+
+.font-sm {
+    font-size: 0.85rem;
+}
+
+
+/* Toast */
+#toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.toast {
+    background: #fff;
+    border: 1px solid #eaeaea;
+    color: #000;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 300px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Toggle Button */
+#mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 60;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: var(--ds-gray-1000);
+    cursor: pointer;
+}
+
+#mobile-toggle:hover {
+    background: #fafafa;
+    border-color: #000;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+    #mobile-toggle {
+        display: flex;
+    }
+
+    .content-area {
+        flex-direction: column;
+    }
+
+    aside {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+        box-shadow: 10px 0 20px rgba(0, 0, 0, 0.05);
+        /* Soft shadow for mobile drawer */
+    }
+
+    aside.mobile-open {
+        transform: translateX(0);
+    }
+
+    /* Adjust main content padding/margin if needed when sidebar is hidden */
+    main {
+        padding-top: 4rem;
+        /* Space for the toggle button */
+    }
+}
+
+/* Lucide Icon adjustments */
+.lucide {
+    width: 16px;
+    height: 16px;
+    stroke-width: 1.5px;
+    /* Default stroke is currentColor, which will be black for primary, gray for muted */
+}
+
+/* --- ANSIBLE LOG STYLING (Geist) --- */
+/* Base container for logs */
+#terminal-container {
+    padding: 16px;
+    font-family: 'Geist Mono', 'SF Mono', 'Menlo', monospace;
+    /* Geist Mono favored */
+    font-size: 13px;
+    color: var(--ds-gray-1000);
+    /* Pure Black #000000 */
+    background-color: #ffffff;
+    /* White background */
+    overflow-y: auto;
+    height: 100%;
+    box-shadow: none;
+    /* No inner shadows */
+    border-radius: 0;
+}
+
+/* Log Levels */
+.log-meta {
+    color: #000000;
+    /* Standard/Info: Pure Black */
+    font-weight: 600;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid var(--ds-gray-200);
+    padding-bottom: 2px;
+}
+
+.log-success {
+    color: #10B981;
+    /* Success (OK): Vercel Green */
+}
+
+.log-changed {
+    color: #F59E0B;
+    /* Changed: Amber/Orange */
+}
+
+.log-error {
+    color: #EE0000;
+    /* Failed/Error: Vercel Red */
+    font-weight: 500;
+}
+
+.log-debug {
+    color: #666666;
+    /* Skipped/Muted: Muted Gray */
+}
+
+/* SSH Terminal Container specific overrides if needed */
+#ssh-terminal-container {
+    background: #ffffff !important;
+}
+
+/* --- GEIST CUSTOM SELECT --- */
+.geist-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.geist-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 32px;
+    padding: 0 8px 0 12px;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #000;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.geist-select-trigger:hover {
+    border-color: #888;
+}
+
+.geist-select-trigger:focus,
+.geist-select-trigger[aria-expanded="true"] {
+    border-color: #000000;
+    outline: none;
+}
+
+.geist-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    min-width: 220px;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 4px;
+    display: none;
+    /* Hidden by default, toggled by Alpine */
+}
+
+.geist-select-header {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #888;
+    padding: 8px 12px 4px;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.geist-select-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #000;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+
+.geist-select-option:hover {
+    background: #fafafa;
+}
+
+.geist-select-option.selected {
+    font-weight: 500;
+    background: #fafafa;
+}
+
+.geist-select-option .check-icon {
+    margin-left: auto;
+    opacity: 0;
+    stroke: #000;
+}
+
+.geist-select-option.selected .check-icon {
+    opacity: 1;
+}
+
+/* Dark Theme Overrides */
+[data-theme='dark'] {
+    /* Mocha Palette Refined Overrides */
+    --ds-background-100: #1e1e2e;
+    --ds-background-200: #181825;
+    --ds-gray-100: #11111b;
+    --ds-gray-200: #313244;
+    --ds-gray-alpha-400: rgba(255, 255, 255, 0.05);
+
+    --ds-gray-1000: #cdd6f4;
+    --ds-gray-900: #bac2de;
+    --ds-gray-600: #7f849c;
+
+    /* Semantic Overrides */
+    --surface-primary: var(--ds-background-100);
+    --surface-secondary: var(--ds-background-200);
+    --border-subtle: var(--ds-gray-200);
+    --text-primary: var(--ds-gray-1000);
+    --text-secondary: var(--ds-gray-900);
+    --text-muted: var(--ds-gray-600);
+
+    /* Pico Overrides */
+    --pico-background-color: var(--surface-primary);
+    --pico-card-background-color: var(--surface-secondary);
+    --pico-form-element-background-color: var(--ds-gray-100);
+    --pico-color: var(--text-primary);
+    --pico-h1-color: #f5c2e7;
+    --pico-h2-color: #f5c2e7;
+    --pico-h3-color: #f5c2e7;
+    --pico-muted-color: var(--text-muted);
+    --pico-primary: #b4befe;
+    --pico-primary-hover: #89b4fa;
+    --pico-primary-inverse: #11111b;
+    --pico-border-color: var(--border-subtle);
+    --pico-form-element-border-color: var(--border-subtle);
+    --pico-form-element-active-border-color: #b4befe;
+
+    /* Status Overrides */
+    --status-success: #a6e3a1;
+    --status-error: #f38ba8;
+    --status-changed: #fab387;
+    --sible-success: var(--status-success);
+    --sible-error: var(--status-error);
+    --sible-warning: var(--status-changed);
+}
+
+
+/* Specific overrides for dark theme elements */
+[data-theme='dark'] .group-badge {
+    background: #313244;
+    /* Mocha Surface0 */
+    color: #cdd6f4;
+    /* Mocha Text */
+}
+
+[data-theme='dark'] button.primary {
+    background: var(--pico-primary);
+    border-color: var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-theme='dark'] button.primary:hover {
+    background: var(--pico-primary-hover);
+    border-color: var(--pico-primary-hover);
+}
+
+[data-theme='dark'] button.secondary {
+    background: transparent;
+    border: 1px solid var(--pico-border-color);
+    color: var(--pico-primary);
+}
+
+[data-theme='dark'] button.secondary:hover {
+    background: rgba(180, 190, 254, 0.1);
+    /* Light Lavender hover */
+    border-color: var(--pico-primary-hover);
+}
+
+[data-theme='dark'] aside {
+    background: #181825;
+    /* Mocha Mantle */
+    border-right: 1px solid #313244;
+    /* Mocha Surface0 */
+}
+
+[data-theme='dark'] .nav-item {
+    color: var(--pico-muted-color);
+}
+
+[data-theme='dark'] .nav-item:hover,
+[data-theme='dark'] .nav-item.active {
+    color: var(--pico-color);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .nav-item.active {
+    border-left-color: var(--pico-primary);
+}
+
+[data-theme='dark'] details>summary,
+[data-theme='dark'] .sidebar-folder[open]>summary {
+    color: var(--pico-color) !important;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .playbook-item {
+    color: var(--pico-muted-color);
+}
+
+[data-theme='dark'] .playbook-item:hover,
+[data-theme='dark'] .playbook-item.active {
+    color: var(--pico-color);
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] .playbook-item.active {
+    box-shadow: 0 0 0 2px var(--pico-primary);
+}
+
+[data-theme='dark'] main {
+    background: var(--pico-background-color);
+}
+
+[data-theme='dark'] header.main-header {
+    background: rgba(255, 255, 255, 0.05);
+    /* Slight transparency */
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] th {
+    color: var(--pico-muted-color);
+    border-bottom: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] td {
+    border-bottom: 1px solid var(--pico-border-color);
+    color: var(--pico-color);
+}
+
+[data-theme='dark'] tr:last-child td {
+    border-bottom: none;
+}
+
+[data-theme='dark'] tr.hover:hover td {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] .status-dot {
+    background-color: var(--pico-muted-color);
+}
+
+[data-theme='dark'] .status-dot.success,
+[data-theme='dark'] .status-dot.online {
+    background-color: var(--status-success);
+    box-shadow: 0 0 0 1px rgba(166, 227, 161, 0.2);
+    /* Mocha Green */
+}
+
+[data-theme='dark'] .status-dot.failed,
+[data-theme='dark'] .status-dot.offline {
+    background-color: var(--status-error);
+}
+
+[data-theme='dark'] .status-dot.running {
+    background-color: var(--pico-primary-hover);
+    /* Mocha Blue */
+}
+
+[data-theme='dark'] .content-area {
+    background: var(--pico-card-background-color);
+}
+
+[data-theme='dark'] .editor-pane,
+[data-theme='dark'] .code-editor-wrapper {
+    background: var(--pico-card-background-color);
+    border: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] .ace_gutter {
+    background: #181825 !important;
+    /* Mocha Mantle */
+    border-right: 1px solid #313244 !important;
+    /* Mocha Surface0 */
+    color: var(--pico-muted-color) !important;
+}
+
+[data-theme='dark'] .ace_marker-layer .ace_active-line {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme='dark'] .ace_marker-layer .ace_selection {
+    background: rgba(180, 190, 254, 0.2) !important;
+    /* Light Lavender selection */
+}
+
+[data-theme='dark'] .terminal-pane {
+    background: #181825 !important;
+    /* Mocha Mantle */
+    border: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] #terminal-container {
+    background: #181825 !important;
+    /* Mocha Mantle */
+    color: var(--pico-color);
+    border: none;
+}
+
+[data-theme='dark'] .log-meta {
+    color: var(--pico-primary);
+    /* Mocha Lavender */
+    border-bottom: 1px solid var(--pico-border-color);
+}
+
+[data-theme='dark'] .log-success {
+    color: var(--status-success);
+    /* Mocha Green */
+}
+
+[data-theme='dark'] .log-changed {
+    color: var(--status-changed);
+    /* Mocha Peach */
+}
+
+[data-theme='dark'] .log-error {
+    color: var(--status-error);
+    /* Mocha Red */
+}
+
+[data-theme='dark'] .log-debug {
+    color: var(--pico-muted-color);
+    /* Mocha Overlay1 */
+}
+
+[data-theme='dark'] #ssh-terminal-container {
+    background: #181825 !important;
+    /* Mocha Mantle */
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+    background: var(--pico-form-element-background-color) !important;
+    border: 1px solid var(--pico-form-element-border-color) !important;
+    color: var(--pico-color) !important;
+}
+
+[data-theme='dark'] input:focus,
+[data-theme='dark'] select:focus,
+[data-theme='dark'] textarea:focus {
+    border-color: var(--pico-primary) !important;
+}
+
+[data-theme='dark'] input:-webkit-autofill,
+[data-theme='dark'] textarea:-webkit-autofill,
+[data-theme='dark'] select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px var(--pico-form-element-background-color) inset !important;
+    -webkit-text-fill-color: var(--pico-color) !important;
+}
+
+/* Make file inputs transparent and borderless to let the button float */
+input[type="file"],
+[data-theme='dark'] input[type="file"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+[data-theme='dark'] input[type="file"]::file-selector-button {
+    background: var(--pico-primary);
+    border: 1px solid var(--pico-primary);
+    color: var(--pico-primary-inverse);
+}
+
+[data-theme='dark'] input[type="file"]::file-selector-button:hover {
+    background: var(--pico-primary-hover);
+    border-color: var(--pico-primary-hover);
+}
+
+[data-theme='dark'] .toast {
+    background: #181825;
+    /* Mocha Mantle */
+    border: 1px solid var(--pico-border-color);
+    color: var(--pico-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] #mobile-toggle {
+    background: #181825;
+    /* Mocha Mantle */
+    border: 1px solid var(--pico-border-color);
+    color: var(--pico-color);
+}
+
+[data-theme='dark'] #mobile-toggle:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Catppuccin Mocha Ace Editor Overrides */
+[data-theme='dark'] .ace_editor {
+    background-color: #1e1e2e !important;
+    color: #cdd6f4 !important;
+}
+
+[data-theme='dark'] .ace_gutter {
+    background-color: #181825 !important;
+    color: #bac2de66 !important;
+    border-right: 1px solid #313244 !important;
+}
+
+[data-theme='dark'] .ace_active-line {
+    background-color: #313244 !important;
+}
+
+[data-theme='dark'] .ace_gutter-active-line {
+    background-color: #313244 !important;
+    color: #cba6f7 !important;
+}
+
+[data-theme='dark'] .ace_marker-layer .ace_selection {
+    background-color: rgba(137, 180, 250, 0.2) !important;
+}
+
+[data-theme='dark'] .ace_cursor {
+    color: #f5e0dc !important;
+}
+
+/* Syntax Highlighting Tweaks for Tomorrow Night Eighties base */
+[data-theme='dark'] .ace_keyword {
+    color: #cba6f7 !important;
+}
+
+[data-theme='dark'] .ace_string {
+    color: #a6e3a1 !important;
+}
+
+[data-theme='dark'] .ace_variable {
+    color: #f5e0dc !important;
+}
+
+[data-theme='dark'] .ace_comment {
+    color: #6c7086 !important;
+}
+
+[data-theme='dark'] .ace_function {
+    color: #89b4fa !important;
+}
+
+[data-theme='dark'] .ace_numeric {
+    color: #fab387 !important;
+}
+
+[data-theme='dark'] .ace_constant {
+    color: #fab387 !important;
+}
+
+[data-theme='dark'] .ace_operator {
+    color: #89dceb !important;
+}
+
+/* --- END OF STYLES --- */
+
+/* --- MODAL SYSTEM --- */
+.sible-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Force flex display when shown by Alpine */
+.sible-modal-backdrop:not([style*="display: none"]) {
+    display: flex !important;
+}
+
+/* Use display: contents to let the article be centered by the backdrop's flexbox */
+.sible-modal-backdrop dialog {
+    display: contents !important;
+    position: static !important;
+}
+
+/* Ensure the modal content is properly styled as the flex child */
+.sible-modal-backdrop article.modal-content {
+    position: relative !important;
+    margin: 0 !important;
+    width: auto !important;
+    min-width: 500px;
+    max-width: 90vw;
+    z-index: 10000;
+}
+
+/* SSH Modal specific centering wrapper - Reverted to original name */
+.ssh-modal-wrapper {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Global dialog overrides removed to avoid breaking other components */
+
+article.modal-content {
+    background: var(--surface-primary);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+    animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+
+/* --- UTILITY CLASSES --- */
+/* (Styles moved or consolidated above) */
+
+.server-card-transition {
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.server-card-transition:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.color-muted,
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.bg-secondary {
+    background: var(--surface-secondary) !important;
+}
+
+.border-subtle {
+    border: 1px solid var(--border-subtle) !important;
+}
+
+.font-sm {
+    font-size: 0.85rem;
+}
+
+.font-bold {
+    font-weight: 600 !important;
+}
+
+.text-success {
+    color: var(--sible-success) !important;
+}
+
+.text-error {
+    color: var(--sible-error) !important;
+}
+
+
+
+/* Quick Action Menu & Playbook Row Hover */
+.playbook-row {
+    transition: background-color 0.2s;
+}
+
+.playbook-row:hover {
+    background-color: var(--surface-secondary) !important;
+}
+
+.playbook-row:hover .quick-actions {
+    opacity: 1 !important;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: var(--surface-primary);
+    color: var(--text-primary);
+}
+
+
+.action-btn i {
+    width: 14px;
+    height: 14px;
+}
+
+/* Status Text Links */
+.status-text-failed:hover {
+    color: var(--sible-error) !important;
+}
+
+
+@keyframes modalScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

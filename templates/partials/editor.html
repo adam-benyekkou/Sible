@@ -145,9 +145,7 @@
 
                 <footer
                     style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1rem; border-top: none; padding: 0;">
-                    <button
-                        style="background-color: var(--text-primary); color: var(--surface-primary); border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500;"
-                        @click='
+                    <button class="primary" style="padding: 10px 20px; border-radius: 6px;" @click='
                             let extraVars = "{}";
                             const dynInput = document.querySelector("#schedule-variables-container input[name=extra_vars]");
                             if (dynInput && dynInput.value) { extraVars = dynInput.value; }
@@ -223,8 +221,7 @@
                 </div>
 
                 <footer style="margin-top: 2rem; padding: 0; border-top: none;">
-                    <button type="submit"
-                        style="background-color: var(--text-primary); color: var(--surface-primary); border: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; width: 100%;">
+                    <button type="submit" class="primary" style="width: 100%; height: 42px;">
                         <i data-lucide="rocket" style="width: 14px; height: 14px; margin-right: 6px;"></i>
                         <span x-text="launchMode === 'check' ? 'Launch Dry Run' : 'Launch Playbook'"></span>
                     </button>
