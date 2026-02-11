@@ -1285,7 +1285,8 @@ tr.hover:hover td {
 }
 
 /* Make file inputs transparent and borderless to let the button float */
-input[type="file"] {
+input[type="file"],
+[data-theme='dark'] input[type="file"] {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
