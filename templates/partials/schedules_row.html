@@ -4,36 +4,40 @@
     </td>
     <td>
         <div class="flex flex-col">
-            <code style="font-size: 12px; background: none; padding: 0; color: #000;">{{ job.cron }}</code>
+            <code
+                style="font-size: 12px; background: none; padding: 0; color: var(--text-primary);">{{ job.cron }}</code>
         </div>
     </td>
+
     <td>
         {% if job.target and job.target != 'all' %}
         <span class="badge secondary"
-            style="background: var(--ds-background-200); color: var(--ds-gray-900); border: 1px solid var(--ds-gray-300);">
+            style="background: var(--surface-secondary); color: var(--text-primary); border: 1px solid var(--border-subtle);">
             <i data-lucide="{{ 'users' if job.target in groups else 'server' }}"
                 style="width: 12px; height: 12px; margin-right: 4px;"></i>
             {{ job.target }}
         </span>
         {% else %}
         <span class="badge secondary"
-            style="background: transparent; color: var(--ds-gray-500); border: 1px dashed var(--ds-gray-300);">
+            style="background: transparent; color: var(--text-muted); border: 1px dashed var(--border-subtle);">
             <i data-lucide="globe" style="width: 12px; height: 12px; margin-right: 4px;"></i>
             All
         </span>
+
         {% endif %}
     </td>
     <td>
         {% if request.state.user.role == 'admin' %}
-        <button class="status-btn {{ 'active' if job.status == 'running' else 'paused' }}"
+        <button class="status-btn"
             hx-post="/schedule/{{ job.id }}/{% if job.status == 'running' %}pause{% else %}resume{% endif %}"
             hx-target="#job-row-{{ job.id }}" hx-swap="outerHTML">
-            <span class="status-dot"></span>
-            {{ 'Active' if job.status == 'running' else 'Paused' }}
+            <span class="badge {{ 'badge-success' if job.status == 'running' else 'badge-secondary' }}">
+                {{ 'Active' if job.status == 'running' else 'Paused' }}
+            </span>
         </button>
         {% else %}
-        <span class="badge {{ 'success' if job.status == 'running' else 'secondary' }}">
-            {{ job.status|title }}
+        <span class="badge {{ 'badge-success' if job.status == 'running' else 'badge-secondary' }}">
+            {{ 'Active' if job.status == 'running' else 'Paused' }}
         </span>
         {% endif %}
     </td>
@@ -46,55 +50,17 @@
     <td style="text-align: right;">
         <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
             {% if request.state.user.role == 'admin' %}
-            <button class="btn-icon" hx-get="/partials/schedules/row/{{ job.id }}/edit"
+            <button class="action-btn" hx-get="/partials/schedules/row/{{ job.id }}/edit"
                 hx-target="#schedule-edit-form-container" hx-swap="innerHTML" hx-trigger="click"
                 @click="showEditModal = true" title="Edit Schedule">
                 <i data-lucide="edit-3" style="width: 14px; height: 14px; stroke-width: 1.5;"></i>
             </button>
-            <button class="btn-icon" style="color: var(--sible-error);" hx-delete="/schedule/{{ job.id }}"
+            <button class="action-btn" style="color: var(--sible-error);" hx-delete="/schedule/{{ job.id }}"
                 hx-confirm="Delete scheduled job?" hx-target="closest tr" hx-swap="outerHTML" title="Delete Schedule">
                 <i data-lucide="trash-2" style="width: 14px; height: 14px; stroke-width: 1.5;"></i>
             </button>
             {% endif %}
         </div>
+
     </td>
 </tr>
-
-<style>
-    .status-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        border: 1px solid var(--ds-gray-200);
-        background: white;
-        color: var(--ds-gray-900);
-        height: 24px;
-    }
-
-    .status-btn:hover {
-        background: var(--ds-gray-100);
-    }
-
-    .status-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background-color: var(--ds-gray-400);
-    }
-
-    .status-btn.active .status-dot {
-        background-color: var(--sible-success);
-        box-shadow: 0 0 0 1.5px rgba(16, 185, 129, 0.25);
-    }
-
-    .status-btn.paused {
-        background: var(--ds-gray-100);
-        color: var(--ds-gray-600);
-    }
-</style>

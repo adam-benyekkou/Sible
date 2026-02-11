@@ -3,6 +3,7 @@
     x-data="{ isFav: {{ 'true' if playbook.is_favorited else 'false' }} }" @click="isFav = !isFav"
     style="background: transparent; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none; margin-left: auto; margin-right: auto;">
     <i data-lucide="heart"
-        :style="'width: 16px; height: 16px; transition: all 0.2s; ' + (isFav ? 'fill: #ee0000; color: #ee0000;' : 'fill: transparent; color: #999;')"
+        :style="'width: 16px; height: 16px; transition: all 0.2s; ' + (isFav ? 'fill: var(--sible-error); color: var(--sible-error);' : 'fill: transparent; color: var(--text-muted);')"
         :class="{ 'heart-active': isFav }"></i>
+
 </button>

@@ -95,9 +95,11 @@
         <article style="max-width: 600px; width: 100%;">
             <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
                 <h5 style="margin: 0;">Schedule Playbook</h5>
-                <button type="button" aria-label="Close" @click="showScheduleModal = false"
-                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ds-gray-600); line-height: 1; padding: 0;">&times;</button>
+                <button type="button" aria-label="Close" @click="showScheduleModal = false" class="action-btn">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
             </header>
+
             <section style="padding: 1rem 0;">
                 <p style="color: var(--ds-gray-600); font-size: 14px; margin-bottom: 1.5rem;">
                     Run <strong>{{ name }}</strong> automatically using a Cron expression.
@@ -105,20 +107,20 @@
 
                 <label style="margin-bottom: 2rem;">
                     <span
-                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Cron
+                        style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px;">Cron
                         Expression</span>
                     <input type="text" x-model="cronExpression" placeholder="* * * * *" required
-                        style="margin-bottom: 8px;">
-                    <div style="color: var(--ds-gray-500); font-size: 11px;">
+                        style="margin-bottom: 8px; background: var(--surface-primary); color: var(--text-primary); border: 1px solid var(--border-subtle);">
+                    <div style="color: var(--text-muted); font-size: 11px;">
                         Example: <code
-                            style="background: var(--ds-background-200); padding: 2px 4px; border-radius: 4px; font-size: 10px;">0 3 * * *</code>
+                            style="background: var(--surface-secondary); padding: 2px 4px; border-radius: 4px; font-size: 10px; color: var(--text-primary);">0 3 * * *</code>
                         (Every day at 3am)
                     </div>
                 </label>
 
                 <div style="margin-bottom: 2rem;" x-init="lucide.createIcons()">
                     <span
-                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 8px;">Target</span>
+                        style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Target</span>
                     <div x-data="{ initialTargets: scheduleTargets.join(',') }"
                         @targets-changed="scheduleTargets = $event.detail">
                         {% with picker_id='schedule-target-picker' %}
@@ -130,10 +132,10 @@
                 <!-- Dynamic Variables -->
                 <div style="margin-bottom: 1.5rem;">
                     <span
-                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 8px;">Variables</span>
+                        style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Variables</span>
                     <div id="schedule-variables-container" hx-get="/api/playbook-vars/{{ name | safe }}"
                         hx-trigger="load, intersect once" hx-swap="innerHTML">
-                        <div style="padding: 10px 0; color: #888; font-size: 0.9em;">
+                        <div style="padding: 10px 0; color: var(--text-muted); font-size: 0.9em;">
                             <span aria-busy="true" style="font-size: 0.9em;">Loading variables...</span>
                         </div>
                     </div>
@@ -144,7 +146,7 @@
                 <footer
                     style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 1rem; border-top: none; padding: 0;">
                     <button
-                        style="background-color: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500;"
+                        style="background-color: var(--text-primary); color: var(--surface-primary); border: none; padding: 10px 20px; border-radius: 6px; font-weight: 500;"
                         @click='
                             let extraVars = "{}";
                             const dynInput = document.querySelector("#schedule-variables-container input[name=extra_vars]");
@@ -168,15 +170,17 @@
             <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: none;">
                 <h5 x-text="launchMode === 'check' ? 'Dry Run: ' + '{{ name }}' : 'Launch: ' + '{{ name }}'"
                     style="margin: 0;"></h5>
-                <button type="button" aria-label="Close" @click="showLaunchModal = false"
-                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ds-gray-600); line-height: 1; padding: 0;">&times;</button>
+                <button type="button" aria-label="Close" @click="showLaunchModal = false" class="action-btn">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
             </header>
+
 
             <form
                 @submit.prevent=" let vals={ limit: Array.isArray(launchParams.limit) ? launchParams.limit.join(',') : launchParams.limit, tags: launchParams.tags, verbosity: launchParams.verbosity, extra_vars: getExtraVarsJson() }; htmx.ajax('POST', (launchMode==='check' ? '/check/{{ name | safe }}' : '/run/{{ name | safe }}' ), { values: vals, target: '#terminal-container', swap: 'innerHTML' }); showLaunchModal=false; ">
                 <div style="margin-bottom: 2rem; position: relative; overflow: visible;">
                     <label
-                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target
+                        style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px;">Target
                         Hosts / Groups</label>
                     <div x-data="{ initialTargets: launchParams.limit.join(',') }"
                         @targets-changed="launchParams.limit = $event.detail">
@@ -220,7 +224,7 @@
 
                 <footer style="margin-top: 2rem; padding: 0; border-top: none;">
                     <button type="submit"
-                        style="background-color: #000; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; width: 100%;">
+                        style="background-color: var(--text-primary); color: var(--surface-primary); border: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; width: 100%;">
                         <i data-lucide="rocket" style="width: 14px; height: 14px; margin-right: 6px;"></i>
                         <span x-text="launchMode === 'check' ? 'Launch Dry Run' : 'Launch Playbook'"></span>
                     </button>
@@ -232,7 +236,7 @@
         <div class="header-left">
             <h4>{{ name }}</h4>
         </div>
-        <div class="actions">
+        <div class="actions flex-row">
             <!-- Edit (Toggle) - Admin Only -->
             {% if request.state.user and request.state.user.role == 'admin' %}
             <button class="secondary" x-show="!isEditing" @click="isEditing = true; window.startEditing()"
@@ -271,52 +275,55 @@
 
             <!-- Schedule (Modal Trigger) - Admin & Operator -->
             {% if request.state.user and request.state.user.role == 'admin' %}
-            <button class="btn-icon" @click="showScheduleModal = true; fetchTargets()" title="Schedule">
+            <button class="action-btn" @click="showScheduleModal = true; fetchTargets()" title="Schedule">
                 <i data-lucide="calendar"></i>
             </button>
             {% endif %}
 
+
             <!-- History - All -->
-            <button class="btn-icon" hx-get="/history/{{ name | safe }}" hx-target="body" hx-swap="beforeend"
+            <button class="action-btn" hx-get="/history/{{ name | safe }}" hx-target="body" hx-swap="beforeend"
                 title="View History">
                 <i data-lucide="clock"></i>
             </button>
 
+
             <!-- Install Roles - Admin Only -->
             {% if request.state.user and request.state.user.role == 'admin' %}
-            <button class="btn-icon" hx-post="/playbooks/{{ name | safe }}/install-requirements"
+            <button class="action-btn" hx-post="/playbooks/{{ name | safe }}/install-requirements"
                 hx-target="#terminal-container" hx-swap="innerHTML" title="Install Ansible Galaxy dependencies">
                 <i data-lucide="download"></i>
             </button>
 
+
             <!-- Delete Button -->
-            <button class="btn-icon" style="color: var(--sible-error); border-color: var(--ds-gray-200);"
-                hx-delete="/playbooks/{{ name | safe }}"
+            <button class="action-btn" style="color: var(--sible-error);" hx-delete="/playbooks/{{ name | safe }}"
                 hx-confirm="Are you sure you want to delete {{ name }}? This cannot be undone."
                 hx-target="#main-content" title="Delete Playbook">
                 <i data-lucide="trash-2"></i>
             </button>
+
             {% endif %}
         </div>
     </header>
 
-    <div class="content-area">
+    <div class="content-area flex-1">
         <!-- Editor Pane -->
-        <div class="editor-pane code-editor-wrapper" style="border: none; box-shadow: none;">
+        <div class="editor-pane flex-1">
             <div id="editor"></div>
         </div>
 
         <!-- Terminal Pane -->
-        <div class="terminal-pane">
-            <div id="terminal-container" style="background-color: #ffffff; color: #000000;">
-                <div class="waiting-text" style="color: #666;">Waiting for execution...</div>
+        <div class="terminal-pane flex-1">
+            <div id="terminal-container">
+                <div class="waiting-text" style="color: var(--text-muted);">Waiting for execution...</div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Hidden Form for HTMX/JS to store state -->
-<textarea id="hidden-content" class="d-none">{{ content }}</textarea>
+<textarea id="hidden-content" style="display: none;">{{ content }}</textarea>
 
 <script>
     (function () {
@@ -327,102 +334,102 @@
             // Prevent double init
             if (editorDiv.classList.contains("ace_editor")) return;
 
-            // Wait for x-show / DOM paint
-            setTimeout(function () {
-                var editor = ace.edit("editor");
-                editor.setTheme("ace/theme/chrome");
-                editor.session.setMode("ace/mode/yaml");
+            var editor = ace.edit("editor");
+            editor.session.setMode("ace/mode/yaml");
+            editor.setReadOnly(true);
+            editor.setShowPrintMargin(false);
 
-                // Default to Read Only
-                editor.setReadOnly(true);
+            // Theme Handling
+            function updateTheme() {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                // Tomorrow Night Eighties is a reliable dark base which we override via CSS for Catppuccin
+                editor.setTheme(isDark ? "ace/theme/tomorrow_night_eighties" : "ace/theme/chrome");
+            }
+            updateTheme();
 
-                // Internal state for undo
-                var originalContent = "";
-
-                // Global Helpers
-                window.setEditorReadOnly = function (readonly) {
-                    editor.setReadOnly(readonly);
-                    if (!readonly) editor.focus();
-                };
-
-                window.startEditing = function () {
-                    originalContent = editor.getValue();
-                    editor.setReadOnly(false);
-                    editor.focus();
-                };
-
-                window.discardEditing = function () {
-                    editor.setValue(originalContent, -1);
-                    editor.setReadOnly(true);
-                };
-
-                // Ensure text is visible
-                editor.setShowPrintMargin(false);
-
-                var contentArea = document.getElementById("hidden-content");
-                if (contentArea) {
-                    editor.setValue(contentArea.value, -1);
-                }
-
-                // Force resize
-                editor.resize();
-
-                // Save handler
-                window.saveFile = function () {
-                    var content = editor.getValue();
-                    htmx.ajax('POST', '/playbooks/{{ name }}', {
-                        values: { content: content },
-                        swap: 'none'
-                    }).then(() => {
-                        // Update original content to the new saved state
-                        originalContent = content;
-                    });
-                };
-
-                // Linting Logic
-                function debounce(func, wait) {
-                    let timeout;
-                    return function (...args) {
-                        clearTimeout(timeout);
-                        timeout = setTimeout(() => func.apply(this, args), wait);
-                    };
-                }
-
-                function lintCode() {
-                    var content = editor.getValue();
-                    // Use URLSearchParams for form data
-                    var formData = new URLSearchParams();
-                    formData.append('content', content);
-
-                    fetch('/lint', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => response.json())
-                        .then(annotations => {
-                            editor.getSession().setAnnotations(annotations);
-                        })
-                        .catch(e => console.error("Lint error", e));
-                }
-
-                var debouncedLint = debounce(lintCode, 1000);
-
-                editor.session.on('change', function () {
-                    if (!editor.getReadOnly()) {
-                        debouncedLint();
+            // React to theme changes
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                        updateTheme();
                     }
                 });
+            });
+            observer.observe(document.documentElement, { attributes: true });
 
-                // Initial lint on edit start
-                var _startEditing = window.startEditing;
-                window.startEditing = function () {
-                    _startEditing();
-                    lintCode();
-                };
-            }, 100);
+            // Internal state for undo
+            var originalContent = "";
+
+            // Global Helpers
+            window.setEditorReadOnly = function (readonly) {
+                editor.setReadOnly(readonly);
+                if (!readonly) editor.focus();
+            };
+
+            window.startEditing = function () {
+                originalContent = editor.getValue();
+                editor.setReadOnly(false);
+                editor.focus();
+            };
+
+            window.discardEditing = function () {
+                editor.setValue(originalContent, -1);
+                editor.setReadOnly(true);
+            };
+
+            var contentArea = document.getElementById("hidden-content");
+            if (contentArea) {
+                editor.setValue(contentArea.value, -1);
+            }
+
+            // Force resize
+            editor.resize();
+
+            // Save handler
+            window.saveFile = function () {
+                var content = editor.getValue();
+                htmx.ajax('POST', '/playbooks/{{ name }}', {
+                    values: { content: content },
+                    swap: 'none'
+                }).then(() => {
+                    originalContent = content;
+                });
+            };
+
+            // Linting Logic
+            function lintCode() {
+                var content = editor.getValue();
+                var formData = new URLSearchParams();
+                formData.append('content', content);
+
+                fetch('/lint', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(annotations => {
+                        editor.getSession().setAnnotations(annotations);
+                    })
+                    .catch(e => console.error("Lint error", e));
+            }
+
+            editor.session.on('change', function () {
+                if (!editor.getReadOnly()) {
+                    // Simple debounce
+                    clearTimeout(editor.lintTimeout);
+                    editor.lintTimeout = setTimeout(lintCode, 1000);
+                }
+            });
+
+            // Initial lint on edit start
+            var _startEditing = window.startEditing;
+            window.startEditing = function () {
+                _startEditing();
+                lintCode();
+            };
         }
 
-        // Run Init
-        initAce();
+        // Run Init - Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(initAce);
     })();
 </script>

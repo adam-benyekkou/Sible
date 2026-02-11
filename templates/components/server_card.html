@@ -1,27 +1,28 @@
-<div class="server-card"
-    style="padding: 1.5rem; position: relative; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);"
-    onmouseover="this.style.borderColor='#666'" onmouseout="this.style.borderColor='var(--ds-gray-200)'"
-    hx-get="/api/inventory/host/{{ host.id }}/card" hx-trigger="every 60s" hx-swap="outerHTML">
+<article class="server-card card server-card-transition" hx-get="/api/inventory/host/{{ host.id }}/card"
+    hx-trigger="every 60s" hx-swap="outerHTML">
 
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
         <div>
-            <h4 style="margin: 0; font-size: 1rem; color: var(--ds-gray-1000); font-weight: 600;">{{ host.alias }}</h4>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary); font-weight: 600;">{{ host.alias }}</h4>
             <code
-                style="font-size: 0.8rem; color: var(--ds-gray-600); background: transparent; padding: 0;">{{ host.hostname }}</code>
+                style="font-size: 0.8rem; color: var(--text-muted); background: transparent; padding: 0;">{{ host.hostname }}</code>
         </div>
 
         <div style="display: flex; align-items: center; gap: 6px;">
             <span class="status-dot {{ host.status if host.status in ['online', 'offline'] else '' }}"
                 style="width: 8px; height: 8px;"></span>
             <span
-                style="font-size: 0.75rem; text-transform: capitalize; font-weight: 500; color: {{ 'var(--sible-success)' if host.status == 'online' else 'var(--sible-error)' if host.status == 'offline' else 'var(--ds-gray-600)' }};">
+                class="font-sm font-bold {{ 'text-success' if host.status == 'online' else 'text-error' if host.status == 'offline' else 'color-muted' }}"
+                style="text-transform: capitalize;">
+
                 {{ host.status|default('unknown') }}
             </span>
+
         </div>
     </div>
 
     <div
-        style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--ds-gray-600); margin-top: 0.5rem;">
+        style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
         <span style="display: flex; align-items: center; gap: 6px;">
             <i data-lucide="user" style="width: 14px; height: 14px;"></i> {{ host.ssh_user }}
         </span>
@@ -34,18 +35,20 @@
 
     <!-- Actions (Terminal) -->
     <div
-        style="margin-top: 1rem; border-top: 1px solid var(--ds-gray-200); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        style="margin-top: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
         <span
-            style="background: var(--ds-gray-100); color: var(--ds-gray-600); border: 1px solid var(--ds-gray-200); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; width: fit-content;">
+            style="background: var(--surface-secondary); color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; width: fit-content;">
+
             {{ host.group_name }}
         </span>
 
         {% if request.state.user.role == 'admin' %}
-        <button class="btn-icon terminal-trigger" title="Open Terminal"
+        <button class="action-btn terminal-trigger" title="Open Terminal"
             onclick="openTerminal('{{ host.id }}', '{{ host.alias }}')">
             <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
         </button>
         {% endif %}
+
     </div>
 
-</div>
+    </div>

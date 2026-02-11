@@ -3,20 +3,20 @@
 
     <template x-for="toast in toasts" :key="toast.id">
         <div class="toast" :class="'toast-' + toast.level"
-            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 6px; background: white; border: 1px solid var(--ds-gray-200); box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 1rem; min-width: 300px;">
+            style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 6px; background: var(--surface-primary); border: 1px solid var(--border-subtle); box-shadow: 0 4px 12px rgba(0,0,0,0.2); margin-top: 1rem; min-width: 300px;">
             <span class="toast-icon">
                 <template x-if="toast.level === 'success'">
-                    <i data-lucide="check-circle" style="color: var(--sible-success);"></i>
+                    <i data-lucide="check-circle" style="color: var(--status-success);"></i>
                 </template>
                 <template x-if="toast.level === 'error'">
-                    <i data-lucide="alert-circle" style="color: var(--sible-error);"></i>
+                    <i data-lucide="alert-circle" style="color: var(--status-error);"></i>
                 </template>
                 <template x-if="toast.level === 'info'">
-                    <i data-lucide="info" style="color: var(--ds-gray-1000);"></i>
+                    <i data-lucide="info" style="color: var(--text-muted);"></i>
                 </template>
             </span>
             <span class="toast-message" x-text="toast.message"
-                style="color: var(--ds-gray-1000); font-size: 0.875rem;"></span>
+                style="color: var(--text-primary); font-size: 0.875rem;"></span>
         </div>
     </template>
 </div>

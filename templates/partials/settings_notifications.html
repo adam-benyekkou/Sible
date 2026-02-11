@@ -6,23 +6,27 @@
     <form hx-post="/settings/notifications" hx-swap="none">
 
         <label>
-            <strong>Apprise URL</strong>
-            <small>Supports Discord, Slack, Telegram, Teams, Email, and <a href="https://github.com/caronc/apprise"
-                    target="_blank">more</a>.</small>
-            <input type="password" name="apprise_url" placeholder="discord://webhook_id/token"
-                value="{{ apprise_url }}">
+            <strong style="color: var(--text-primary);">Apprise URL</strong>
+            <small style="color: var(--text-muted);">Supports Discord, Slack, Telegram, Teams, Email, and <a
+                    href="https://github.com/caronc/apprise" target="_blank">more</a>.</small>
+            <input type="password" name="apprise_url" placeholder="discord://webhook_id/token" value="{{ apprise_url }}"
+                style="background: var(--surface-secondary); color: var(--text-primary); border: 1px solid var(--border-subtle);">
         </label>
 
-        <fieldset style="margin-top: 1.5rem;">
-            <legend><strong>Triggers</strong></legend>
-            <label>
+
+        <fieldset
+            style="margin-top: 1.5rem; border: 1px solid var(--border-subtle); padding: 1rem; border-radius: 8px;">
+            <legend><strong style="color: var(--text-primary);">Triggers</strong></legend>
+            <label style="color: var(--text-primary);">
                 <input type="checkbox" name="notify_on_failure" {% if notify_on_failure %}checked{% endif %}>
                 Notify on Failure 🔴
             </label>
-            <label>
+
+            <label style="color: var(--text-primary);">
                 <input type="checkbox" name="notify_on_success" {% if notify_on_success %}checked{% endif %}>
                 Notify on Success 🟢
             </label>
+
         </fieldset>
 
         {% if request.state.user.role == 'admin' %}

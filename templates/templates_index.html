@@ -11,10 +11,11 @@
     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 4px; align-items: center;">
         <div style="position: relative; height: 32px;">
             <i data-lucide="search"
-                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ds-gray-600); pointer-events: none;"></i>
+                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;"></i>
             <input type="text" x-model="searchQuery" placeholder="Search templates..."
-                style="padding-left: 32px; height: 32px; width: 220px; font-size: 13px; margin: 0; border-radius: 6px; box-shadow: none !important;">
+                style="padding-left: 32px; height: 32px; width: 220px; font-size: 13px; margin: 0; border-radius: 6px; box-shadow: none !important; background: var(--surface-secondary); border: 1px solid var(--border-subtle); color: var(--text-primary);">
         </div>
+
         {% if request.state.user and request.state.user.role == 'admin' %}
         <button class="primary" @click="openNewTemplateModal()"
             style="height: 32px; padding: 0 12px; font-size: 13px; display: inline-flex; align-items: center;">
@@ -42,16 +43,19 @@
                     <tr class="hover">
                         <td>
                             <strong x-text="template.title"></strong>
-                            <div style="color: #666; font-size: 13px; margin-top: 2px;" x-text="template.description">
+                            <div style="color: var(--text-muted); font-size: 13px; margin-top: 2px;"
+                                x-text="template.description">
                             </div>
                         </td>
+
                         <td>
                             <template x-if="template.category">
                                 <span class="group-badge" x-text="template.category"></span>
                             </template>
                             <template x-if="!template.category">
-                                <span style="color: var(--ds-gray-600); font-size: 12px;">Uncategorized</span>
+                                <span style="color: var(--text-muted); font-size: 12px;">Uncategorized</span>
                             </template>
+
                         </td>
                         <td>
                             <span class="color-muted" style="font-size: 13px;"
@@ -60,15 +64,16 @@
                         <td style="text-align: right;">
                             <div class="flex gap-2" x-show="window.currentUserRole === 'admin'"
                                 style="display: flex; justify-content: flex-end; gap: 4px;">
-                                <button class="btn-icon" @click="editTemplate(template)" title="Edit">
+                                <button class="action-btn" @click="editTemplate(template)" title="Edit">
                                     <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
                                 </button>
-                                <button class="btn-icon" style="color: var(--sible-error);"
+                                <button class="action-btn" style="color: var(--sible-error);"
                                     @click="deleteTemplate(template)" title="Delete">
                                     <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                                 </button>
                             </div>
                         </td>
+
                     </tr>
                 </template>
                 <tr x-show="filteredTemplates.length === 0">
@@ -84,17 +89,20 @@
     <div class="card"
         style="margin-top: 16px; padding: 12px; display: flex; justify-content: space-between; align-items: center;"
         x-show="pagination.totalPages > 1">
-        <div style="font-size: 13px; color: #666;">
-            Page <span style="font-weight: 500; color: #000;" x-text="pagination.page"></span> of <span
+        <div style="font-size: 13px; color: var(--text-muted);">
+            Page <span style="font-weight: 500; color: var(--text-primary);" x-text="pagination.page"></span> of <span
                 x-text="pagination.totalPages"></span>
-            <span style="color: #999; margin-left: 8px;">(<span x-text="pagination.totalCount"></span> templates)</span>
+            <span style="color: var(--text-muted); margin-left: 8px;">(<span x-text="pagination.totalCount"></span>
+                templates)</span>
         </div>
+
         <div style="display: flex; gap: 8px;">
             <button class="secondary" @click="fetchTemplates(pagination.page - 1)" :disabled="!pagination.hasPrev"
-                style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; cursor: pointer;">Previous</button>
+                style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--surface-primary); color: var(--text-primary); cursor: pointer; margin-bottom: 0;">Previous</button>
             <button class="secondary" @click="fetchTemplates(pagination.page + 1)" :disabled="!pagination.hasNext"
-                style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; cursor: pointer;">Next</button>
+                style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--surface-primary); color: var(--text-primary); cursor: pointer; margin-bottom: 0;">Next</button>
         </div>
+
     </div>
 
 </div>

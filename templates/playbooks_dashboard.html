@@ -5,8 +5,9 @@
     search: ''
 }" @playbooks-refresh.window="htmx.trigger('#playbooks-table-body', 'refresh')">
     <div style="margin-bottom: 32px;">
-        <h1 style="margin-bottom: 4px; font-weight: 600; color: #000;">Infrastructure Registry</h1>
-        <p style="margin-bottom: 0; color: #666666; font-size: 14px;">A centralized registry of all infrastructure
+        <h1 style="margin-bottom: 4px; font-weight: 600;">Infrastructure Registry</h1>
+        <p style="margin-bottom: 0; color: var(--text-muted); font-size: 14px;">A centralized registry of all
+            infrastructure
             playbooks and automated workflows.</p>
     </div>
 
@@ -14,24 +15,25 @@
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
         <div style="position: relative; flex: 1; max-width: 400px;">
             <i data-lucide="search"
-                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #999; pointer-events: none;"></i>
+                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;"></i>
             <input type="text" name="search" id="playbook-search" placeholder="Search registry..."
                 hx-get="/api/playbooks/list" hx-trigger="keyup changed delay:500ms, playbooks-refresh from:body"
                 hx-target="#playbooks-table-container"
-                style="padding-left: 36px; height: 40px; width: 100%; font-size: 14px; margin: 0; border: 1px solid #EAEAEA; border-radius: 6px; background: #FFF; color: #000;">
+                style="padding-left: 36px; height: 40px; width: 100%; font-size: 14px; margin: 0; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--surface-secondary); color: var(--text-primary);">
         </div>
 
         <div style="display: flex; gap: 8px;">
             {% if request.state.user.role == 'admin' %}
-            <button class="secondary" @click="$dispatch('open-new-playbook-modal')"
-                style="height: 40px; padding: 0 16px; font-size: 14px; display: inline-flex; align-items: center; border-radius: 6px; width: auto; margin: 0; background: #000; color: #FFF; border: none; font-weight: 500;">
-                <i data-lucide="plus" style="width: 16px; height: 16px; margin-right: 8px;"></i> New Playbook
+            <button class="primary" @click="$dispatch('open-new-playbook-modal')"
+                style="height: 40px; padding: 0 16px; font-size: 14px; display: inline-flex; align-items: center; width: auto; margin: 0;">
+                <i data-lucide="plus" style="width: 14px; height: 14px; margin-right: 8px;"></i> New Playbook
             </button>
             {% endif %}
         </div>
     </div>
 
-    <div style="border: 1px solid #EAEAEA; border-radius: 8px; background: #FFF; overflow: hidden;">
+    <div
+        style="border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface-primary); overflow: hidden;">
         <div id="playbooks-table-container">
             {% include "partials/playbooks_table.html" %}
         </div>
@@ -45,49 +47,17 @@
     }
 
     tr.playbook-row:hover td {
-        background-color: #FAFAFA !important;
-    }
-
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 8px;
-    }
-
-    .status-success {
-        background-color: #0070f3;
-    }
-
-    .status-failed {
-        background-color: #ee0000;
-    }
-
-    .status-pending {
-        background-color: #F5A623;
-    }
-
-    .status-never_run {
-        background-color: #A1A1A1;
-    }
-
-    .status-text-never_run {
-        color: #A1A1A1 !important;
-    }
-
-    .status-text-success {
-        color: #0070f3 !important;
+        background-color: var(--surface-secondary) !important;
     }
 
     .breadcrumb-link {
-        color: #999;
+        color: var(--text-muted);
         text-decoration: none;
         transition: color 0.2s;
     }
 
     .breadcrumb-link:hover {
-        color: #000;
+        color: var(--text-primary);
         text-decoration: underline;
     }
 </style>

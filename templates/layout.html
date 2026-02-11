@@ -29,9 +29,12 @@
 
     <!-- Ace Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/theme-chrome.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/theme-tomorrow_night_eighties.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/mode-yaml.js"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/css/style.css?v=9">
+    <link rel="stylesheet" href="/static/css/style.css?v=10">
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -135,8 +138,8 @@
     </aside>
 
     <!-- Main Content -->
-    <main>
-        <div id="main-content" class="h-100">
+    <main class="flex-col flex-1">
+        <div id="main-content" class="flex-1">
             {% block content %}
             <div class="container text-center flex-col-center h-100 color-muted">
                 <p>Select a playbook to get started</p>

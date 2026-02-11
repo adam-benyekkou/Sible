@@ -6,17 +6,20 @@
     <form hx-post="/settings/retention" hx-swap="none">
         <div class="grid">
             <label>
-                <strong>Global Retention (Days)</strong>
+                <strong style="color: var(--text-primary);">Global Retention (Days)</strong>
                 <input type="number" name="global_retention" value="{{ global_retention }}" required min="1"
-                    {{ 'disabled' if request.state.user.role=='watcher' }}>
+                    {{ 'disabled' if request.state.user.role=='watcher' }}
+                    style="background: var(--surface-secondary); color: var(--text-primary); border: 1px solid var(--border-subtle);">
             </label>
             <label>
-                <strong>Global Max Logs (Count)</strong>
-                <small>Keep at most this many logs per playbook.</small>
+                <strong style="color: var(--text-primary);">Global Max Logs (Count)</strong>
+                <small style="color: var(--text-muted);">Keep at most this many logs per playbook.</small>
                 <input type="number" name="global_max_runs" value="{{ global_max_runs }}" required min="1" {{ 'disabled'
-                    if request.state.user.role=='watcher' }}>
+                    if request.state.user.role=='watcher' }}
+                    style="background: var(--surface-secondary); color: var(--text-primary); border: 1px solid var(--border-subtle);">
             </label>
         </div>
+
 
         <hr>
 
@@ -33,20 +36,23 @@
             </thead>
             <tbody>
                 {% for pb in playbooks %}
-                <tr>
-                    <td>{{ pb.name }}</td>
+                <tr style="border-bottom: 1px solid var(--border-subtle);">
+                    <td style="color: var(--text-primary);">{{ pb.name }}</td>
                     <td>
                         <input type="number" name="retention_{{ pb.name }}" value="{{ pb.retention }}"
-                            placeholder="Global ({{ global_retention }})" style="margin-bottom: 0;" {{ 'disabled' if
-                            request.state.user.role=='watcher' }}>
+                            placeholder="Global ({{ global_retention }})"
+                            style="margin-bottom: 0; background: var(--surface-primary); color: var(--text-primary); border: 1px solid var(--border-subtle);"
+                            {{ 'disabled' if request.state.user.role=='watcher' }}>
                     </td>
                     <td>
                         <input type="number" name="max_runs_{{ pb.name }}" value="{{ pb.max_runs }}"
-                            placeholder="Global ({{ global_max_runs }})" style="margin-bottom: 0;" {{ 'disabled' if
-                            request.state.user.role=='watcher' }}>
+                            placeholder="Global ({{ global_max_runs }})"
+                            style="margin-bottom: 0; background: var(--surface-primary); color: var(--text-primary); border: 1px solid var(--border-subtle);"
+                            {{ 'disabled' if request.state.user.role=='watcher' }}>
                     </td>
                 </tr>
                 {% endfor %}
+
             </tbody>
         </table>
 

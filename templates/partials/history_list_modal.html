@@ -46,34 +46,39 @@
                             {% if run.username %}
                             {% set db_user = users.get(run.username) if users else None %}
                             {% if run.username == 'Scheduled' %}
-                            <i data-lucide="calendar" style="width: 14px; height: 14px; color: #888;"></i>
-                            <span style="color: #888; font-style: italic;">Scheduled</span>
+                            <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+                            <span style="color: var(--text-muted); font-style: italic;">Scheduled</span>
                             {% else %}
                             <i data-lucide="user"
-                                style="width: 14px; height: 14px; color: {% if db_user and db_user.role == 'admin' %}#000{% else %}#666{% endif %};"></i>
+                                class="{% if db_user and db_user.role == 'admin' %}text-primary{% else %}color-muted{% endif %}"
+                                style="width: 14px; height: 14px;"></i>
                             <span
-                                style="color: {% if db_user and db_user.role == 'admin' %}#000{% else %}#666{% endif %}; {% if db_user and db_user.role == 'admin' %}font-weight: 600;{% endif %}">
+                                class="{% if db_user and db_user.role == 'admin' %}text-primary font-bold{% else %}color-muted{% endif %}">
                                 {{ run.username }}
                             </span>
+
+
                             {% endif %}
                             {% else %}
-                            <span style="color: #999; font-style: italic; font-size: 13px;">Unknown</span>
+                            <span style="color: var(--text-muted); font-style: italic; font-size: 13px;">Unknown</span>
                             {% endif %}
                         </div>
+
                     </td>
                     <td>
                         {% if run.status == 'success' %}
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <span style="color: green;">●</span> Success
+                            <span style="color: var(--sible-success);">●</span> Success
                         </div>
                         {% elif run.status == 'failed' %}
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            <span style="color: red;">●</span> Failed
+                            <span style="color: var(--sible-error);">●</span> Failed
                         </div>
                         {% else %}
-                        <span aria-busy="true">Running</span>
+                        <span aria-busy="true" style="color: var(--text-muted);">Running</span>
                         {% endif %}
                     </td>
+
                     <td>
                         {% if run.end_time %}
                         {{ (run.end_time - run.start_time).total_seconds()|round(1) }}s
@@ -86,12 +91,12 @@
                     </td>
                     <td>
                         <div style="display: flex; gap: 10px;">
-                            <button type="button" class="btn-icon" title="View Logs" hx-get="/history/run/{{ run.id }}"
-                                hx-target="body" hx-swap="beforeend">
+                            <button type="button" class="action-btn" title="View Logs"
+                                hx-get="/history/run/{{ run.id }}" hx-target="body" hx-swap="beforeend">
                                 <i data-lucide="file-text"></i>
                             </button>
                             {% if request.state.user.role == 'admin' %}
-                            <button class="btn-icon" style="color: var(--sible-error);"
+                            <button class="action-btn" style="color: var(--sible-error);"
                                 hx-delete="/history/run/{{ run.id }}"
                                 hx-confirm="Are you sure you want to delete this log permanently?"
                                 hx-target="#run-row-{{ run.id }}" hx-swap="outerHTML" title="Delete">
@@ -99,6 +104,7 @@
                             </button>
                             {% endif %}
                         </div>
+
                     </td>
                 </tr>
                 {% else %}
@@ -112,21 +118,22 @@
         <!-- Pagination Bar -->
         {% if total_pages > 1 %}
         <div
-            style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid #eaeaea; margin-top: 1rem;">
-            <div style="font-size: 13px; color: #666;">
+            style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--border-subtle); margin-top: 1rem;">
+            <div style="font-size: 13px; color: var(--text-muted);">
                 Page {{ page }} of {{ total_pages }}
             </div>
+
 
             <div style="display: flex; gap: 8px;">
                 <button type="button" {% if has_prev %} hx-get="/history/{{ playbook_name }}?page={{ page - 1 }}"
                     hx-target="closest dialog" hx-swap="outerHTML" {% else %} disabled {% endif %} class="secondary"
-                    style="height: 32px; padding: 0 16px; font-size: 13px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; margin-bottom: 0;">
+                    style="height: 32px; padding: 0 16px; font-size: 13px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--surface-primary); color: var(--text-primary); margin-bottom: 0;">
                     Previous
                 </button>
 
                 <button type="button" {% if has_next %} hx-get="/history/{{ playbook_name }}?page={{ page + 1 }}"
                     hx-target="closest dialog" hx-swap="outerHTML" {% else %} disabled {% endif %} class="secondary"
-                    style="height: 32px; padding: 0 16px; font-size: 13px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; margin-bottom: 0;">
+                    style="height: 32px; padding: 0 16px; font-size: 13px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--surface-primary); color: var(--text-primary); margin-bottom: 0;">
                     Next
                 </button>
             </div>

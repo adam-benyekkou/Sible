@@ -1,26 +1,27 @@
 <table class="striped" style="margin-bottom: 0; border-collapse: separate; border-spacing: 0;">
     <thead>
-        <tr style="border-bottom: 1px solid #EAEAEA;">
+        <tr style="border-bottom: 1px solid var(--border-subtle);">
             <th
-                style="width: 80px; padding-left: 24px; color: #666; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                style="width: 80px; padding-left: 24px; color: var(--text-muted); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
                 Favorited</th>
             <th
-                style="width: 120px; color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                style="width: 120px; color: var(--text-muted); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
                 Status</th>
             <th
-                style="color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                style="color: var(--text-muted); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
                 Playbook</th>
             <th
-                style="color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                style="color: var(--text-muted); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
                 Description</th>
             <th
-                style="width: 150px; color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                style="width: 150px; color: var(--text-muted); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
                 Author</th>
             <th
-                style="width: 180px; padding-right: 24px; color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
+                style="width: 180px; padding-right: 24px; color: var(--text-muted); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;">
                 Last Execution</th>
         </tr>
     </thead>
+
     <tbody id="playbooks-table-body" hx-get="/api/playbooks/list" hx-trigger="playbooks-refresh from:body"
         hx-swap="outerHTML">
         {% if playbooks %}
@@ -29,37 +30,40 @@
         {% endfor %}
         {% else %}
         <tr>
-            <td colspan="6" style="text-align: center; padding: 64px 24px; color: #666;">
-                <div style="font-size: 14px; font-weight: 400; color: #999;">No automation found for this query</div>
+            <td colspan="6" style="text-align: center; padding: 64px 24px; color: var(--text-muted);">
+                <div style="font-size: 14px; font-weight: 400; color: var(--text-muted);">No automation found for this
+                    query</div>
             </td>
         </tr>
+
         {% endif %}
     </tbody>
 </table>
 
 {% if total_pages > 1 %}
 <div
-    style="padding: 12px; border-top: 1px solid #eaeaea; background: #fafafa; display: flex; justify-content: space-between; align-items: center;">
-    <div style="font-size: 12px; color: #666; font-weight: 500;">
-        Page <span style="color: #000;">{{ page }}</span> of {{ total_pages }}
-        <span style="color: #999; margin-left: 8px; font-weight: 400;">({{ total_count }} items)</span>
+    style="padding: 12px; border-top: 1px solid var(--border-subtle); background: var(--surface-secondary); display: flex; justify-content: space-between; align-items: center;">
+    <div style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
+        Page <span style="color: var(--text-primary);">{{ page }}</span> of {{ total_pages }}
+        <span style="color: var(--text-muted); margin-left: 8px; font-weight: 400;">({{ total_count }} items)</span>
     </div>
     <div style="display: flex; gap: 8px;">
         <button type="button" {% if has_prev %} hx-get="/api/playbooks/list?page={{ page - 1 }}"
             hx-target="#playbooks-table-container" hx-include="[name='search']" {% else %} disabled
             style="opacity: 0.5; cursor: not-allowed;" {% endif %} class="secondary"
-            style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; display: flex; align-items: center; gap: 4px;">
+            style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--surface-primary); color: var(--text-primary); display: flex; align-items: center; gap: 4px;">
             <i data-lucide="chevron-left" style="width: 12px; height: 12px;"></i> Previous
         </button>
 
         <button type="button" {% if has_next %} hx-get="/api/playbooks/list?page={{ page + 1 }}"
             hx-target="#playbooks-table-container" hx-include="[name='search']" {% else %} disabled
             style="opacity: 0.5; cursor: not-allowed;" {% endif %} class="secondary"
-            style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid #eaeaea; background: white; color: #333; display: flex; align-items: center; gap: 4px;">
+            style="height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--surface-primary); color: var(--text-primary); display: flex; align-items: center; gap: 4px;">
             Next <i data-lucide="chevron-right" style="width: 12px; height: 12px;"></i>
         </button>
     </div>
 </div>
+
 <script>
     if (typeof lucide !== 'undefined') { lucide.createIcons(); }
 </script>

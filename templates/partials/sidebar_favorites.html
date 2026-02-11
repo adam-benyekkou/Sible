@@ -3,7 +3,7 @@
     {% for folder, playbooks in favorites_grouped.items() %}
     <details class="sidebar-folder" open>
         <summary class="folder-title"
-            style="color: #666; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 12px;">
+            style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 12px 4px; color: var(--text-muted); opacity: 0.8;">
             <i data-lucide="folder" style="width: 12px; height: 12px; margin-right: 6px;"></i>
             {{ folder }}
         </summary>
@@ -11,7 +11,7 @@
             {% for playbook in playbooks %}
             <div class="playbook-item" hx-get="/playbooks/{{ playbook.path | safe }}" hx-target="#main-content"
                 hx-swap="innerHTML" hx-push-url="true"
-                style="color: #000; font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                style="font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                 <span class="status-dot status-{{ playbook.status }}" style="width: 6px; height: 6px;"></span>
                 {{ playbook.name }}
             </div>
@@ -20,7 +20,7 @@
     </details>
     {% endfor %}
     {% if not favorites_grouped %}
-    <div style="padding: 24px 16px; text-align: center; color: #999; font-size: 13px;">
+    <div style="padding: 24px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
         Pin your favorite playbooks here.
     </div>
     {% endif %}

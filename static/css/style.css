@@ -7,48 +7,49 @@
 
 :root {
     /* --- GLOBAL VARIABLES (Geist Light) --- */
-    /* 1. The Geist Canvas */
     --ds-background-100: #ffffff;
     --ds-background-200: #fafafa;
-    /* Sidebar, Subtler backgrounds */
     --ds-gray-100: #f5f5f5;
-    /* Hover states */
     --ds-gray-200: #eaeaea;
-    /* Borders */
     --ds-gray-alpha-400: rgba(0, 0, 0, 0.05);
-    /* Subtle shadows */
 
-    /* 2. Text Colors */
+    /* Text Colors */
     --ds-gray-1000: #000000;
-    /* Primary Text */
     --ds-gray-900: #171717;
-    /* Secondary Text */
     --ds-gray-600: #666666;
-    /* Muted Text */
 
-    /* 3. Sible Identity (Status) */
-    --sible-success: #10b981;
-    /* Emerald Green */
-    --sible-error: #ee0000;
-    /* Deep Red */
-    --sible-warning: #f5a623;
+    /* Semantic Mappings */
+    --surface-primary: var(--ds-background-100);
+    --surface-secondary: var(--ds-background-200);
+    --border-subtle: var(--ds-gray-200);
+    --text-primary: var(--ds-gray-1000);
+    --text-secondary: var(--ds-gray-900);
+    --text-muted: var(--ds-gray-600);
 
-    /* 4. Pico Overrides */
+    /* Sible Identity (Status) */
+    --status-success: #10b981;
+    --status-error: #ee0000;
+    --status-warning: #f5a623;
+    --sible-success: var(--status-success);
+    --sible-error: var(--status-error);
+    --sible-warning: var(--status-warning);
+
+    /* Pico Overrides */
     --pico-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    --pico-background-color: var(--ds-background-100);
-    --pico-color: var(--ds-gray-1000);
+    --pico-background-color: var(--surface-primary);
+    --pico-color: var(--text-primary);
     --pico-border-radius: 6px;
-    --pico-form-element-border-color: var(--ds-gray-200);
-    --pico-form-element-background-color: var(--ds-background-200);
-    --pico-form-element-active-background-color: var(--ds-background-100);
-    --pico-primary-background: var(--ds-gray-1000);
-    --pico-primary-border: var(--ds-gray-1000);
+    --pico-form-element-border-color: var(--border-subtle);
+    --pico-form-element-background-color: var(--surface-secondary);
+    --pico-form-element-active-background-color: var(--surface-primary);
+    --pico-primary-background: var(--text-primary);
+    --pico-primary-border: var(--text-primary);
     --pico-primary-hover-background: #333;
     --pico-primary-inverse: #ffffff;
     --pico-primary-focus: rgba(0, 0, 0, 0.05);
     --pico-selection-background: rgba(0, 0, 0, 0.1);
     --pico-selection-color: inherit;
-    --pico-muted-color: var(--ds-gray-600);
+    --pico-muted-color: var(--text-muted);
     --pico-line-height: 1.5;
     --pico-font-size: 100%;
 
@@ -73,7 +74,22 @@ body {
 
 /* Helper for full height */
 .h-100 {
-    height: 100%;
+    height: 100% !important;
+}
+
+.flex-col {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.flex-row {
+    display: flex !important;
+    flex-direction: row !important;
+}
+
+.flex-1 {
+    flex: 1 !important;
+    min-height: 0;
 }
 
 /* Main Content Scroll Area - Prevents layout shift */
@@ -198,10 +214,33 @@ button[type="submit"]:hover,
     transform: translateY(-1px);
 }
 
+/* Aggressive fix for all button icons */
+button.primary svg,
+button.primary [data-lucide],
 button.primary .lucide,
 button.primary i {
-    stroke: #ffffff;
-    color: #ffffff;
+    stroke: currentColor !important;
+    color: inherit !important;
+}
+
+[data-theme='dark'] button.primary {
+    color: #000000 !important;
+    /* Explicit Black */
+}
+
+/* Force ALL elements inside the SVG to Black and improve visibility */
+[data-theme='dark'] button.primary svg,
+[data-theme='dark'] button.primary [data-lucide],
+[data-theme='dark'] button.primary .lucide {
+    stroke: #000000 !important;
+    stroke-width: 2.5px !important;
+    /* Slightly thicker for maximum visibility */
+}
+
+[data-theme='dark'] button.primary svg *,
+[data-theme='dark'] button.primary [data-lucide] *,
+[data-theme='dark'] button.primary .lucide * {
+    stroke: #000000 !important;
 }
 
 /* Secondary Button (White with Border) */
@@ -323,11 +362,12 @@ textarea:focus {
 /* Cards & Containers */
 .card,
 .server-card {
-    background: #ffffff;
-    border: 1px solid #eaeaea;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
     border-radius: 8px;
     box-shadow: none;
 }
+
 
 /* Sidebar */
 aside {
@@ -544,27 +584,28 @@ tr.hover:hover td {
     display: flex;
     gap: 16px;
     padding: 16px;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
 }
 
 .editor-pane {
     flex: 6;
-    border: 1px solid var(--ds-gray-200);
+    border: 1px solid var(--border-subtle);
     border-radius: 8px;
     overflow: hidden;
     position: relative;
-    background: #fff;
+    background: var(--surface-primary);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
 }
 
 /* Reusable Editor Wrapper */
 .code-editor-wrapper {
-    border: 1px solid var(--ds-gray-200);
+    border: 1px solid var(--border-subtle);
     border-radius: 8px;
     overflow: hidden;
     position: relative;
-    background: #fff;
+    background: var(--surface-primary);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
 }
 
@@ -574,13 +615,13 @@ tr.hover:hover td {
 }
 
 .ace_gutter {
-    background: #fafafa !important;
-    border-right: 1px solid #eaeaea !important;
-    color: #999 !important;
+    background: var(--surface-secondary) !important;
+    border-right: 1px solid var(--border-subtle) !important;
+    color: var(--text-muted) !important;
 }
 
 .ace_marker-layer .ace_active-line {
-    background: #fafafa !important;
+    background: var(--surface-secondary) !important;
 }
 
 .ace_marker-layer .ace_selection {
@@ -594,15 +635,13 @@ tr.hover:hover td {
 
 .terminal-pane {
     flex: 4;
-    border: 1px solid var(--ds-gray-200);
+    border: 1px solid var(--border-subtle);
     border-radius: 8px;
     overflow: hidden;
-    background: #ffffff;
-    /* Terminal becomes white */
+    background: var(--surface-secondary);
     display: flex;
     flex-direction: column;
     box-shadow: none;
-    /* Remove shadows as requested */
 }
 
 /* #terminal-container is now handled at bottom of file for specific log styling */
@@ -610,6 +649,17 @@ tr.hover:hover td {
 /* Utilities */
 .w-100 {
     width: 100%;
+}
+
+.d-none {
+    display: none !important;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
 }
 
 .text-right {
@@ -632,13 +682,99 @@ tr.hover:hover td {
     gap: 8px;
 }
 
-.color-muted {
-    color: var(--ds-gray-600);
+.color-muted,
+.text-muted {
+    color: var(--text-muted);
+}
+
+/* --- UTILITY CLASSES FOR THEME CONSISTENCY --- */
+/* --- BADGE SYSTEM --- */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    min-width: 70px;
+    height: 24px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.badge-success,
+.status-success-badge {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--status-success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-failed,
+.status-failed-badge {
+    background-color: rgba(238, 0, 0, 0.1);
+    color: var(--status-error);
+    border: 1px solid rgba(238, 0, 0, 0.2);
+}
+
+.badge-secondary {
+    background-color: var(--ds-gray-alpha-400);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+}
+
+.status-btn {
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    padding: 0;
+    display: inline-flex;
+    text-decoration: none;
+}
+
+.status-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .status-btn:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .badge-success,
+[data-theme='dark'] .status-success-badge {
+    background-color: rgba(166, 227, 161, 0.1);
+    border-color: rgba(166, 227, 161, 0.2);
+}
+
+[data-theme='dark'] .badge-failed,
+[data-theme='dark'] .status-failed-badge {
+    background-color: rgba(243, 139, 168, 0.1);
+    border-color: rgba(243, 139, 168, 0.2);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.bg-secondary {
+    background: var(--surface-secondary) !important;
+}
+
+.border-subtle {
+    border: 1px solid var(--border-subtle) !important;
 }
 
 .font-sm {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
 }
+
 
 /* Toast */
 #toast-container {
@@ -888,37 +1024,50 @@ tr.hover:hover td {
 
 /* Dark Theme Overrides */
 [data-theme='dark'] {
-    --pico-background-color: #1e1e2e;
-    /* Mocha Base */
-    --pico-card-background-color: #181825;
-    /* Mocha Mantle */
-    --pico-form-element-background-color: #11111b;
-    /* Mocha Crust */
-    --pico-color: #cdd6f4;
-    /* Mocha Text */
+    /* Mocha Palette Refined Overrides */
+    --ds-background-100: #1e1e2e;
+    --ds-background-200: #181825;
+    --ds-gray-100: #11111b;
+    --ds-gray-200: #313244;
+    --ds-gray-alpha-400: rgba(255, 255, 255, 0.05);
+
+    --ds-gray-1000: #cdd6f4;
+    --ds-gray-900: #bac2de;
+    --ds-gray-600: #7f849c;
+
+    /* Semantic Overrides */
+    --surface-primary: var(--ds-background-100);
+    --surface-secondary: var(--ds-background-200);
+    --border-subtle: var(--ds-gray-200);
+    --text-primary: var(--ds-gray-1000);
+    --text-secondary: var(--ds-gray-900);
+    --text-muted: var(--ds-gray-600);
+
+    /* Pico Overrides */
+    --pico-background-color: var(--surface-primary);
+    --pico-card-background-color: var(--surface-secondary);
+    --pico-form-element-background-color: var(--ds-gray-100);
+    --pico-color: var(--text-primary);
     --pico-h1-color: #f5c2e7;
-    /* Mocha Pink */
     --pico-h2-color: #f5c2e7;
     --pico-h3-color: #f5c2e7;
-    --pico-muted-color: #7f849c;
-    /* Mocha Overlay1 */
+    --pico-muted-color: var(--text-muted);
     --pico-primary: #b4befe;
-    /* Mocha Lavender */
     --pico-primary-hover: #89b4fa;
-    /* Mocha Blue */
     --pico-primary-inverse: #11111b;
-    --pico-border-color: #313244;
-    /* Mocha Surface0 */
-    --pico-form-element-border-color: #313244;
+    --pico-border-color: var(--border-subtle);
+    --pico-form-element-border-color: var(--border-subtle);
     --pico-form-element-active-border-color: #b4befe;
-    /* Ansible Status Indicators */
+
+    /* Status Overrides */
     --status-success: #a6e3a1;
-    /* Mocha Green */
     --status-error: #f38ba8;
-    /* Mocha Red */
     --status-changed: #fab387;
-    /* Mocha Peach */
+    --sible-success: var(--status-success);
+    --sible-error: var(--status-error);
+    --sible-warning: var(--status-changed);
 }
+
 
 /* Specific overrides for dark theme elements */
 [data-theme='dark'] .group-badge {
@@ -1135,6 +1284,15 @@ tr.hover:hover td {
     -webkit-text-fill-color: var(--pico-color) !important;
 }
 
+/* Make file inputs transparent and borderless to let the button float */
+input[type="file"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
 [data-theme='dark'] input[type="file"]::file-selector-button {
     background: var(--pico-primary);
     border: 1px solid var(--pico-primary);
@@ -1163,6 +1321,68 @@ tr.hover:hover td {
 
 [data-theme='dark'] #mobile-toggle:hover {
     background: rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Catppuccin Mocha Ace Editor Overrides */
+[data-theme='dark'] .ace_editor {
+    background-color: #1e1e2e !important;
+    color: #cdd6f4 !important;
+}
+
+[data-theme='dark'] .ace_gutter {
+    background-color: #181825 !important;
+    color: #bac2de66 !important;
+    border-right: 1px solid #313244 !important;
+}
+
+[data-theme='dark'] .ace_active-line {
+    background-color: #313244 !important;
+}
+
+[data-theme='dark'] .ace_gutter-active-line {
+    background-color: #313244 !important;
+    color: #cba6f7 !important;
+}
+
+[data-theme='dark'] .ace_marker-layer .ace_selection {
+    background-color: rgba(137, 180, 250, 0.2) !important;
+}
+
+[data-theme='dark'] .ace_cursor {
+    color: #f5e0dc !important;
+}
+
+/* Syntax Highlighting Tweaks for Tomorrow Night Eighties base */
+[data-theme='dark'] .ace_keyword {
+    color: #cba6f7 !important;
+}
+
+[data-theme='dark'] .ace_string {
+    color: #a6e3a1 !important;
+}
+
+[data-theme='dark'] .ace_variable {
+    color: #f5e0dc !important;
+}
+
+[data-theme='dark'] .ace_comment {
+    color: #6c7086 !important;
+}
+
+[data-theme='dark'] .ace_function {
+    color: #89b4fa !important;
+}
+
+[data-theme='dark'] .ace_numeric {
+    color: #fab387 !important;
+}
+
+[data-theme='dark'] .ace_constant {
+    color: #fab387 !important;
+}
+
+[data-theme='dark'] .ace_operator {
+    color: #89dceb !important;
 }
 
 /* --- END OF STYLES --- */
@@ -1221,13 +1441,67 @@ tr.hover:hover td {
 /* Global dialog overrides removed to avoid breaking other components */
 
 article.modal-content {
-    background: #ffffff;
+    background: var(--surface-primary);
     border-radius: 12px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--ds-gray-200);
+    border: 1px solid var(--border-subtle);
     overflow: hidden;
     animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+
+
+/* --- UTILITY CLASSES --- */
+/* (Styles moved or consolidated above) */
+
+.server-card-transition {
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.server-card-transition:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.color-muted,
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.bg-secondary {
+    background: var(--surface-secondary) !important;
+}
+
+.border-subtle {
+    border: 1px solid var(--border-subtle) !important;
+}
+
+.font-sm {
+    font-size: 0.85rem;
+}
+
+.font-bold {
+    font-weight: 600 !important;
+}
+
+.text-success {
+    color: var(--sible-success) !important;
+}
+
+.text-error {
+    color: var(--sible-error) !important;
+}
+
 
 
 /* Quick Action Menu & Playbook Row Hover */
@@ -1236,7 +1510,7 @@ article.modal-content {
 }
 
 .playbook-row:hover {
-    background-color: var(--ds-gray-100) !important;
+    background-color: var(--surface-secondary) !important;
 }
 
 .playbook-row:hover .quick-actions {
@@ -1249,7 +1523,7 @@ article.modal-content {
     padding: 6px;
     border-radius: 4px;
     cursor: pointer;
-    color: #666;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1257,9 +1531,10 @@ article.modal-content {
 }
 
 .action-btn:hover {
-    background: #e8e8e8;
-    color: #000;
+    background: var(--surface-primary);
+    color: var(--text-primary);
 }
+
 
 .action-btn i {
     width: 14px;
@@ -1268,8 +1543,9 @@ article.modal-content {
 
 /* Status Text Links */
 .status-text-failed:hover {
-    color: #b00000 !important;
+    color: var(--sible-error) !important;
 }
+
 
 @keyframes modalScaleIn {
     from {

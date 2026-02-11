@@ -2,7 +2,7 @@
     x-show="isOpen" x-transition.opacity style="display: none;">
 
     <style>
-        /* Custom scrollbar for xterm - Light theme version */
+        /* Custom scrollbar for xterm - Theme-aware version */
         #ssh-terminal-container .xterm-viewport::-webkit-scrollbar {
             width: 8px !important;
             height: 0px !important;
@@ -10,17 +10,17 @@
         }
 
         #ssh-terminal-container .xterm-viewport::-webkit-scrollbar-track {
-            background: #fdfdfd !important;
+            background: var(--surface-primary) !important;
             border: none !important;
         }
 
         #ssh-terminal-container .xterm-viewport::-webkit-scrollbar-thumb {
-            background: #e5e7eb !important;
+            background: var(--border-subtle) !important;
             border-radius: 4px !important;
         }
 
         #ssh-terminal-container .xterm-viewport::-webkit-scrollbar-thumb:hover {
-            background: #d1d5db !important;
+            background: var(--text-muted) !important;
         }
 
         /* Ensure the viewport only scrolls vertically and hides track when unnecessary */
@@ -37,22 +37,22 @@
 
     <dialog open x-show="isOpen" x-transition.scale style="background: transparent; border: none; padding: 0;">
         <article class="modal-content"
-            style="min-width: 800px; width: 90vw; max-width: 1200px; border-radius: 12px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb; background: #ffffff;">
+            style="min-width: 800px; width: 90vw; max-width: 1200px; border-radius: 12px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); border: 1px solid var(--border-subtle); background: var(--surface-primary);">
             <header
-                style="background: #ffffff; padding: 1.5rem 1.5rem 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #111827;">Terminal: <span
+                style="background: var(--surface-primary); border-bottom: 1px solid var(--border-subtle); padding: 1.5rem 1.5rem 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">Terminal: <span
                         x-text="alias"></span></h2>
                 <button @click="closeModal()"
-                    style="background: transparent; border: none; padding: 4px; cursor: pointer; color: #9ca3af;"
+                    style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--text-muted);"
                     title="Close">
                     <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                 </button>
             </header>
 
-            <div style="padding: 0 1.5rem 1.5rem 1.5rem; background: #ffffff;">
-                <!-- Light "Editor-style" box for the terminal -->
+            <div style="padding: 0 1.5rem 1.5rem 1.5rem; background: var(--surface-primary);">
+                <!-- Theme-aware box for the terminal -->
                 <div
-                    style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; overflow: hidden;">
+                    style="background: var(--surface-secondary); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 20px; overflow: hidden;">
                     <div id="ssh-terminal-container"
                         style="height: 600px; width: 100%; background: transparent; outline: none; overflow: hidden;"
                         tabindex="0" @click="term && term.focus()">
@@ -112,11 +112,34 @@
                     throw new Error("xterm.js libraries not loaded");
                 }
 
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
                 this.term = new Terminal({
                     cursorBlink: true,
                     disableStdin: false,
                     allowTransparency: true,
-                    theme: {
+                    theme: isDark ? {
+                        background: '#11111b',
+                        foreground: '#cdd6f4',
+                        cursor: '#cdd6f4',
+                        selectionBackground: 'rgba(205, 214, 244, 0.2)',
+                        black: '#45475a',
+                        red: '#f38ba8',
+                        green: '#a6e3a1',
+                        yellow: '#f9e2af',
+                        blue: '#89b4fa',
+                        magenta: '#f5c2e7',
+                        cyan: '#94e2d5',
+                        white: '#bac2de',
+                        brightBlack: '#585b70',
+                        brightRed: '#f38ba8',
+                        brightGreen: '#a6e3a1',
+                        brightYellow: '#f9e2af',
+                        brightBlue: '#89b4fa',
+                        brightMagenta: '#f5c2e7',
+                        brightCyan: '#94e2d5',
+                        brightWhite: '#a6adc8'
+                    } : {
                         background: '#ffffff',
                         foreground: '#1f2937',
                         cursor: '#111827',

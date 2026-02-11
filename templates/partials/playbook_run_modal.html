@@ -29,21 +29,22 @@
     @click.self="$root.remove()">
 
     <article :style="running ? 'max-width: 90vw; width: 1000px;' : 'max-width: 600px; width: 100%;'"
-        style="border: 1px solid #EAEAEA; box-shadow: 0 20px 40px rgba(0,0,0,0.15); background: #FFF; border-radius: 12px; overflow: hidden; animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); transition: all 0.3s ease;">
+        style="border: 1px solid var(--border-subtle); box-shadow: 0 20px 40px rgba(0,0,0,0.15); background: var(--surface-primary); border-radius: 12px; overflow: hidden; animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); transition: all 0.3s ease;">
+
 
         <header
-            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAEAEA; padding: 1.5rem;">
+            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding: 1.5rem;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <div x-show="running" class="status-dot status-running" style="width: 10px; height: 10px;"></div>
-                <h5 style="margin: 0; font-weight: 600; color: #000;"
+                <h5 style="margin: 0; font-weight: 600; color: var(--text-primary);"
                     x-text="running ? 'Executing: {{ name }}' : 'Launch Playbook: {{ name }}'"></h5>
             </div>
-            <button type="button" aria-label="Close" @click="$root.remove()"
-                style="background: transparent; border: none; padding: 8px; cursor: pointer; color: #666; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: background 0.2s;"
-                onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='transparent'">
+            <button type="button" aria-label="Close" @click="$root.remove()" class="action-btn">
                 <i data-lucide="x" style="width: 20px; height: 20px;"></i>
             </button>
+
         </header>
+
 
         <section style="padding: 1.5rem;">
             <!-- Configuration Form -->
@@ -59,8 +60,9 @@
             ">
                 <div style="margin-bottom: 2rem; position: relative;">
                     <label
-                        style="display: block; font-size: 13px; font-weight: 500; color: #444; margin-bottom: 4px;">Target
+                        style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px;">Target
                         Hosts / Groups</label>
+
                     <div x-data="{ initialTargets: launchParams.limit.join(',') }"
                         @targets-changed="launchParams.limit = $event.detail">
                         {% with picker_id='launch-target-picker-standalone' %}
@@ -71,14 +73,15 @@
 
                 <div class="grid">
                     <label>
-                        <span style="font-size: 13px; font-weight: 500; color: #444;">Tags</span>
+                        <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Tags</span>
                         <input type="text" x-model="launchParams.tags" placeholder="e.g. deploy, !db"
-                            style="font-size: 14px; margin-top: 4px;">
+                            style="font-size: 14px; margin-top: 4px; background: var(--surface-secondary); color: var(--text-primary); border: 1px solid var(--border-subtle);">
                     </label>
                     <label>
-                        <span style="font-size: 13px; font-weight: 500; color: #444;">Verbosity</span>
+                        <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Verbosity</span>
                         <select x-model="launchParams.verbosity"
-                            style="height: 42px; font-size: 14px; margin-top: 4px;">
+                            style="height: 42px; font-size: 14px; margin-top: 4px; background: var(--surface-secondary); color: var(--text-primary); border: 1px solid var(--border-subtle);">
+
                             <option value="0">Normal</option>
                             <option value="1">Verbose (-v)</option>
                             <option value="2">More Verbose (-vv)</option>
@@ -88,22 +91,25 @@
                 </div>
 
                 <div style="margin-top: 1rem;">
-                    <strong style="font-size: 13px; display: block; margin-bottom: 8px;">Variables</strong>
+                    <strong
+                        style="font-size: 13px; display: block; margin-bottom: 8px; color: var(--text-primary);">Variables</strong>
                     <div id="playbook-vars-container-standalone" hx-get="/api/playbook-vars/{{ name | safe }}"
                         hx-trigger="load" hx-swap="innerHTML">
-                        <div style="padding: 10px 0; color: #888; font-size: 0.9em;">
+                        <div style="padding: 10px 0; color: var(--text-muted); font-size: 0.9em;">
                             <span aria-busy="true" style="font-size: 0.9em;">Loading variables...</span>
                         </div>
                     </div>
+
                 </div>
 
                 <footer style="margin-top: 2rem; padding: 0; border-top: none;">
                     <button type="submit"
-                        style="background-color: #000; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; width: 100%; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        style="background-color: var(--pico-primary); color: var(--pico-primary-inverse); border: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; width: 100%; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <i data-lucide="rocket" style="width: 16px; height: 16px;"></i>
                         Launch Playbook
                     </button>
                 </footer>
+
             </form>
 
             <!-- Real-time Terminal Area -->
@@ -112,12 +118,13 @@
                     <!-- terminal_connect.html will be loaded here -->
                 </div>
                 <div class="terminal-pane"
-                    style="margin-top: 1rem; border: 1px solid #EAEAEA; border-radius: 8px; overflow: hidden;">
+                    style="margin-top: 1rem; border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden;">
                     <div id="terminal-container"
-                        style="background-color: #ffffff; color: #000; font-family: 'Geist Mono', monospace; font-size: 13px; padding: 1.5rem; height: 400px; overflow-y: auto; white-space: pre-wrap;">
-                        <div class="waiting-text" style="color: #666;">Initializing execution...</div>
+                        style="background-color: var(--surface-secondary); color: var(--text-primary); font-family: 'Geist Mono', monospace; font-size: 13px; padding: 1.5rem; height: 400px; overflow-y: auto; white-space: pre-wrap;">
+                        <div class="waiting-text" style="color: var(--text-muted);">Initializing execution...</div>
                     </div>
                 </div>
+
             </div>
         </section>
     </article>

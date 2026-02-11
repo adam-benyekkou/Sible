@@ -12,9 +12,9 @@
         {% if request.state.user.role == 'admin' %}
         <button type="button" hx-delete="/history/all"
             hx-confirm="Are you sure you want to delete ALL (filtered) history logs? This cannot be undone."
-            hx-include="#search-input, #status-input" class="btn-danger-ghost"
-            style="background: white; color: var(--sible-error); border: 1px solid var(--ds-gray-200); font-size: 13px; font-weight: 500; padding: 6px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; margin: 0;">
-            Delete All
+            hx-include="#search-input, #status-input" class="primary"
+            style="height: 32px; padding: 0 16px; font-size: 13px; display: inline-flex; align-items: center; width: auto; margin: 0;">
+            <i data-lucide="trash-2" style="width: 14px; height: 14px; margin-right: 8px;"></i> Delete All
         </button>
         {% endif %}
     </div>
@@ -28,20 +28,21 @@
             <input type="text" name="search" id="search-input" placeholder="Filter by playbook or folder..."
                 value="{{ search or '' }}" hx-get="/history" hx-trigger="keyup changed delay:300ms, search-update"
                 hx-target="#history-container" hx-include="[name='status']" hx-push-url="true"
-                style="padding-left: 32px; height: 36px; width: 100%; font-size: 13px; margin: 0; border: 1px solid #eaeaea; border-radius: 6px; box-shadow: none !important;">
+                style="padding-left: 32px; height: 36px; width: 100%; font-size: 13px; margin: 0; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--surface-secondary); color: var(--text-primary); box-shadow: none !important;">
         </div>
 
         <div class="filter-group"
-            style="display: flex; border: 1px solid #eaeaea; border-radius: 6px; overflow: hidden; width: auto; flex-shrink: 0; align-items: stretch;">
+            style="display: flex; border: 1px solid var(--border-subtle); border-radius: 6px; overflow: hidden; width: auto; flex-shrink: 0; align-items: stretch;">
             <!-- Hidden input to store status state for hx-include -->
             <input type="hidden" name="status" id="status-input" value="{{ status or 'all' }}">
 
             <button type="button" class="filter-btn {{ 'active' if not status or status == 'all' else '' }}"
-                onclick="updateStatus('all')" style="border-right: 1px solid #eaeaea; min-width: 80px;">
+                onclick="updateStatus('all')" style="border-right: 1px solid var(--border-subtle); min-width: 80px;">
                 All
             </button>
             <button type="button" class="filter-btn {{ 'active' if status == 'success' else '' }}"
-                onclick="updateStatus('success')" style="border-right: 1px solid #eaeaea; min-width: 100px;">
+                onclick="updateStatus('success')"
+                style="border-right: 1px solid var(--border-subtle); min-width: 100px;">
                 Success
             </button>
             <button type="button" class="filter-btn {{ 'active' if status == 'failed' else '' }}"
@@ -72,20 +73,13 @@
 <style>
     /* Row Hover Effect */
     tr.history-row:hover td {
-        background-color: #FAFAFA !important;
-    }
-
-    /* Button Hover */
-    .btn-danger-ghost:hover {
-        background: var(--sible-error) !important;
-        color: white !important;
-        border-color: var(--sible-error) !important;
+        background-color: var(--surface-secondary) !important;
     }
 
     /* Filter Button Styles */
     .filter-btn {
-        background: white;
-        color: #666;
+        background: var(--surface-primary);
+        color: var(--text-muted);
         cursor: pointer;
         transition: all 0.2s;
         height: 36px;
@@ -100,13 +94,13 @@
     }
 
     .filter-btn:hover {
-        background: #fafafa;
-        color: #000;
+        background: var(--surface-secondary);
+        color: var(--text-primary);
     }
 
     .filter-btn.active {
-        background: #000 !important;
-        color: white !important;
+        background: var(--pico-primary) !important;
+        color: var(--pico-primary-inverse) !important;
     }
 </style>
 {% endblock %}

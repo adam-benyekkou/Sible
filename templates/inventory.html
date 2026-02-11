@@ -75,11 +75,12 @@
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px;">
         <div style="position: relative; flex: 1; max-width: 400px;">
             <i data-lucide="search"
-                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #999; pointer-events: none;"></i>
+                style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;"></i>
             <input type="text" name="search" id="inventory-search" placeholder="Search servers or groups..."
                 hx-get="/api/inventory/hosts" hx-trigger="keyup changed delay:500ms, inventory-refresh from:body"
                 hx-target="#inventory-table-body"
-                style="padding-left: 36px; height: 40px; width: 100%; font-size: 14px; margin: 0; border: 1px solid #EAEAEA; border-radius: 6px; background: #FFF; color: #000;">
+                style="padding-left: 36px; height: 40px; width: 100%; font-size: 14px; margin: 0; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--surface-secondary); color: var(--text-primary);">
+
         </div>
 
         <div style="display: flex; gap: 8px; align-items: center;">
@@ -102,10 +103,10 @@
             <template x-if="viewMode === 'table'">
                 <button class="primary" @click="openModal()"
                     style="white-space: nowrap; height: 40px; padding: 0 16px; font-size: 14px; display: inline-flex; align-items: center;">
-                    <i data-lucide="plus"
-                        style="width: 14px; height: 14px; color: white; stroke: white; margin-right: 8px;"></i> Add
+                    <i data-lucide="plus" style="width: 14px; height: 14px; margin-right: 8px;"></i> Add
                     Server
                 </button>
+
             </template>
             {% endif %}
         </div>
@@ -150,7 +151,8 @@
             hx-on::after-request="if(event.detail.successful) htmx.ajax('POST', '/api/inventory/import', {swap:'none'})">
 
             <textarea name="content"
-                style="font-family: 'Geist Mono', monospace; min-height: 500px; width: 100%; background: #ffffff; color: #000000; border: 1px solid var(--ds-gray-200); padding: 1rem; border-radius: 6px; resize: vertical;">{{ content }}</textarea>
+                style="font-family: 'Geist Mono', monospace; min-height: 500px; width: 100%; background: var(--surface-secondary); color: var(--text-primary); border: 1px solid var(--border-subtle); padding: 1rem; border-radius: 6px; resize: vertical;">{{ content }}</textarea>
+
 
             <div style="text-align: right; margin-top: 1rem;">
                 <p class="font-sm color-muted" style="display: inline-block; margin-right: 1rem;">

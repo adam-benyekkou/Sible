@@ -3,21 +3,21 @@
 
     <div style="margin-bottom: 1.5rem;">
         <label
-            style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Username</label>
+            style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Username</label>
         <input type="text" name="username" value="{{ user.username }}" required
-            style="width: 100%; padding: 10px 12px; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
-            onfocus="this.style.borderColor='#000'; this.style.boxShadow='0 0 0 1px #000';"
-            onblur="this.style.borderColor='#EAEAEA'; this.style.boxShadow='none';">
+            style="width: 100%; padding: 10px 12px; background: var(--surface-primary); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
+            onfocus="this.style.borderColor='var(--pico-primary)'; this.style.boxShadow='0 0 0 1px var(--pico-primary)';"
+            onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none';">
     </div>
 
     <div style="margin-bottom: 1.5rem;">
         <label
-            style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">New
+            style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">New
             Password (leave blank to keep current)</label>
         <input type="password" name="password" placeholder="Min 8 characters"
-            style="width: 100%; padding: 10px 12px; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
-            onfocus="this.style.borderColor='#000'; this.style.boxShadow='0 0 0 1px #000';"
-            onblur="this.style.borderColor='#EAEAEA'; this.style.boxShadow='none';">
+            style="width: 100%; padding: 10px 12px; background: var(--surface-primary); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
+            onfocus="this.style.borderColor='var(--pico-primary)'; this.style.boxShadow='0 0 0 1px var(--pico-primary)';"
+            onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none';">
     </div>
 
     <div style="margin-bottom: 2rem;">
@@ -57,22 +57,22 @@
             <input type="hidden" name="role" :value="selected">
 
             <div x-ref="trigger" @click.stop="toggle()"
-                style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0 12px; background: #fff; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; cursor: pointer; transition: border-color 0.15s ease;"
-                :style="open ? 'border-color: #000; box-shadow: 0 0 0 1px #000;' : ''">
+                style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0 12px; background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 14px; cursor: pointer; transition: border-color 0.15s ease; color: var(--text-primary);"
+                :style="open ? 'border-color: var(--pico-primary); box-shadow: 0 0 0 1px var(--pico-primary);' : ''">
                 <span x-text="label"></span>
-                <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: #666;"></i>
+                <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
             </div>
 
             <div x-show="open" x-init="lucide.createIcons()"
-                :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px; background: white; border: 1px solid #EAEAEA; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; padding: 4px;`"
+                :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px; background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; padding: 4px; color: var(--text-primary);`"
                 x-cloak>
                 <template x-for="opt in options" :key="opt.val">
                     <div @click="select(opt)"
-                        style="padding: 10px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px; transition: background 0.1s ease;"
-                        :style="selected === opt.val ? 'background: #fafafa; font-weight: 500;' : ''"
-                        onmouseover="this.style.background='#fafafa'"
+                        style="padding: 10px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px; transition: background 0.1s ease; color: var(--text-primary);"
+                        :style="selected === opt.val ? 'background: var(--surface-secondary); font-weight: 500;' : ''"
+                        onmouseover="this.style.background='var(--surface-secondary)'"
                         onmouseout="if(this.dataset.selected !== 'true') this.style.background='transparent'">
-                        <i :data-lucide="opt.icon" style="width: 14px; height: 14px; color: #666;"></i>
+                        <i :data-lucide="opt.icon" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
                         <span x-text="opt.lbl"></span>
                     </div>
                 </template>
@@ -83,7 +83,7 @@
     <footer
         style="padding: 0; background: transparent; border: none; margin: 0; display: flex; justify-content: flex-end;">
         <button type="submit"
-            style="width: auto; padding: 0 24px; background: #000; color: #fff; border: none; border-radius: 6px; height: 40px; font-weight: 500; cursor: pointer; transition: opacity 0.15s ease;"
+            style="width: auto; padding: 0 24px; background: var(--text-primary); color: var(--surface-primary); border: none; border-radius: 6px; height: 40px; font-weight: 500; cursor: pointer; transition: opacity 0.15s ease;"
             onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
             Save Changes
         </button>

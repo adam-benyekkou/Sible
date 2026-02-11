@@ -1,23 +1,26 @@
 {% for run in runs %}
 <tr id="run-row-{{ run.id }}" class="history-row">
     <!-- Date -->
-    <td style="padding: 12px; border-bottom: 1px solid #eaeaea; font-size: 14px; color: #111;">
+    <td
+        style="padding: 12px; border-bottom: 1px solid var(--border-subtle); font-size: 14px; color: var(--text-primary);">
         {{ run.start_time|format_datetime(request.state.user.timezone) }}
     </td>
 
+
     <!-- Playbook Link -->
-    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
+    <td style="padding: 12px; border-bottom: 1px solid var(--border-subtle);">
         <a href="#" hx-get="/playbook/{{ run.playbook }}" hx-target="#main-content" hx-swap="innerHTML"
-            style="color: #000; text-decoration: none; font-weight: 500; font-size: 14px;"
+            style="color: var(--text-primary); text-decoration: none; font-weight: 500; font-size: 14px;"
             onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
             {{ run.playbook }}
         </a>
     </td>
 
+
     <!-- Target -->
-    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
+    <td style="padding: 12px; border-bottom: 1px solid var(--border-subtle);">
         <span
-            style="background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: 'Geist Mono', monospace; display: inline-flex; align-items: center; gap: 4px;">
+            style="background: var(--surface-secondary); color: var(--text-primary); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: 'Geist Mono', monospace; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-subtle);">
             {% if run.target in groups %}
             <span style="opacity: 0.7; font-weight: bold;">[G]</span>
             {% endif %}
@@ -25,53 +28,59 @@
         </span>
     </td>
 
+
     <!-- User -->
-    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
+    <td style="padding: 12px; border-bottom: 1px solid var(--border-subtle);">
         <div style="display: flex; align-items: center; gap: 6px; font-size: 14px;">
             {% if run.username %}
             {% set db_user = users.get(run.username) if users else None %}
             {% if run.username == 'Scheduled' %}
-            <i data-lucide="calendar" style="width: 14px; height: 14px; color: #888;"></i>
-            <span style="color: #888; font-style: italic;">Scheduled</span>
+            <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--text-muted);"></i>
+            <span style="color: var(--text-muted); font-style: italic;">Scheduled</span>
             {% else %}
             <i data-lucide="user"
-                style="width: 14px; height: 14px; color: {% if db_user and db_user.role == 'admin' %}#000{% else %}#666{% endif %};"></i>
+                class="{% if db_user and db_user.role == 'admin' %}text-primary{% else %}color-muted{% endif %}"
+                style="width: 14px; height: 14px;"></i>
             <span
-                style="color: {% if db_user and db_user.role == 'admin' %}#000{% else %}#666{% endif %}; {% if db_user and db_user.role == 'admin' %}font-weight: 600;{% endif %}">
+                class="{% if db_user and db_user.role == 'admin' %}text-primary font-bold{% else %}color-muted{% endif %}">
                 {{ run.username }}
             </span>
+
+
             {% endif %}
             {% else %}
-            <span style="color: #999; font-style: italic; font-size: 13px;">Unknown</span>
+            <span style="color: var(--text-muted); font-style: italic; font-size: 13px;">Unknown</span>
             {% endif %}
         </div>
     </td>
 
+
     <!-- Status -->
-    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
+    <td style="padding: 12px; border-bottom: 1px solid var(--border-subtle);">
         {% if run.status == 'success' %}
         <div style="display: flex; align-items: center; gap: 8px;">
             <span
                 style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--sible-success); display: inline-block;"></span>
-            <span style="font-size: 14px; color: #111;">Success</span>
+            <span style="font-size: 14px; color: var(--text-primary);">Success</span>
         </div>
         {% elif run.status == 'failed' %}
         <div style="display: flex; align-items: center; gap: 8px;">
             <span
                 style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--sible-error); display: inline-block;"></span>
-            <span style="font-size: 14px; color: #111;">Failed</span>
+            <span style="font-size: 14px; color: var(--text-primary);">Failed</span>
         </div>
         {% else %}
         <div style="display: flex; align-items: center; gap: 8px;">
             <span aria-busy="true" style="width: 8px; height: 8px; display: inline-block;"></span>
-            <span style="font-size: 14px; color: var(--ds-gray-600);">Running</span>
+            <span style="font-size: 14px; color: var(--text-muted);">Running</span>
         </div>
         {% endif %}
     </td>
 
+
     <!-- Duration (Mono) -->
     <td
-        style="padding: 12px; border-bottom: 1px solid #eaeaea; font-family: 'Geist Mono', monospace; font-size: 13px; color: #444;">
+        style="padding: 12px; border-bottom: 1px solid var(--border-subtle); font-family: 'Geist Mono', monospace; font-size: 13px; color: var(--text-secondary);">
         {% if run.end_time %}
         {{ (run.end_time - run.start_time).total_seconds()|round(1) }}s
         {% else %}
@@ -79,35 +88,39 @@
         {% endif %}
     </td>
 
+
     <!-- Type Badge -->
-    <td style="padding: 12px; border-bottom: 1px solid #eaeaea;">
+    <td style="padding: 12px; border-bottom: 1px solid var(--border-subtle);">
         <div style="display: flex; align-items: center; gap: 6px;">
             <span
-                style="background-color: #F5F5F5; color: #444; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 500; border: 1px solid #eaeaea;">
+                style="background-color: var(--surface-secondary); color: var(--text-secondary); border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 500; border: 1px solid var(--border-subtle);">
                 {{ run.trigger|upper }}
             </span>
         </div>
     </td>
 
+
     <!-- Actions -->
-    <td style="padding: 12px; border-bottom: 1px solid #eaeaea; text-align: right;">
+    <td style="padding: 12px; border-bottom: 1px solid var(--border-subtle); text-align: right;">
         <div style="display: flex; justify-content: flex-end; gap: 8px;">
-            <button type="button" class="btn-icon" title="View Logs" hx-get="/history/run/{{ run.id }}" hx-target="body"
-                hx-swap="beforeend" style="color: #666; transition: color 0.2s;">
+            <button type="button" class="action-btn" title="View Logs" hx-get="/history/run/{{ run.id }}"
+                hx-target="body" hx-swap="beforeend">
                 <i data-lucide="file-text" style="width: 16px; height: 16px;"></i>
             </button>
             {% if request.state.user.role == 'admin' %}
-            <button class="btn-icon" style="color: var(--sible-error); transition: opacity 0.2s;"
-                hx-delete="/history/run/{{ run.id }}" hx-confirm="Are you sure you want to delete this log permanently?"
-                hx-target="#run-row-{{ run.id }}" hx-swap="outerHTML" title="Delete">
+            <button class="action-btn" style="color: var(--sible-error);" hx-delete="/history/run/{{ run.id }}"
+                hx-confirm="Are you sure you want to delete this log permanently?" hx-target="#run-row-{{ run.id }}"
+                hx-swap="outerHTML" title="Delete">
                 <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
             </button>
             {% endif %}
         </div>
     </td>
+
 </tr>
 {% else %}
 <tr>
-    <td colspan="7" class="text-center" style="padding: 24px; color: #666;">No runs recorded yet.</td>
+    <td colspan="7" class="text-center" style="padding: 24px; color: var(--text-muted);">No runs recorded yet.</td>
+
 </tr>
 {% endfor %}

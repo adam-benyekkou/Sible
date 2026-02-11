@@ -28,21 +28,22 @@
                         </span>
                     </td>
                     <td style="text-align: right; display: flex; justify-content: flex-end; gap: 4px;">
-                        <button class="btn-icon" hx-get="/settings/users/{{ user.id }}/edit"
+                        <button class="action-btn" hx-get="/settings/users/{{ user.id }}/edit"
                             hx-target="#edit-user-form-container" @click="showEditModal = true" title="Edit">
                             <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
                         </button>
 
                         {% if user.username != 'admin' and user.username != request.state.user.username %}
-                        <button class="btn-icon" style="color: var(--sible-error);" hx-delete="/api/users/{{ user.id }}"
-                            hx-confirm="Delete user {{ user.username }}?" hx-target="closest tr" hx-swap="outerHTML"
-                            title="Delete">
+                        <button class="action-btn" style="color: var(--sible-error);"
+                            hx-delete="/api/users/{{ user.id }}" hx-confirm="Delete user {{ user.username }}?"
+                            hx-target="closest tr" hx-swap="outerHTML" title="Delete">
                             <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                         </button>
                         {% else %}
                         <span class="color-muted text-sm my-auto" style="padding: 0 8px;">Protected</span>
                         {% endif %}
                     </td>
+
                 </tr>
                 {% else %}
                 <tr>
@@ -62,10 +63,10 @@
                 <header
                     style="padding: 0; margin-bottom: 24px; border: none; background: transparent; display: flex; justify-content: space-between; align-items: center;">
                     <h5 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Create New User</h5>
-                    <button type="button" @click="showCreateModal = false"
-                        style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--ds-gray-600); transition: color 0.15s ease;">
+                    <button type="button" @click="showCreateModal = false" class="action-btn">
                         <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                     </button>
+
                 </header>
 
                 <form hx-post="/api/users" hx-swap="none"
@@ -73,25 +74,25 @@
 
                     <div style="margin-bottom: 1.5rem;">
                         <label
-                            style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Username</label>
+                            style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Username</label>
                         <input type="text" name="username" required
-                            style="width: 100%; padding: 10px 12px; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
-                            onfocus="this.style.borderColor='#000'; this.style.boxShadow='0 0 0 1px #000';"
-                            onblur="this.style.borderColor='#EAEAEA'; this.style.boxShadow='none';">
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease; background: var(--surface-secondary); color: var(--text-primary);"
+                            onfocus="this.style.borderColor='var(--pico-primary)'; this.style.boxShadow='0 0 0 1px var(--pico-primary)';"
+                            onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none';">
                     </div>
 
                     <div style="margin-bottom: 1.5rem;">
                         <label
-                            style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Password</label>
+                            style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Password</label>
                         <input type="password" name="password" required
-                            style="width: 100%; padding: 10px 12px; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease;"
-                            onfocus="this.style.borderColor='#000'; this.style.boxShadow='0 0 0 1px #000';"
-                            onblur="this.style.borderColor='#EAEAEA'; this.style.boxShadow='none';">
+                            style="width: 100%; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 14px; transition: border-color 0.15s ease, box-shadow 0.15s ease; background: var(--surface-secondary); color: var(--text-primary);"
+                            onfocus="this.style.borderColor='var(--pico-primary)'; this.style.boxShadow='0 0 0 1px var(--pico-primary)';"
+                            onblur="this.style.borderColor='var(--border-subtle)'; this.style.boxShadow='none';">
                     </div>
 
                     <div style="margin-bottom: 2rem;">
                         <label
-                            style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Role</label>
+                            style="display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Role</label>
                         <div x-data="{
                             open: false,
                             selected: 'watcher',
@@ -126,22 +127,24 @@
                             <input type="hidden" name="role" :value="selected">
 
                             <div x-ref="trigger" @click.stop="toggle()"
-                                style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0 12px; background: #fff; border: 1px solid #EAEAEA; border-radius: 6px; font-size: 14px; cursor: pointer; transition: border-color 0.15s ease;"
-                                :style="open ? 'border-color: #000; box-shadow: 0 0 0 1px #000;' : ''">
+                                style="display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0 12px; background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 14px; cursor: pointer; transition: border-color 0.15s ease; color: var(--text-primary);"
+                                :style="open ? 'border-color: var(--pico-primary); box-shadow: 0 0 0 1px var(--pico-primary);' : ''">
                                 <span x-text="label"></span>
-                                <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: #666;"></i>
+                                <i data-lucide="chevron-down"
+                                    style="width: 16px; height: 16px; color: var(--text-muted);"></i>
                             </div>
 
                             <div x-show="open" x-init="lucide.createIcons()"
-                                :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px; background: white; border: 1px solid #EAEAEA; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; padding: 4px;`"
+                                :style="`position: fixed; top: ${top}px; left: ${left}px; width: ${width}px; background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; padding: 4px;`"
                                 x-cloak>
                                 <template x-for="opt in options" :key="opt.val">
                                     <div @click="select(opt)"
-                                        style="padding: 10px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px; transition: background 0.1s ease;"
-                                        :style="selected === opt.val ? 'background: #fafafa; font-weight: 500;' : ''"
-                                        onmouseover="this.style.background='#fafafa'"
+                                        style="padding: 10px 12px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px; transition: background 0.1s ease; color: var(--text-primary);"
+                                        :style="selected === opt.val ? 'background: var(--surface-secondary); font-weight: 500;' : ''"
+                                        onmouseover="this.style.background='var(--surface-secondary)'"
                                         onmouseout="if(this.dataset.selected !== 'true') this.style.background='transparent'">
-                                        <i :data-lucide="opt.icon" style="width: 14px; height: 14px; color: #666;"></i>
+                                        <i :data-lucide="opt.icon"
+                                            style="width: 14px; height: 14px; color: var(--text-muted);"></i>
                                         <span x-text="opt.lbl"></span>
                                     </div>
                                 </template>
@@ -152,11 +155,11 @@
                     <footer
                         style="padding: 0; background: transparent; border: none; margin: 0; display: flex; justify-content: flex-end;">
                         <button type="submit"
-                            style="width: auto; padding: 0 24px; background: #000; color: #fff; border: none; border-radius: 6px; height: 40px; font-weight: 500; cursor: pointer; transition: opacity 0.15s ease;"
-                            onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                            style="width: auto; padding: 0 24px; background: var(--pico-primary); color: var(--pico-primary-inverse); border: none; border-radius: 6px; height: 40px; font-weight: 500; cursor: pointer; transition: opacity 0.15s ease;">
                             Create User
                         </button>
                     </footer>
+
                 </form>
             </article>
         </dialog>
@@ -171,16 +174,17 @@
                 <header
                     style="padding: 0; margin-bottom: 24px; border: none; background: transparent; display: flex; justify-content: space-between; align-items: center;">
                     <h5 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Edit User</h5>
-                    <button type="button" @click="showEditModal = false"
-                        style="background: transparent; border: none; padding: 4px; cursor: pointer; color: var(--ds-gray-600); transition: color 0.15s ease;">
+                    <button type="button" @click="showEditModal = false" class="action-btn">
                         <i data-lucide="x" style="width: 20px; height: 20px;"></i>
                     </button>
+
                 </header>
                 <div id="edit-user-form-container">
-                    <div style="padding: 2rem; text-align: center; color: var(--ds-gray-500); font-size: 14px;">
+                    <div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 14px;">
                         Loading...
                     </div>
                 </div>
+
             </article>
         </dialog>
     </div>
@@ -192,32 +196,16 @@
         margin: 0;
     }
 
-    button.btn-icon {
-        background: transparent;
-        border: none;
-        padding: 6px;
-        border-radius: 4px;
-        cursor: pointer;
-        color: var(--ds-gray-600);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s ease;
-    }
-
-    button.btn-icon:hover {
-        background: var(--ds-gray-100);
-        color: var(--ds-gray-1000);
-    }
 
     .loader {
         width: 24px;
         height: 24px;
-        border: 2px solid #EAEAEA;
-        border-top-color: #000;
+        border: 2px solid var(--border-subtle);
+        border-top-color: var(--pico-primary);
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
     }
+
 
     @keyframes spin {
         to {
