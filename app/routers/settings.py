@@ -11,7 +11,7 @@ from app.models import PlaybookConfig, User
 import shutil
 from sqlmodel import Session, select
 import json
-from app.utils.path import validate_path
+from app.utils.path import validate_directory_path
 
 settings_conf = get_settings()
 router = APIRouter()
@@ -228,8 +228,6 @@ async def save_settings_general(
     request: Request,
     app_name: str = Form(...),
     auth_enabled: Optional[str] = Form(None),
-    auth_username: str = Form("admin"),
-    auth_password: Optional[str] = Form(None),
     timezone: str = Form("UTC"),
     theme: str = Form("light"),
     logo: Optional[UploadFile] = File(None),
@@ -265,25 +263,27 @@ async def save_settings_general(
     update_data = {
         "app_name": app_name,
         "auth_enabled": auth_enabled == "on",
-        "auth_username": auth_username,
         "playbooks_path": playbooks_path
     }
-    
-    if auth_password and auth_password.strip():
-        update_data["auth_password"] = get_password_hash(auth_password)
     
     upload_dir = settings_conf.STATIC_DIR / "uploads"
     upload_dir.mkdir(parents=True, exist_ok=True)
     
     if logo and logo.filename:
-        logo_path = f"/static/uploads/{logo.filename}"
-        with open(settings_conf.BASE_DIR / logo_path.lstrip("/"), "wb") as buffer:
+        # Security: Only extract the filename to prevent path traversal
+        safe_filename = Path(logo.filename).name
+        logo_path = f"/static/uploads/{safe_filename}"
+        save_path = upload_dir / safe_filename
+        with open(save_path, "wb") as buffer:
             shutil.copyfileobj(logo.file, buffer)
         update_data["logo_path"] = logo_path
         
     if favicon and favicon.filename:
-        fav_path = f"/static/uploads/{favicon.filename}"
-        with open(settings_conf.BASE_DIR / fav_path.lstrip("/"), "wb") as buffer:
+        # Security: Only extract the filename to prevent path traversal
+        safe_filename = Path(favicon.filename).name
+        fav_path = f"/static/uploads/{safe_filename}"
+        save_path = upload_dir / safe_filename
+        with open(save_path, "wb") as buffer:
             shutil.copyfileobj(favicon.file, buffer)
         update_data["favicon_path"] = fav_path
         
@@ -317,7 +317,7 @@ async def validate_playbooks_path(
     Returns:
         HTML fragment with success or error message.
     """
-    error = validate_path(playbooks_path)
+    error = validate_directory_path(playbooks_path)
     if error:
         return HTMLResponse(
             content=f'<div class="text-error text-xs mt-1 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> {error}</div>',

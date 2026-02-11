@@ -11,6 +11,7 @@ from datetime import datetime
 from sqlmodel import Session, select
 from app.models import JobRun, EnvVar
 from app.core.config import get_settings
+from app.core.security import decrypt_secret
 from app.services.notification import NotificationService
 
 settings = get_settings()
@@ -446,9 +447,17 @@ class RunnerService:
         Yields:
             HTML-formatted log lines.
         """
-        # Sync inventory before run
+        # Prepare isolated job directory
         from app.services.inventory import InventoryService
-        InventoryService.sync_db_to_ini(self.db)
+        job_inv_dir = InventoryService.create_job_inventory(self.db, job.id)
+        if not job_inv_dir:
+             msg = '<div class="log-error">Error: Failed to create isolated job inventory.</div>'
+             yield msg
+             job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = msg; job.exit_code = 1
+             self.db.add(job); self.db.commit()
+             return
+
+        inventory_file = "inventory.ini"
         
         playbook_name = playbook_name.replace("\\", "/")
         trigger = "manual" if not check_mode else "manual_check"
@@ -494,7 +503,7 @@ class RunnerService:
                  return
  
             env_vars_db = self.db.exec(select(EnvVar)).all()
-            custom_env = {ev.key: ev.value for ev in env_vars_db}
+            custom_env = {ev.key: (decrypt_secret(ev.value) if ev.is_secret else ev.value) for ev in env_vars_db}
             custom_env.update({"ANSIBLE_FORCE_COLOR": "0", "ANSIBLE_NOCOWS": "1", "ANSIBLE_HOST_KEY_CHECKING": "False"})
  
             # Create ephemeral inventory

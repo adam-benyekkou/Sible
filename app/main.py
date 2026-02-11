@@ -133,7 +133,23 @@ async def auth_middleware(request: Request, call_next) -> Response:
     return response
 
 # Session Middleware
-app.add_middleware(SessionMiddleware, secret_key=settings_conf.SECRET_KEY, https_only=False)
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=settings_conf.SECRET_KEY, 
+    https_only=not settings_conf.DEBUG, # Secure in prod
+    same_site="lax"
+)
+
+# Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' ws: wss:;"
+    return response
 
 # Mount Static
 app.mount("/static", StaticFiles(directory=str(settings_conf.STATIC_DIR)), name="static")

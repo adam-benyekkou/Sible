@@ -11,6 +11,7 @@ import logging
 import uuid
 from app.utils.network import check_ssh
 from app.core.config import get_settings
+from app.core.security import decrypt_secret
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -111,9 +112,15 @@ class InventoryService:
                     elif h.ssh_key_secret:
                         env_var = next((e for e in db.exec(select(EnvVar).where(EnvVar.key == h.ssh_key_secret)).all()), None)
                         if env_var and env_var.value:
-                            secret_val = env_var.value
-                            keys_dir = settings.PLAYBOOKS_DIR / "keys"
-                            keys_dir.mkdir(exist_ok=True)
+                            secret_val = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
+                            
+                            # Use job-specific key isolation if job_id is provided
+                            if job_id:
+                                keys_dir = settings.BASE_DIR / ".jobs" / job_id / "keys"
+                            else:
+                                keys_dir = settings.PLAYBOOKS_DIR / "keys"
+                                
+                            keys_dir.mkdir(parents=True, exist_ok=True)
                             key_file = keys_dir / f"{h.alias}.pem"
                             
                             if "\\n" in secret_val: secret_val = secret_val.replace("\\n", "\n")
@@ -126,7 +133,9 @@ class InventoryService:
                                 logger.error(f"Failed to write key file for {h.alias}: {e}")
                             
                             if settings.USE_DOCKER:
-                                 line += f" ansible_ssh_private_key_file={settings.DOCKER_WORKSPACE_PATH}/keys/{h.alias}.pem"
+                                 # Docker mapping remains consistent if we mount .jobs
+                                 worker_keys_path = f"{settings.DOCKER_WORKSPACE_PATH}/.jobs/{job_id}/keys" if job_id else f"{settings.DOCKER_WORKSPACE_PATH}/keys"
+                                 line += f" ansible_ssh_private_key_file={worker_keys_path}/{h.alias}.pem"
                             else:
                                  line += f" ansible_ssh_private_key_file={key_file.resolve()}"
                         else:
@@ -389,7 +398,7 @@ class InventoryService:
                         # Resolve secret to file in job_dir/keys
                         env_var = next((e for e in db.exec(select(EnvVar).where(EnvVar.key == h.ssh_key_secret)).all()), None)
                         if env_var and env_var.value:
-                            secret_val = env_var.value
+                            secret_val = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
                             key_file = keys_dir / f"{h.alias}.pem"
                             
                             # Ensure valid format

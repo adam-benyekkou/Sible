@@ -71,18 +71,21 @@ class SettingsService:
         return self.db.exec(select(EnvVar)).all()
 
     def create_env_var(self, key: str, value: str, is_secret: bool) -> Any:
-        """Creates a new environment variable.
+        """Creates a new environment variable, encrypting it if it's a secret.
 
         Args:
             key: The variable name (e.g., 'ANSIBLE_HOST_KEY_CHECKING').
             value: The variable value.
-            is_secret: If True, the value will be masked in the UI.
+            is_secret: If True, the value will be encrypted at rest.
 
         Returns:
             The newly created EnvVar record.
         """
         from app.models import EnvVar
-        env_var = EnvVar(key=key, value=value, is_secret=is_secret)
+        from app.core.security import encrypt_secret
+        
+        stored_value = encrypt_secret(value) if is_secret else value
+        env_var = EnvVar(key=key, value=stored_value, is_secret=is_secret)
         self.db.add(env_var)
         self.db.commit()
         return env_var
@@ -112,7 +115,7 @@ class SettingsService:
         value: str, 
         is_secret: bool
     ) -> Optional[Any]:
-        """Updates an existing environment variable.
+        """Updates an existing environment variable, handling encryption for secrets.
 
         Why: Allows users to rotate secrets or update configuration without
         deleting and recreating records.
@@ -127,13 +130,14 @@ class SettingsService:
             The updated EnvVar record, or None if not found.
         """
         from app.models import EnvVar
+        from app.core.security import encrypt_secret
         env_var = self.db.get(EnvVar, env_id)
         if env_var:
             env_var.key = key
             if is_secret:
                 env_var.is_secret = True
                 if value.strip():
-                    env_var.value = value
+                    env_var.value = encrypt_secret(value)
             else:
                 env_var.is_secret = False
                 env_var.value = value
