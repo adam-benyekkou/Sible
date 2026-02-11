@@ -99,8 +99,13 @@
     }
 
     .filter-btn.active {
-        background: var(--pico-primary) !important;
-        color: var(--pico-primary-inverse) !important;
+        background: #000000 !important;
+        color: #ffffff !important;
+    }
+
+    [data-theme='dark'] .filter-btn.active {
+        background: var(--ds-gray-100) !important;
+        color: var(--ds-gray-1000) !important;
     }
 </style>
 {% endblock %}
