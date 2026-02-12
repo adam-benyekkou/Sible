@@ -219,7 +219,7 @@ async def get_settings_retention(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_retention.html", {"request": request, **context})
 
-    return render_settings_page(request, "retention", context)
+    return await render_settings_page(request, "retention", context)
 
 @router.post("/settings/general")
 async def save_settings_general(
@@ -645,7 +645,7 @@ async def get_settings_notifications(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_notifications.html", {"request": request, **context})
 
-    return render_settings_page(request, "notifications", context)
+    return await render_settings_page(request, "notifications", context)
 
 @router.post("/settings/notifications")
 async def save_notification_settings(

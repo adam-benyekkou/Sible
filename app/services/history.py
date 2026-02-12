@@ -49,7 +49,7 @@ class HistoryService:
         results = self.db.exec(query.offset(offset).limit(limit)).all()
         
         # Fetch only users referenced in the results to avoid broad select(*)
-        user_names = {run.triggered_by for run in results if run.triggered_by}
+        user_names = {run.username for run in results if run.username}
         users = []
         if user_names:
             users = self.db.exec(select(User).where(User.username.in_(list(user_names)))).all()
@@ -123,7 +123,7 @@ class HistoryService:
         results = self.db.exec(statement.offset(offset).limit(limit)).all()
         
         # Fetch only users referenced in the results
-        user_names = {run.triggered_by for run in results if run.triggered_by}
+        user_names = {run.username for run in results if run.username}
         users = []
         if user_names:
             users = self.db.exec(select(User).where(User.username.in_(list(user_names)))).all()
