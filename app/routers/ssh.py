@@ -57,6 +57,15 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
             ssh_key_data = None
             ssh_key_path = host.ssh_key_path
 
+            # Fix hardcoded paths from old inventory.ini if they exist
+            if ssh_key_path and "/ansible/" in ssh_key_path:
+                from app.core.config import get_settings
+                app_conf = get_settings()
+                # Translate /ansible/keys/foo.pem -> /sible/playbooks/keys/foo.pem
+                filename = ssh_key_path.split("/")[-1]
+                ssh_key_path = str(app_conf.PLAYBOOKS_DIR / "keys" / filename)
+                logger.info(f"DEBUG: Translated SSH Key path to {ssh_key_path}")
+
             if host.ssh_key_secret:
                 env_var = db.exec(select(EnvVar).where(EnvVar.key == host.ssh_key_secret)).first()
                 if env_var:

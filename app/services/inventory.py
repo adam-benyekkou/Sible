@@ -289,7 +289,16 @@ class InventoryService:
                         if k == 'ansible_host': hostname = v
                         elif k == 'ansible_user': ssh_user = v
                         elif k == 'ansible_port': ssh_port = int(v) if v.isdigit() else 22
-                        elif k == 'ansible_ssh_private_key_file': ssh_key_path = v
+                        elif k == 'ansible_ssh_private_key_file': 
+                            ssh_key_path = v
+                            # Fix container paths if imported from standard ansible environment
+                            if "/ansible/" in ssh_key_path:
+                                filename = ssh_key_path.split("/")[-1]
+                                # Re-derive path relative to current app config
+                                from app.core.config import get_settings
+                                app_conf = get_settings()
+                                ssh_key_path = str(app_conf.PLAYBOOKS_DIR / "keys" / filename)
+
                 
                 # Check for Sible comments
                 if '#' in line:
