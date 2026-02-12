@@ -369,7 +369,7 @@ async def get_inventory_secrets(
 @router.get("/api/inventory/targets")
 async def get_inventory_targets(
     db: Session = Depends(get_db),
-    current_user: User = Depends(requires_role(["admin", "operator"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
     """
     Returns a list of all hosts and groups for selection in the UI.
@@ -388,7 +388,7 @@ async def get_inventory_targets_picker(
     request: Request,
     q: str = "",
     db: Session = Depends(get_db),
-    current_user: User = Depends(requires_role(["admin", "operator"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ):
     """
     Returns the filtered list of targets for the picker component.
@@ -414,7 +414,7 @@ async def get_host_card(
     request: Request, 
     host_id: int, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(requires_role(["admin", "operator"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ) -> Response:
     """Renders a detailed information card for a specific host.
 

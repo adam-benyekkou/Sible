@@ -226,6 +226,8 @@ class RunnerService:
             r'password\s*[=:]\s*(\S+)',
             r'secret\s*[=:]\s*(\S+)',
             r'token\s*[=:]\s*(\S+)',
+            r'api_key\s*[=:]\s*(\S+)',
+            r'auth\s*[=:]\s*(\S+)',
             r'key\s*[=:]\s*(\S+)'
         ]
         
