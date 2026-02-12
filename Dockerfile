@@ -32,8 +32,8 @@ RUN mkdir -p /sible/playbooks /sible/inventory /sible/.jobs \
 # Expose port
 EXPOSE 8000
 
-# Switch to non-root user
-USER sible
+# Switch to root user to allow Docker socket access
+USER root
 
 # Run
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
