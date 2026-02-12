@@ -1,3 +1,5 @@
+from sqlmodel import select
+from app.models import Host
 from typing import Optional
 from fastapi import APIRouter, Request, Response, Depends
 from typing import List, Optional, Any
@@ -73,7 +75,7 @@ def get_history_page(
     return templates.TemplateResponse("history.html", context)
 
 @router.delete("/history/all")
-async def delete_all_history(
+def delete_all_history(
     request: Request,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))
@@ -93,12 +95,10 @@ async def delete_all_history(
     status = request.query_params.get("status")
     
     if search is None or status is None:
-        try:
-            form = await request.form()
-            if search is None: search = form.get("search")
-            if status is None: status = form.get("status")
-        except Exception:
-            pass
+        # Note: HTMX hx-delete doesn't easily send form data in body without extra config,
+        # but we check both just in case.
+        if search is None: search = request.query_params.get("search")
+        if status is None: status = request.query_params.get("status")
 
     import logging
     logger = logging.getLogger(__name__)

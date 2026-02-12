@@ -159,8 +159,11 @@ class RoleChecker:
             if not db_user:
                 raise HTTPException(status_code=401, detail="User not found")
 
-            if db_user.role not in self.allowed_roles:
-                if db_user.role == UserRole.ADMIN:
+            # Check if user's role string value is in allowed roles
+            user_role_val = db_user.role.value if hasattr(db_user.role, 'value') else str(db_user.role)
+            
+            if user_role_val not in self.allowed_roles:
+                if user_role_val == "admin": # Admin always has access
                     return db_user
                 raise HTTPException(status_code=403, detail="Operation not permitted")
             return db_user

@@ -17,7 +17,7 @@ settings_conf = get_settings()
 router = APIRouter()
 
 # Helper to render the common settings shell with active tab
-def render_settings_page(request: Request, active_tab: str, context: dict[str, Any] = {}) -> Response:
+async def render_settings_page(request: Request, active_tab: str, context: dict[str, Any] = {}) -> Response:
     """Helper to render the common settings shell with active tab.
 
     Args:
@@ -55,7 +55,7 @@ async def get_settings_root(request: Request) -> RedirectResponse:
     return RedirectResponse(url="/settings/general")
 
 @router.get("/settings/general")
-def get_settings_general(
+async def get_settings_general(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
@@ -76,10 +76,10 @@ def get_settings_general(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_general.html", {"request": request, **context})
         
-    return render_settings_page(request, "general", context)
+    return await render_settings_page(request, "general", context)
 
 @router.get("/settings/secrets")
-def get_settings_secrets(
+async def get_settings_secrets(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
@@ -100,12 +100,12 @@ def get_settings_secrets(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_secrets.html", {"request": request, **context})
 
-    return render_settings_page(request, "secrets", context)
+    return await render_settings_page(request, "secrets", context)
 
 
 
 @router.get("/settings/users")
-def get_settings_users(
+async def get_settings_users(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
@@ -127,7 +127,7 @@ def get_settings_users(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_users.html", {"request": request, **context})
 
-    return render_settings_page(request, "users", context)
+    return await render_settings_page(request, "users", context)
 
 @router.get("/settings/users/{user_id}/edit")
 def get_user_edit_form(

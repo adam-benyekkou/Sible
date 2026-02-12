@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get("/")
-def root(
+async def root(
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ) -> Response:
@@ -47,7 +47,7 @@ def root(
     return templates.TemplateResponse("index.html", {"request": request, "hosts": hosts, "fav_ids": fav_ids})
 
 @router.get("/partials/sidebar")
-def get_sidebar(
+async def get_sidebar(
     request: Request,
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
