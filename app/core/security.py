@@ -145,6 +145,16 @@ async def get_current_user_ws(websocket: WebSocket) -> Optional[str]:
 from app.models import UserRole
 
 
+def is_using_default_password(user_obj) -> bool:
+    """
+    Checks if the user is using their username as their password.
+    This is used during onboarding to warn users.
+    """
+    from app.core.hashing import verify_password
+    # During seeding, we set password = username
+    return verify_password(user_obj.username, user_obj.hashed_password)
+
+
 class RoleChecker:
     """FastAPI dependency that enforces role-based access control."""
 

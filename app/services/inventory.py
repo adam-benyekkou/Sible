@@ -34,17 +34,20 @@ class InventoryService:
         """Sanitizes strings for Ansible compatibility by removing illegal characters.
 
         Why: Ansible is sensitive to host and group names containing spaces or
-        certain special characters. This ensures that user input in the UI
-        doesn't break the generated CLI commands.
+        certain special characters. This also prevents path traversal if the
+        name is used in a filesystem path.
 
         Args:
             name: The raw string (e.g., from a form input).
 
         Returns:
-            A sanitized string with spaces replaced by underscores.
+            A sanitized string with only alphanumeric characters, underscores, and hyphens.
         """
         if not name: return ""
-        return name.strip().replace(" ", "_")
+        # Remove any character that isn't alphanumeric, underscore, or hyphen
+        import re
+        sanitized = re.sub(r'[^a-zA-Z0-9_\-]', '_', name.strip())
+        return sanitized
 
     
     @staticmethod

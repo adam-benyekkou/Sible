@@ -1,0 +1,11 @@
+---
+- name: Welcome to Sible
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Display Welcome Message
+      debug:
+        msg:
+          - "Welcome to Sible v1.0.0"
+          - "Professional Ansible Orchestration Made Easy."
+          - "Your onboarding is complete. Happy automating!"

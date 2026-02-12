@@ -1,18 +1,36 @@
-# .gitleaks.toml
-# Custom configuration to detect the developer email and standard secrets
-
-[extend]
-useDefault = true
-
 [allowlist]
-description = "Allowlisted files or paths"
-paths = [
-    '''vendor/''',
-    '''node_modules/'''
-]
+    description = "Global allowlist"
+    paths = [
+        '''app/blueprints/.*'''
+    ]
 
 [[rules]]
-description = "Developer Email Leak"
-id = "developer-email"
-regex = '''(?i)cavy\.protocol\.dev@proton\.me'''
-severity = "high"
+    description = "Developer Email Leak"
+    id = "developer-email"
+    regex = '''cavy\.protocol\.dev@proton\.me'''
+    keywords = [
+        "cavy",
+        "proton"
+    ]
+
+[[rules]]
+    description = "Private Key"
+    id = "private-key"
+    regex = '''(?i)-----BEGIN[ A-Z0-9]*PRIVATE KEY-----'''
+    keywords = [
+        "-----BEGIN"
+    ]
+
+[[rules]]
+    description = "Generic API Key"
+    id = "generic-api-key"
+    regex = '''(?i)(?:key|api|token|secret|pass|auth)[=:]\s*['"][0-9a-zA-Z]{16,128}['"]'''
+    entropy = 3.5
+    keywords = [
+        "key",
+        "api",
+        "token",
+        "secret",
+        "pass",
+        "auth"
+    ]

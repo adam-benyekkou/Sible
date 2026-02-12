@@ -10,6 +10,7 @@ apprise
 itsdangerous
 bcrypt
 python-jose[cryptography]
+cryptography
 pydantic-settings
 watchfiles
 asyncssh

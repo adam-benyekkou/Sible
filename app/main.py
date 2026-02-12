@@ -150,6 +150,24 @@ async def auth_middleware(request: Request, call_next) -> Response:
     request.state.user = user_obj
 
     response = await call_next(request)
+    
+    # Check for default password warning
+    if user_obj:
+        from app.core.security import is_using_default_password
+        import json
+        if is_using_default_password(user_obj):
+            existing_trigger = response.headers.get("HX-Trigger", "{}")
+            try:
+                trigger_data = json.loads(existing_trigger)
+            except json.JSONDecodeError:
+                trigger_data = {existing_trigger: True} if existing_trigger != "{}" else {}
+            
+            trigger_data["show-toast"] = {
+                "message": "SECURITY WARNING: You are using a default password. Please change it in Settings immediately.",
+                "level": "error"
+            }
+            response.headers["HX-Trigger"] = json.dumps(trigger_data)
+            
     return response
 
 # Session Middleware

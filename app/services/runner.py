@@ -91,30 +91,12 @@ class RunnerService:
         extra_vars: Optional[dict[str, Any]] = None,
         inventory_path: Optional[Path] = None
     ) -> tuple[Optional[list[str]], Optional[str]]:
-        """Constructs the shell command for running Ansible or Ansible Galaxy.
+        """Constructs the command list for running Ansible or Ansible Galaxy.
 
         Why: Sible abstracts the execution environment. It prioritizes Docker for
         isolation, falls back to native execution, and provides a WSL path-mapping
-        strategy for Windows hosts. This allows the same API to work across
-        disparate server setups.
-
-        Args:
-            playbook_path: Path to the playbook file.
-            playbooks_dir: Base directory containing playbooks.
-            check_mode: If True, appends --check (Dry Run).
-            env_vars: Dictionary of environment variables.
-            galaxy: If True, constructs an ansible-galaxy command instead.
-            galaxy_req_file: Name of the requirements file for Galaxy.
-            galaxy_cwd: Working directory for Galaxy execution.
-            limit: Ansible --limit value to target specific hosts/groups.
-            tags: Ansible --tags value to run specific tasks.
-            verbosity: Integer 0-4 for -v, -vv, etc.
-            extra_vars: Dictionary of variables passed via -e.
-            inventory_path: Path to the inventory file to use.
-
-        Returns:
-            A tuple of (command_list, error_message). If command_list is None,
-            the error_message will contain details on what failed.
+        strategy for Windows hosts. This implementation uses direct list-based
+        execution to prevent command injection.
         """
         base = playbooks_dir or settings.PLAYBOOKS_DIR
         inventory_file_name = "inventory.ini"
@@ -136,24 +118,6 @@ class RunnerService:
                 host_workdir = settings.HOST_WORKSPACE_PATH + "/playbooks" if settings.HOST_WORKSPACE_PATH else str(base.resolve())
                 container_workdir = settings.DOCKER_WORKSPACE_PATH
                 
-                if galaxy:
-                    inner_cmd = f"cd {shlex.quote(container_workdir)} && ansible-galaxy install -r {shlex.quote(galaxy_req_file)} -p ./roles"
-                else:
-                    try:
-                        rel_playbook = playbook_path.resolve().relative_to(base.resolve())
-                        container_playbook_path = f"{container_workdir}/{rel_playbook.as_posix()}"
-                    except ValueError:
-                         container_playbook_path = f"{container_workdir}/{playbook_path.name}"
-                    
-                    inner_cmd = f"ansible-playbook {shlex.quote(container_playbook_path)} -i {shlex.quote(container_workdir + '/' + inventory_file_name)}"
-                    if check_mode: inner_cmd += " --check"
-                    if limit: inner_cmd += f" --limit {shlex.quote(limit)}"
-                    if tags: inner_cmd += f" --tags {shlex.quote(tags)}"
-                    if verbosity > 0: inner_cmd += f" -{'v' * verbosity}"
-                    if extra_vars:
-                        import json
-                        inner_cmd += f" -e {shlex.quote(json.dumps(extra_vars))}"
- 
                 cmd = [
                     docker_bin, "run", "--rm",
                     "-v", f"{host_workdir}:{container_workdir}",
@@ -165,27 +129,25 @@ class RunnerService:
                         cmd.extend(["-e", f"{k}={v}"])
                 
                 cmd.append(settings.DOCKER_IMAGE)
-                cmd.extend(["sh", "-c", inner_cmd])
                 
-                def mask_cmd(c):
-                    safe_c = []
-                    it = iter(c)
-                    for part in it:
-                        safe_c.append(part)
-                        if part == "-e":
-                            val = next(it, None)
-                            if val:
-                                k = val.split("=")[0]
-                                if "key" in k.lower() or "secret" in k.lower() or "pass" in k.lower() or "token" in k.lower():
-                                    safe_c.append(f"{k}=********")
-                                else:
-                                    safe_c.append(val)
-                        elif part == "-v":
-                             next(it, None)
-                             safe_c.append("********:********")
-                    return safe_c
+                if galaxy:
+                    cmd.extend(["ansible-galaxy", "install", "-r", galaxy_req_file or "requirements.yml", "-p", "./roles"])
+                else:
+                    try:
+                        rel_playbook = playbook_path.resolve().relative_to(base.resolve())
+                        container_playbook_path = f"{container_workdir}/{rel_playbook.as_posix()}"
+                    except ValueError:
+                         container_playbook_path = f"{container_workdir}/{playbook_path.name}"
+                    
+                    cmd.extend(["ansible-playbook", container_playbook_path, "-i", f"{container_workdir}/{inventory_file_name}"])
+                    if check_mode: cmd.append("--check")
+                    if limit: cmd.extend(["--limit", limit])
+                    if tags: cmd.extend(["--tags", tags])
+                    if verbosity > 0: cmd.append(f"-{'v' * verbosity}")
+                    if extra_vars:
+                        import json
+                        cmd.extend(["-e", json.dumps(extra_vars)])
 
-                logger.debug(f"Constructed Docker command: {' '.join(mask_cmd(cmd))}")
                 return cmd, None
 
         # 2. Try native host execution as fallback
@@ -214,29 +176,35 @@ class RunnerService:
                     parts = list(abs_p.parts[1:])
                     return f"/mnt/{drive}/" + "/".join(parts)
  
+                # WSL still requires some path translation, but we use list-based exec
+                wsl_cmd = [wsl_bin]
+                
+                # Note: Setting env vars in WSL call
+                if env_vars:
+                    for k, v in env_vars.items():
+                        if k.startswith(("ANSIBLE_", "SIB_")) or len(str(v)) < 100:
+                            wsl_cmd.extend(["--env", f"{k}={v}"])
+
                 if galaxy:
                      wsl_cwd = to_wsl_path(galaxy_cwd or base)
-                     bash_cmd = f"cd {shlex.quote(wsl_cwd)} && ansible-galaxy install -r {shlex.quote(galaxy_req_file)} -p ./roles"
+                     wsl_cmd.extend(["bash", "-c", f"cd {shlex.quote(wsl_cwd)} && ansible-galaxy install -r {shlex.quote(galaxy_req_file)} -p ./roles"])
+                     # Note: galaxy still uses bash -c because of 'cd', but inputs are quoted.
                 else:
                     wsl_playbook_path = to_wsl_path(playbook_path)
                     wsl_inventory_path = to_wsl_path(base / inventory_file_name)
                     
-                    env_prefix = ""
-                    if env_vars:
-                        for k, v in env_vars.items():
-                            if k.startswith(("ANSIBLE_", "SIB_")) or len(str(v)) < 100:
-                                 env_prefix += f"{k}={shlex.quote(str(v))} "
-                    
-                    bash_cmd = f"{env_prefix}ansible-playbook {shlex.quote(wsl_playbook_path)} -i {shlex.quote(wsl_inventory_path)}"
-                    if check_mode: bash_cmd += " --check"
-                    if limit: bash_cmd += f" --limit {shlex.quote(limit)}"
-                    if tags: bash_cmd += f" --tags {shlex.quote(tags)}"
-                    if verbosity > 0: bash_cmd += f" -{'v' * verbosity}"
+                    inner_wsl_cmd = ["ansible-playbook", wsl_playbook_path, "-i", wsl_inventory_path]
+                    if check_mode: inner_wsl_cmd.append("--check")
+                    if limit: inner_wsl_cmd.extend(["--limit", limit])
+                    if tags: inner_wsl_cmd.extend(["--tags", tags])
+                    if verbosity > 0: inner_wsl_cmd.append(f"-{'v' * verbosity}")
                     if extra_vars:
                         import json
-                        bash_cmd += f" -e {shlex.quote(json.dumps(extra_vars))}"
+                        inner_wsl_cmd.extend(["-e", json.dumps(extra_vars)])
+                    
+                    wsl_cmd.extend(inner_wsl_cmd)
                 
-                return [wsl_bin, "bash", "-c", bash_cmd], None
+                return wsl_cmd, None
                 
             return None, '<div class="log-error">Error: Ansible not found (Docker/Host/WSL).</div>'
             
@@ -244,25 +212,35 @@ class RunnerService:
 
     @staticmethod
     def format_log_line(line: str) -> str:
-        """Applies HTML formatting to a single Ansible log line based on content.
+        """Applies HTML formatting and secret masking to a single Ansible log line.
 
         Why: Ansible's output is colored via ANSI codes in a terminal, which
-        don't work in a browser. This method parses task headers, successes,
-        failures, and changes to apply CSS classes for a professional UI.
-
-        Args:
-            line: The raw string line from Ansible output.
-
-        Returns:
-            An HTML string wrapped in a classed <div>.
+        don't work in a browser. This method parses task headers and applies
+        CSS classes. It also masks potential secrets to prevent exposure.
         """
+        # Mask sensitive keywords
+        sensitive_patterns = [
+            r'ansible_become_pass\s*[=:]\s*(\S+)',
+            r'ansible_password\s*[=:]\s*(\S+)',
+            r'ansible_ssh_pass\s*[=:]\s*(\S+)',
+            r'password\s*[=:]\s*(\S+)',
+            r'secret\s*[=:]\s*(\S+)',
+            r'token\s*[=:]\s*(\S+)',
+            r'key\s*[=:]\s*(\S+)'
+        ]
+        
+        masked_line = line
+        import re
+        for pattern in sensitive_patterns:
+            masked_line = re.sub(pattern, lambda m: m.group(0).replace(m.group(1), "********"), masked_line, flags=re.IGNORECASE)
+
         css_class = ""
-        if "TASK [" in line or "PLAY [" in line or "PLAY RECAP" in line: css_class = "log-meta"
-        elif "ok: [" in line or "ok=" in line: css_class = "log-success"
-        elif "changed: [" in line or "changed=" in line: css_class = "log-changed"
-        elif "fatal:" in line or "failed=" in line or "unreachable=" in line: css_class = "log-error"
-        elif "skipping:" in line: css_class = "log-debug"
-        escaped_line = html.escape(line)
+        if "TASK [" in masked_line or "PLAY [" in masked_line or "PLAY RECAP" in masked_line: css_class = "log-meta"
+        elif "ok: [" in masked_line or "ok=" in masked_line: css_class = "log-success"
+        elif "changed: [" in masked_line or "changed=" in masked_line: css_class = "log-changed"
+        elif "fatal:" in masked_line or "failed=" in masked_line or "unreachable=" in masked_line: css_class = "log-error"
+        elif "skipping:" in masked_line: css_class = "log-debug"
+        escaped_line = html.escape(masked_line)
         return f'<div class="{css_class}">{escaped_line}</div>' if css_class else f'<div>{escaped_line}</div>'
  
     async def run_playbook_headless(
