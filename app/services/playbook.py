@@ -37,9 +37,13 @@ class PlaybookService:
             Path object pointing to the playbooks root.
         """
         from app.models import AppSettings
+        from app.core.config import get_settings as get_app_settings
         db_settings = self.db.get(AppSettings, 1)
-        path_str = db_settings.playbooks_path if db_settings else "/app/playbooks"
-        return Path(path_str)
+        if db_settings and db_settings.playbooks_path:
+            return Path(db_settings.playbooks_path)
+        
+        # Fallback to dynamic config
+        return get_app_settings().PLAYBOOKS_DIR
 
     def _validate_path(self, name: str) -> Optional[Path]:
         """Validates a playbook path to prevent directory traversal attacks.

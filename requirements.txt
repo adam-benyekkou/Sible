@@ -7,6 +7,7 @@ sqlmodel
 apscheduler
 ansible-lint
 apprise
+itsdangerous
 bcrypt
 python-jose[cryptography]
 pydantic-settings

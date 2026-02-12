@@ -36,7 +36,10 @@ class SettingsService:
         """
         settings = self.db.get(AppSettings, 1)
         if not settings:
-            settings = AppSettings(id=1)
+            from app.core.config import get_settings as get_app_settings
+            app_conf = get_app_settings()
+            # Use dynamic PLAYBOOKS_DIR from config as initial default
+            settings = AppSettings(id=1, playbooks_path=str(app_conf.PLAYBOOKS_DIR))
             self.db.add(settings)
             self.db.commit()
             self.db.refresh(settings)

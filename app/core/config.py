@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     TEMPLATES_DIR: Path = BASE_DIR / "templates"
     DATABASE_URL: str = "sqlite:///sible.db"
     SECRET_KEY: str = "sible-secret-key-change-me"
+    DEBUG: bool = False
     
     # Docker Settings
     USE_DOCKER: bool = True

@@ -52,9 +52,12 @@ class RunnerService:
             Path object pointing to the playbook root directory.
         """
         from app.models import AppSettings
+        from app.core.config import get_settings as get_app_settings
         db_settings = self.db.get(AppSettings, 1)
-        path_str = db_settings.playbooks_path if db_settings else "/app/playbooks"
-        return Path(path_str)
+        if db_settings and db_settings.playbooks_path:
+            return Path(db_settings.playbooks_path)
+            
+        return get_app_settings().PLAYBOOKS_DIR
 
     def _get_lock(self, playbook_name: str) -> asyncio.Lock:
         """Retrieves or creates a named lock for a specific playbook.
