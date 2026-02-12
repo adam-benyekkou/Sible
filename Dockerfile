@@ -18,8 +18,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create a non-root user with home directory
-RUN groupadd -r sible && useradd -r -m -g sible -u 1000 sible
+# Create a non-root user and add to docker group for socket access
+RUN groupadd -r sible && useradd -r -m -g sible -u 1000 sible \
+    && groupadd -g 999 docker_host && usermod -aG docker_host sible
 
 # Setup application directory
 WORKDIR /sible
@@ -32,8 +33,8 @@ RUN mkdir -p /sible/playbooks /sible/inventory /sible/.jobs \
 # Expose port
 EXPOSE 8000
 
-# Switch to root user to allow Docker socket access
-USER root
+# Switch to non-root user
+USER sible
 
 # Run
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
