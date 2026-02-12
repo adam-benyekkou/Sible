@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Request, Response, Depends
 from typing import List, Optional, Any
 from app.templates import templates

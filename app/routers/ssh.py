@@ -11,7 +11,6 @@ router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
 
 @router.websocket("/ws/ssh/{host_id}")
-@router.websocket("/ws/ssh/{host_id}")
 async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
     """Provides a bi-directional WebSocket-to-SSH terminal bridge.
 
@@ -29,8 +28,10 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
     
     try:
         # 2. Authenticate
+        logger.info(f"DEBUG: WebSocket cookies: {websocket.cookies}")
         username = await get_current_user_ws(websocket)
         if not username:
+            logger.warning(f"DEBUG: WebSocket Auth failed for host_id: {host_id}")
             await websocket.send_text("\r\n\x1b[31mAuthentication failed. Please refresh and log in again.\x1b[0m\r\n")
             await websocket.close(code=4001)
             return
@@ -40,8 +41,9 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
             statement = select(User).where(User.username == username)
             user = db.exec(statement).first()
             
-            if not user or user.role != "admin":
-                await websocket.send_text("\r\n\x1b[31mForbidden: Admin access required for terminal.\x1b[0m\r\n")
+            if not user or user.role not in ["admin", "operator"]:
+                logger.warning(f"DEBUG: Forbidden access for user {username} (role: {user.role if user else 'N/A'})")
+                await websocket.send_text("\r\n\x1b[31mForbidden: Admin or Operator access required for terminal.\x1b[0m\r\n")
                 await websocket.close(code=4003)
                 return
 
@@ -59,6 +61,10 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
                 env_var = db.exec(select(EnvVar).where(EnvVar.key == host.ssh_key_secret)).first()
                 if env_var:
                     ssh_key_data = env_var.value
+                    if "\\n" in ssh_key_data:
+                        ssh_key_data = ssh_key_data.replace("\\n", "\n")
+                    if not ssh_key_data.endswith("\n"):
+                        ssh_key_data += "\n"
                     logger.info(f"DEBUG: Using SSH Key Secret '{host.ssh_key_secret}' (length: {len(ssh_key_data)})")
 
         # 3. Inform user of progress

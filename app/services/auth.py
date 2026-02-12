@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, Any
+from typing import Any, Optional
 from jose import jwt, JWTError
 from app.core.config import get_settings
 from app.core.hashing import verify_password, get_password_hash
