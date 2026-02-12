@@ -26,7 +26,8 @@ class InventoryService:
     Attributes:
         INVENTORY_FILE (Path): Path to the persistent global inventory file.
     """
-    INVENTORY_FILE: Path = settings.PLAYBOOKS_DIR / "inventory.ini"
+    INVENTORY_FILE: Path = settings.INFRASTRUCTURE_DIR / "inventory" / "inventory.ini"
+    ONBOARDING_FILE: Path = settings.INFRASTRUCTURE_DIR / "inventory" / "onboarding.ini"
     
     @staticmethod
     def sanitize_ansible_name(name: str) -> str:
@@ -48,16 +49,21 @@ class InventoryService:
     
     @staticmethod
     def get_inventory_content() -> str:
-        """Reads the raw content of the global inventory.ini file.
+        """Reads the raw content of the global inventory file.
 
         Why: Provides the 'Source of Truth' for the raw text editor in the UI.
 
         Returns:
             The complete contents of the inventory file as a string.
         """
-        if not InventoryService.INVENTORY_FILE.exists():
-            InventoryService.INVENTORY_FILE.write_text("[all]\nlocalhost ansible_connection=local\n", encoding="utf-8")
-        return InventoryService.INVENTORY_FILE.read_text(encoding="utf-8")
+        target = InventoryService.INVENTORY_FILE
+        if not target.exists():
+            if InventoryService.ONBOARDING_FILE.exists():
+                target = InventoryService.ONBOARDING_FILE
+            else:
+                InventoryService.INVENTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+                InventoryService.INVENTORY_FILE.write_text("[all]\nlocalhost ansible_connection=local\n", encoding="utf-8")
+        return target.read_text(encoding="utf-8")
 
     @staticmethod
     def save_inventory_content(content: str) -> bool:

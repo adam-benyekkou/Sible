@@ -18,7 +18,7 @@ from app.core.database import create_db_and_tables
 from app.core.security import check_auth, get_user_from_token
 from app.services import RunnerService, SchedulerService, AuthService, PlaybookService
 from app.models import User
-from app.core.onboarding import seed_onboarding_data
+from app.core.onboarding import seed_onboarding_data, seed_users, seed_app_settings
 from app.core.database import engine
 from sqlmodel import Session, select
 
@@ -59,13 +59,11 @@ async def lifespan(app: FastAPI):
         from app.services.history import HistoryService
         HistoryService(session).apply_retention_policies()
         
-        # Ensure Admin User
-        auth_service = AuthService(session)
-        stmt = select(User).where(User.username == "admin")
-        admin_exists = session.exec(stmt).first()
-        if not admin_exists:
-             logger.info("Creating default admin user...")
-             auth_service.create_user("admin", "admin", "admin")
+        # Seed RBAC Users
+        seed_users(session)
+        
+        # Seed App Settings (Favicon etc)
+        seed_app_settings(session)
         
         # Seed Onboarding Data
         seed_onboarding_data(session, PlaybookService(session))

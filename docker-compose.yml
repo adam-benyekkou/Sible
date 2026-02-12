@@ -1,13 +1,32 @@
 services:
-  web:
+  sible:
     build: .
+    image: sible:latest
+    container_name: sible
     ports:
       - "8000:8000"
-    environment:
-      - HOST_WORKSPACE_PATH=${PWD}
+    user: "1000:1000"
+    group_add:
+      - "0"
+    init: true
     volumes:
-      - .:/sible
+      - ./infrastructure:/app/infrastructure
+      - sible-db:/data
+      # Ensure the docker socket is accessible if Sible needs to spawn worker containers
       - /var/run/docker.sock:/var/run/docker.sock
-      # To use an external playbooks directory, mount it here and update the path in Settings
-      # - /path/to/my-infra/playbooks:/sible/playbooks
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - SIBLE_THEME_LIGHT=Geist Light
+      - SIBLE_THEME_DARK=Catppuccin Dark
+      - SIBLE_INFRA_PATH=/app/infrastructure
+      - SIBLE_DATABASE_URL=sqlite:////data/sible.db
+      - SIBLE_HOST_INFRA_PATH=C:\Users\Adam\Desktop\Code\Sible\infrastructure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  sible-db:

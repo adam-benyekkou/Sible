@@ -7,14 +7,17 @@ from sqlmodel import Session, select
 import logging
 from datetime import datetime
 import math
+from app.core.config import get_settings
 from app.core.database import engine
 from app.services.runner import RunnerService
 
+settings = get_settings()
 logger = logging.getLogger(__name__)
 
 # Job Store Configuration
+# Use the same database URL as the rest of the app for consistency
 jobstores = {
-    'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
+    'default': SQLAlchemyJobStore(url=settings.DATABASE_URL)
 }
 
 scheduler = AsyncIOScheduler(jobstores=jobstores)

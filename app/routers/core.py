@@ -12,6 +12,15 @@ router = APIRouter()
 
 
 
+@router.get("/health")
+async def health_check():
+    """Health check endpoint for Docker and monitoring.
+    
+    Returns:
+        Status and version information.
+    """
+    return {"status": "ok", "version": settings_conf.VERSION}
+
 @router.get("/")
 async def root(
     request: Request,

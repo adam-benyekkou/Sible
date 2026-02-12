@@ -26,7 +26,7 @@ def _run_migrations():
     migrations = [
         ("user", "timezone", "TEXT DEFAULT 'UTC'"),
         ("user", "theme", "TEXT DEFAULT 'light'"),
-        ("appsettings", "playbooks_path", "TEXT DEFAULT '/playbooks'"),
+        ("appsettings", "playbooks_path", "TEXT DEFAULT '/app/infrastructure/playbooks'"),
     ]
     
     try:

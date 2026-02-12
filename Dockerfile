@@ -1,3 +1,17 @@
+# Stage 1: Builder
+FROM python:3.11-slim as builder
+
+WORKDIR /build
+
+# Install build dependencies if needed (e.g., for some python packages)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# Stage 2: Runtime
 FROM python:3.11-slim
 
 # Install system dependencies
@@ -13,24 +27,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get update && apt-get install -y docker-ce-cli \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies as root
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Create a non-root user and handle docker group for socket access
+# Create a non-root system user named sible
 RUN groupadd -g 1000 sible && \
-    useradd -u 1000 -g sible -m -s /bin/bash sible && \
-    (getent group 999 || groupadd -g 999 docker) && \
-    usermod -aG $(getent group 999 | cut -d: -f1) sible
+    useradd -u 1000 -g sible -m -s /bin/bash sible
 
-# Setup application directory
-WORKDIR /sible
+# Set work directory
+WORKDIR /app
+
+# Copy installed python packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code with correct ownership
 COPY --chown=sible:sible . .
 
-# Ensure permissions for playbooks and inventory
-RUN mkdir -p /sible/playbooks /sible/inventory /sible/.jobs \
-    && chown -R sible:sible /sible
+# Setup infrastructure and data directories
+RUN mkdir -p /app/infrastructure /data && chown -R sible:sible /app/infrastructure /data
+
+# Environment Branding
+ENV SIBLE_THEME_LIGHT="Geist Light"
+ENV SIBLE_THEME_DARK="Catppuccin Dark"
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
 
 # Expose port
 EXPOSE 8000
@@ -38,5 +57,6 @@ EXPOSE 8000
 # Switch to non-root user
 USER sible
 
-# Run
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application
+# We use a shell to ensure we can handle volume permissions if needed on entry
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000"]
