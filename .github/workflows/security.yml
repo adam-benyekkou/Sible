@@ -8,60 +8,81 @@ on:
 
 jobs:
   gitleaks:
-    name: Gitleaks (Secrets)
+    name: Secret Scanning (Gitleaks)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Gitleaks Scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --verbose --redact
+          config-path: .gitleaks.toml
 
   bandit:
-    name: Bandit (Static Analysis)
+    name: Python SAST (Bandit)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install Bandit
         run: pip install bandit
-      - name: Bandit Scan
-        run: bandit -r app/ -ll
 
-  safety:
-    name: Safety (Dependencies)
+      - name: Bandit Scan
+        # -r: recursive, -ll: medium and high severity, -ii: medium and high confidence
+        run: bandit -r app/ run.py -ll -ii
+
+  dependency-audit:
+    name: Dependency Audit (Safety)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Check Dependencies
         run: |
           pip install safety
           safety check -r requirements.txt
 
-  trivy:
-    name: Trivy (Docker Scan)
+  container-security:
+    name: Container Security (Trivy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Build Docker Image
-        run: docker build -t sible:test .
-      - name: Trivy Scan
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Scan Dockerfile (Config)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'sible:test'
+          scan-type: 'config'
+          hide-progress: true
+          exit-code: '1'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Build Docker Image
+        run: docker build -t sible:${{ github.sha }} .
+
+      - name: Scan Container Image (Vulnerabilities)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sible:${{ github.sha }}'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
+          severity: 'HIGH,CRITICAL'

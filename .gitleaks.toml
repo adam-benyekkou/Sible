@@ -1,0 +1,18 @@
+# .gitleaks.toml
+# Custom configuration to detect the developer email and standard secrets
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlisted files or paths"
+paths = [
+    '''vendor/''',
+    '''node_modules/'''
+]
+
+[[rules]]
+description = "Developer Email Leak"
+id = "developer-email"
+regex = '''(?i)cavy\.protocol\.dev@proton\.me'''
+severity = "high"
