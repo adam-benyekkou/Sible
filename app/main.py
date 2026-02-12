@@ -155,6 +155,8 @@ async def auth_middleware(request: Request, call_next) -> Response:
     if user_obj:
         from app.core.security import is_using_default_password
         import json
+        
+        # 1. Default user password check
         if is_using_default_password(user_obj):
             existing_trigger = response.headers.get("HX-Trigger", "{}")
             try:
@@ -163,9 +165,25 @@ async def auth_middleware(request: Request, call_next) -> Response:
                 trigger_data = {existing_trigger: True} if existing_trigger != "{}" else {}
             
             trigger_data["show-toast"] = {
-                "message": "SECURITY WARNING: You are using a default password. Please change it in Settings immediately.",
+                "message": f"SECURITY WARNING: You are using the default password for '{user_obj.username}'. Please change it in Settings immediately.",
                 "level": "error"
             }
+            response.headers["HX-Trigger"] = json.dumps(trigger_data)
+            
+        # 2. Default SECRET_KEY check
+        if settings_conf.SECRET_KEY == "sible-secret-key-change-me" and user_obj.role == "admin":
+            existing_trigger = response.headers.get("HX-Trigger", "{}")
+            try:
+                trigger_data = json.loads(existing_trigger)
+            except json.JSONDecodeError:
+                trigger_data = {existing_trigger: True} if existing_trigger != "{}" else {}
+            
+            # Only overwrite if not already set or if it's a higher priority
+            if "show-toast" not in trigger_data:
+                trigger_data["show-toast"] = {
+                    "message": "PRODUCTION WARNING: SIBLE_SECRET_KEY is still using the default value. Update your .env file.",
+                    "level": "error"
+                }
             response.headers["HX-Trigger"] = json.dumps(trigger_data)
             
     return response

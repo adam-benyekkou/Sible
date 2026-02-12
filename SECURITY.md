@@ -9,7 +9,7 @@
 
 ## Reporting a Vulnerability
 
-We take the security of Sible seriously. If you believe you have found a security vulnerability, please report it to us by emailing **<cavy.protocol.dev@proton.me>**.
+We take the security of Sible seriously. If you believe you have found a security vulnerability, please report it to us by emailing **<security@sible.io>**.
 
 **Please do not report security vulnerabilities via public GitHub issues.**
 
