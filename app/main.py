@@ -6,8 +6,8 @@ import logging
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, Response
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import RedirectResponse, Response, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
@@ -83,6 +83,28 @@ app = FastAPI(
     version=settings.VERSION,
     lifespan=lifespan
 )
+
+# Global Exception Handlers
+@app.exception_handler(HTTPException)
+async def htmx_http_exception_handler(request: Request, exc: HTTPException):
+    """Returns HTML error partials for HTMX requests, JSON for API calls."""
+    if request.headers.get("HX-Request"):
+        return HTMLResponse(
+            content=f'<div class="log-error" style="padding: 1rem;">{exc.detail}</div>',
+            status_code=exc.status_code,
+        )
+    return Response(content=str(exc.detail), status_code=exc.status_code)
+
+@app.exception_handler(Exception)
+async def htmx_generic_exception_handler(request: Request, exc: Exception):
+    """Catches unhandled exceptions and returns clean error responses."""
+    logger.exception("Unhandled exception")
+    if request.headers.get("HX-Request"):
+        return HTMLResponse(
+            content='<div class="log-error" style="padding: 1rem;">An unexpected error occurred.</div>',
+            status_code=500,
+        )
+    return Response(content="Internal Server Error", status_code=500)
 
 # Auth Middleware
 @app.middleware("http")

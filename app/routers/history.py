@@ -12,7 +12,7 @@ settings = get_settings()
 router = APIRouter()
 
 @router.get("/history")
-async def get_history_page(
+def get_history_page(
     request: Request,
     page: int = 1,
     search: Optional[str] = None,
@@ -42,12 +42,9 @@ async def get_history_page(
     runs, total_count, users = service.get_recent_runs(limit=limit, offset=offset, search=search, status=status)
     
     # Get groups for UI distinction in Target column
-    from sqlmodel import select
+    from sqlmodel import select, func
     from app.models import Host
-    from app.dependencies import get_db
-    # We can use the service or just a quick query
-    db = next(get_db())
-    groups = list(set(h.group_name for h in db.exec(select(Host)).all() if h.group_name))
+    groups = service.db.exec(select(Host.group_name).where(Host.group_name.is_not(None)).distinct()).all()
     groups.append("all")
     
     import math
@@ -100,17 +97,19 @@ async def delete_all_history(
             form = await request.form()
             if search is None: search = form.get("search")
             if status is None: status = form.get("status")
-        except:
+        except Exception:
             pass
 
-    print(f"[Sible] Deleting filtered history: search='{search}', status='{status}'")
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Deleting filtered history: search='{search}', status='{status}'")
     service.delete_all_runs(search=search, status=status)
     response = Response(status_code=200)
     response.headers["HX-Refresh"] = "true"
     return response
 
 @router.delete("/history/run/{run_id}")
-async def delete_run(
+def delete_run(
     run_id: int,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))
@@ -131,7 +130,7 @@ async def delete_run(
     return Response(status_code=404)
 
 @router.get("/history/run/{run_id}")
-async def get_run_details(
+def get_run_details(
     run_id: int, 
     request: Request,
     service: HistoryService = Depends(get_history_service),
@@ -153,7 +152,7 @@ async def get_run_details(
     return templates.TemplateResponse("partials/log_viewer_modal.html", {"request": request, "run": run})
 
 @router.get("/history/{name:path}")
-async def get_playbook_history(
+def get_playbook_history(
     name: str,
     request: Request,
     page: int = 1,
@@ -171,9 +170,7 @@ async def get_playbook_history(
 
     from sqlmodel import select
     from app.models import Host
-    from app.dependencies import get_db
-    db = next(get_db())
-    groups = list(set(h.group_name for h in db.exec(select(Host)).all() if h.group_name))
+    groups = service.db.exec(select(Host.group_name).where(Host.group_name.is_not(None)).distinct()).all()
     groups.append("all")
 
     return templates.TemplateResponse("partials/history_list_modal.html", {
@@ -190,7 +187,7 @@ async def get_playbook_history(
     })
 
 @router.delete("/history/playbook/{name:path}/all")
-async def delete_playbook_history(
+def delete_playbook_history(
     name: str,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))

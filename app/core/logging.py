@@ -1,6 +1,5 @@
 import logging
 import sys
-from pathlib import Path
 from app.core.config import get_settings
 
 settings = get_settings()

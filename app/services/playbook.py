@@ -81,7 +81,20 @@ class PlaybookService:
         if not base.exists():
             base.mkdir(parents=True, exist_ok=True)
             return []
-            
+
+        # Batch-fetch latest job status for all playbooks in one query
+        from sqlmodel import func
+        subq = (
+            select(JobRun.playbook, func.max(JobRun.start_time).label("max_time"))
+            .group_by(JobRun.playbook)
+            .subquery()
+        )
+        latest_jobs = self.db.exec(
+            select(JobRun.playbook, JobRun.status)
+            .join(subq, (JobRun.playbook == subq.c.playbook) & (JobRun.start_time == subq.c.max_time))
+        ).all()
+        status_map = {playbook: status for playbook, status in latest_jobs}
+
         def build_tree(current_path: Path, relative_root: Path) -> List[dict]:
             items = []
             if not current_path.exists(): return []
@@ -99,13 +112,11 @@ class PlaybookService:
                             "children": children
                         })
                 elif entry.suffix.lower() in {".yaml", ".yml"}:
-                    statement = select(JobRun).where(JobRun.playbook == rel_path).order_by(desc(JobRun.start_time)).limit(1)
-                    run = self.db.exec(statement).first()
                     items.append({
                         "type": "file", 
                         "name": entry.stem, 
                         "path": rel_path, 
-                        "status": run.status if run else None
+                        "status": status_map.get(rel_path)
                     })
             return items
         return build_tree(base, base)
@@ -209,6 +220,19 @@ class PlaybookService:
             ).all()
             favorites = {f.playbook_path for f in fav_objs}
 
+        # Batch-fetch latest job per playbook in one query
+        from sqlmodel import func
+        subq = (
+            select(JobRun.playbook, func.max(JobRun.start_time).label("max_time"))
+            .group_by(JobRun.playbook)
+            .subquery()
+        )
+        latest_jobs = self.db.exec(
+            select(JobRun)
+            .join(subq, (JobRun.playbook == subq.c.playbook) & (JobRun.start_time == subq.c.max_time))
+        ).all()
+        jobs_map = {job.playbook: job for job in latest_jobs}
+
         playbooks = []
         for file_path in base.rglob("*"):
             if file_path.is_file() and file_path.suffix.lower() in {".yaml", ".yml"}:
@@ -222,14 +246,7 @@ class PlaybookService:
                     if s not in rel_path.lower() and s not in file_path.stem.lower() and s not in description.lower():
                         continue
 
-                # Fetch history metadata
-                # Use subquery or separate query for latest job per playbook?
-                # For simplicity and performance with small sets, we'll get last successful/failed run
-                last_job = self.db.exec(
-                    select(JobRun)
-                    .where(JobRun.playbook == rel_path)
-                    .order_by(desc(JobRun.start_time))
-                ).first()
+                last_job = jobs_map.get(rel_path)
 
                 mtime = file_path.stat().st_mtime
                 last_modified = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")

@@ -13,7 +13,7 @@ settings = get_settings()
 router = APIRouter()
 
 @router.get("/schedules", response_class=HTMLResponse)
-async def get_queue_view(
+def get_queue_view(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator"]))
@@ -32,8 +32,7 @@ async def get_queue_view(
     jobs = SchedulerService.list_jobs()
     
     # Get groups for icon logic
-    hosts = db.exec(select(Host)).all()
-    groups = list(set(h.group_name for h in hosts if h.group_name))
+    groups = db.exec(select(Host.group_name).where(Host.group_name.is_not(None)).distinct()).all()
 
     return templates.TemplateResponse("schedules.html", {
         "request": request, 
@@ -43,7 +42,7 @@ async def get_queue_view(
     })
 
 @router.post("/schedule")
-async def create_schedule(
+def create_schedule(
     playbook: str = Form(...), 
     cron: str = Form(...),
     target: Optional[str] = Form(default=None),
@@ -76,7 +75,7 @@ async def create_schedule(
     return response
 
 @router.delete("/schedule/{job_id}")
-async def delete_schedule(
+def delete_schedule(
     job_id: str,
     current_user: Any = Depends(requires_role(["admin"]))
 ) -> Response:
@@ -98,7 +97,7 @@ async def delete_schedule(
     return response
 
 @router.put("/schedule/{job_id}")
-async def update_schedule(
+def update_schedule(
     job_id: str, 
     request: Request, 
     cron: Optional[str] = Form(default=None),
@@ -146,8 +145,7 @@ async def update_schedule(
              return response
         
         from app.models import Host
-        hosts = db.exec(select(Host)).all()
-        groups = list(set(h.group_name for h in hosts if h.group_name))
+        groups = db.exec(select(Host.group_name).where(Host.group_name.is_not(None)).distinct()).all()
              
         response = templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job, "groups": groups})
         
@@ -164,7 +162,7 @@ async def update_schedule(
         return response
 
 @router.post("/schedule/{job_id}/pause")
-async def pause_schedule(
+def pause_schedule(
     job_id: str,
     request: Request,
     db: Session = Depends(get_db),
@@ -189,13 +187,12 @@ async def pause_schedule(
     job = SchedulerService.get_job_info(job_id)
     
     from app.models import Host
-    hosts = db.exec(select(Host)).all()
-    groups = list(set(h.group_name for h in hosts if h.group_name))
+    groups = db.exec(select(Host.group_name).where(Host.group_name.is_not(None)).distinct()).all()
 
     return templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job, "groups": groups})
 
 @router.post("/schedule/{job_id}/resume")
-async def resume_schedule(
+def resume_schedule(
     job_id: str,
     request: Request,
     db: Session = Depends(get_db),
@@ -226,7 +223,7 @@ async def resume_schedule(
     return templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job, "groups": groups})
 
 @router.get("/partials/schedules/row/{job_id}")
-async def get_job_row(
+def get_job_row(
     job_id: str, 
     request: Request,
     db: Session = Depends(get_db),
@@ -243,17 +240,12 @@ async def get_job_row(
     Returns:
         Row template response.
     """
-    from app.services.inventory import InventoryService
     job = SchedulerService.get_job_info(job_id)
     if not job: return Response("")
     
     # Get groups for icon logic
-    content = InventoryService.get_inventory_content()
-    # A simple way to get groups without parsing content again if we have a DB helper,
-    # but let's use the DB since we have the session
     from app.models import Host
-    hosts = db.exec(select(Host)).all()
-    groups = list(set(h.group_name for h in hosts if h.group_name))
+    groups = db.exec(select(Host.group_name).where(Host.group_name.is_not(None)).distinct()).all()
     
     return templates.TemplateResponse("partials/schedules_row.html", {
         "request": request, 
@@ -262,7 +254,7 @@ async def get_job_row(
     })
 
 @router.get("/partials/schedules/row/{job_id}/edit")
-async def get_job_row_edit(
+def get_job_row_edit(
     job_id: str, 
     request: Request,
     db: Session = Depends(get_db),
@@ -283,9 +275,8 @@ async def get_job_row_edit(
     job = SchedulerService.get_job_info(job_id)
     if not job: return Response(status_code=404)
     
-    hosts = db.exec(select(Host)).all()
-    groups = sorted(list(set(h.group_name for h in hosts if h.group_name)))
-    servers = sorted([h.alias for h in hosts])
+    groups = sorted(db.exec(select(Host.group_name).where(Host.group_name.is_not(None)).distinct()).all())
+    servers = sorted(db.exec(select(Host.alias)).all())
     
     return templates.TemplateResponse("partials/schedules_modal.html", {
         "request": request, 

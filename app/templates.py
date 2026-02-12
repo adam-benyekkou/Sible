@@ -11,7 +11,7 @@ templates = Jinja2Templates(directory=str(settings.TEMPLATES_DIR))
 def get_global_app_name():
     with Session(engine) as session:
         try: return SettingsService(session).get_settings().app_name
-        except: return "Sible"
+        except Exception: return "Sible"
 
 def get_settings_global():
     with Session(engine) as session:

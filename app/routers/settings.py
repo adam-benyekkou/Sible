@@ -17,7 +17,7 @@ settings_conf = get_settings()
 router = APIRouter()
 
 # Helper to render the common settings shell with active tab
-async def render_settings_page(request: Request, active_tab: str, context: dict[str, Any] = {}) -> Response:
+def render_settings_page(request: Request, active_tab: str, context: dict[str, Any] = {}) -> Response:
     """Helper to render the common settings shell with active tab.
 
     Args:
@@ -55,7 +55,7 @@ async def get_settings_root(request: Request) -> RedirectResponse:
     return RedirectResponse(url="/settings/general")
 
 @router.get("/settings/general")
-async def get_settings_general(
+def get_settings_general(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
@@ -76,10 +76,10 @@ async def get_settings_general(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_general.html", {"request": request, **context})
         
-    return await render_settings_page(request, "general", context)
+    return render_settings_page(request, "general", context)
 
 @router.get("/settings/secrets")
-async def get_settings_secrets(
+def get_settings_secrets(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
@@ -100,12 +100,12 @@ async def get_settings_secrets(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_secrets.html", {"request": request, **context})
 
-    return await render_settings_page(request, "secrets", context)
+    return render_settings_page(request, "secrets", context)
 
 
 
 @router.get("/settings/users")
-async def get_settings_users(
+def get_settings_users(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
@@ -127,10 +127,10 @@ async def get_settings_users(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_users.html", {"request": request, **context})
 
-    return await render_settings_page(request, "users", context)
+    return render_settings_page(request, "users", context)
 
 @router.get("/settings/users/{user_id}/edit")
-async def get_user_edit_form(
+def get_user_edit_form(
     request: Request,
     user_id: int,
     db: Session = Depends(get_db),
@@ -157,7 +157,7 @@ async def get_user_edit_form(
     })
 
 @router.get("/settings/retention")
-async def get_settings_retention(
+def get_settings_retention(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     playbook_service: PlaybookService = Depends(get_playbook_service),
@@ -219,9 +219,7 @@ async def get_settings_retention(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_retention.html", {"request": request, **context})
 
-    return await render_settings_page(request, "retention", context)
-
-    return await render_settings_page(request, "notifications", context)
+    return render_settings_page(request, "retention", context)
 
 @router.post("/settings/general")
 async def save_settings_general(
@@ -361,7 +359,7 @@ async def update_theme(
 # REDUNDANT ENDPOINT REMOVED (Handled in @router.get("/settings/secrets") above)
 
 @router.post("/settings/secrets")
-async def create_env_var(
+def create_env_var(
     request: Request, 
     key: str = Form(...), 
     value: str = Form(...), 
@@ -394,7 +392,7 @@ async def create_env_var(
     return response
 
 @router.delete("/settings/secrets/{env_id}")
-async def delete_env_var(
+def delete_env_var(
     env_id: int,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
@@ -417,7 +415,7 @@ async def delete_env_var(
     return Response(status_code=404)
 
 @router.get("/partials/settings/secrets/edit/{env_id}")
-async def get_settings_secrets_edit(
+def get_settings_secrets_edit(
     request: Request, 
     env_id: int,
     service: SettingsService = Depends(get_settings_service),
@@ -481,7 +479,7 @@ async def update_env_var(
     return response
 
 @router.get("/partials/settings/secrets/list")
-async def get_secrets_list(
+def get_secrets_list(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
@@ -531,9 +529,13 @@ async def save_retention_settings(
     global_max_runs = form.get("global_max_runs")
     
     update_data = {}
-    if global_retention: update_data["global_retention_days"] = int(global_retention)
-    if global_max_runs: update_data["global_max_runs"] = int(global_max_runs)
-    if update_data: service.update_settings(update_data)
+    if global_retention and global_retention.isdigit(): 
+        update_data["global_retention_days"] = int(global_retention)
+    if global_max_runs and global_max_runs.isdigit(): 
+        update_data["global_max_runs"] = int(global_max_runs)
+        
+    if update_data: 
+        service.update_settings(update_data)
     
     overrides = {}
     
@@ -542,10 +544,6 @@ async def save_retention_settings(
             name = key.replace("retention_", "")
             if name not in overrides: overrides[name] = {}
             overrides[name]['retention'] = value
-        elif key.startswith("max_runs_"):
-            name = key.replace("max_runs_", "")
-            if name not in overrides: overrides[name] = {}
-            overrides[name]['max_runs'] = value
         elif key.startswith("max_runs_"):
             name = key.replace("max_runs_", "")
             if name not in overrides: overrides[name] = {}
@@ -578,11 +576,15 @@ async def save_retention_settings(
         if has_retention or has_max_runs:
             if not p_conf: p_conf = PlaybookConfig(playbook_name=pb_name)
             
-            if has_retention: p_conf.retention_days = int(retention_val)
-            else: p_conf.retention_days = None
+            if has_retention and retention_val.isdigit(): 
+                p_conf.retention_days = int(retention_val)
+            else: 
+                p_conf.retention_days = None
             
-            if has_max_runs: p_conf.max_runs = int(max_runs_val)
-            else: p_conf.max_runs = None
+            if has_max_runs and max_runs_val.isdigit(): 
+                p_conf.max_runs = int(max_runs_val)
+            else: 
+                p_conf.max_runs = None
             
             db.add(p_conf)
         else:
@@ -643,7 +645,7 @@ async def get_settings_notifications(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_notifications.html", {"request": request, **context})
 
-    return await render_settings_page(request, "notifications", context)
+    return render_settings_page(request, "notifications", context)
 
 @router.post("/settings/notifications")
 async def save_notification_settings(
@@ -756,6 +758,4 @@ async def test_notification(
         response = Response(status_code=200)
         trigger_toast(response, f"Failed to send: {str(e)}", "error")
     return response
-@router.get("/settings/gitops", response_class=RedirectResponse)
-async def settings_gitops_page():
-    return RedirectResponse(url="/settings/general", status_code=301)
+

@@ -46,9 +46,15 @@ class HistoryService:
         total_count = self.db.exec(count_query).one()
 
         from app.models import User
-        users = self.db.exec(select(User)).all()
+        results = self.db.exec(query.offset(offset).limit(limit)).all()
+        
+        # Fetch only users referenced in the results to avoid broad select(*)
+        user_names = {run.triggered_by for run in results if run.triggered_by}
+        users = []
+        if user_names:
+            users = self.db.exec(select(User).where(User.username.in_(list(user_names)))).all()
 
-        return self.db.exec(query.offset(offset).limit(limit)).all(), total_count, users
+        return results, total_count, users
 
     def get_run(self, run_id: int) -> Optional[JobRun]:
         """Fetches a specific job run by its primary key.
@@ -114,9 +120,15 @@ class HistoryService:
         total_count = self.db.exec(count_query).one()
 
         from app.models import User
-        users = self.db.exec(select(User)).all()
+        results = self.db.exec(statement.offset(offset).limit(limit)).all()
+        
+        # Fetch only users referenced in the results
+        user_names = {run.triggered_by for run in results if run.triggered_by}
+        users = []
+        if user_names:
+            users = self.db.exec(select(User).where(User.username.in_(list(user_names)))).all()
 
-        return self.db.exec(statement.offset(offset).limit(limit)).all(), total_count, users
+        return results, total_count, users
 
     def delete_playbook_runs(self, playbook_name: str) -> None:
         """Deletes all execution records for a specific playbook.

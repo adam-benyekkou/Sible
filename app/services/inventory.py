@@ -100,6 +100,13 @@ class InventoryService:
                     groups[g] = []
                 groups[g].append(host)
             
+            # Pre-fetch secrets to avoid N+1 queries
+            secret_keys = {h.ssh_key_secret for h in hosts if h.ssh_key_secret}
+            secrets_map = {}
+            if secret_keys:
+                env_vars = db.exec(select(EnvVar).where(EnvVar.key.in_(list(secret_keys)))).all()
+                secrets_map = {ev.key: ev for ev in env_vars}
+
             for group, group_hosts in groups.items():
                 sanitized_group = InventoryService.sanitize_ansible_name(group or "all")
                 lines.append(f"[{sanitized_group}]")
@@ -110,16 +117,11 @@ class InventoryService:
                     if h.ssh_key_path:
                         line += f" ansible_ssh_private_key_file={h.ssh_key_path}"
                     elif h.ssh_key_secret:
-                        env_var = next((e for e in db.exec(select(EnvVar).where(EnvVar.key == h.ssh_key_secret)).all()), None)
+                        env_var = secrets_map.get(h.ssh_key_secret)
                         if env_var and env_var.value:
                             secret_val = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
                             
-                            # Use job-specific key isolation if job_id is provided
-                            if job_id:
-                                keys_dir = settings.BASE_DIR / ".jobs" / job_id / "keys"
-                            else:
-                                keys_dir = settings.PLAYBOOKS_DIR / "keys"
-                                
+                            keys_dir = settings.PLAYBOOKS_DIR / "keys"
                             keys_dir.mkdir(parents=True, exist_ok=True)
                             key_file = keys_dir / f"{h.alias}.pem"
                             
@@ -133,8 +135,7 @@ class InventoryService:
                                 logger.error(f"Failed to write key file for {h.alias}: {e}")
                             
                             if settings.USE_DOCKER:
-                                 # Docker mapping remains consistent if we mount .jobs
-                                 worker_keys_path = f"{settings.DOCKER_WORKSPACE_PATH}/.jobs/{job_id}/keys" if job_id else f"{settings.DOCKER_WORKSPACE_PATH}/keys"
+                                 worker_keys_path = f"{settings.DOCKER_WORKSPACE_PATH}/keys"
                                  line += f" ansible_ssh_private_key_file={worker_keys_path}/{h.alias}.pem"
                             else:
                                  line += f" ansible_ssh_private_key_file={key_file.resolve()}"
@@ -296,7 +297,7 @@ class InventoryService:
                     if 'Sible:' in comment:
                         if 'ssh_key_secret=' in comment:
                             try: ssh_key_secret = comment.split('ssh_key_secret=')[1].split()[0]
-                            except: pass
+                            except Exception: pass
 
                 host = Host(
                     alias=alias,
@@ -377,6 +378,13 @@ class InventoryService:
             hosts = db.exec(select(Host)).all()
             lines = []
             
+            # Pre-fetch secrets to avoid N+1 queries
+            secret_keys = {h.ssh_key_secret for h in hosts if h.ssh_key_secret}
+            secrets_map = {}
+            if secret_keys:
+                env_vars = db.exec(select(EnvVar).where(EnvVar.key.in_(list(secret_keys)))).all()
+                secrets_map = {ev.key: ev for ev in env_vars}
+
             # Group by group_name
             groups = {}
             for host in hosts:
@@ -396,7 +404,7 @@ class InventoryService:
                         line += f" ansible_ssh_private_key_file={h.ssh_key_path}"
                     elif h.ssh_key_secret:
                         # Resolve secret to file in job_dir/keys
-                        env_var = next((e for e in db.exec(select(EnvVar).where(EnvVar.key == h.ssh_key_secret)).all()), None)
+                        env_var = secrets_map.get(h.ssh_key_secret)
                         if env_var and env_var.value:
                             secret_val = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
                             key_file = keys_dir / f"{h.alias}.pem"
@@ -408,7 +416,7 @@ class InventoryService:
                             try:
                                 key_file.write_text(secret_val, encoding="utf-8")
                                 try: os.chmod(key_file, 0o600)
-                                except: pass
+                                except Exception: pass
                             except Exception as e:
                                 logger.error(f"Failed to write key file for {h.alias}: {e}")
                             

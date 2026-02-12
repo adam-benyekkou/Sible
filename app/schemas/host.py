@@ -21,6 +21,3 @@ class HostUpdate(BaseModel):
     ssh_key_path: Optional[str] = None
     ssh_key_secret: Optional[str] = None
     group_name: Optional[str] = None
-
-class HostRead(HostBase):
-    id: int

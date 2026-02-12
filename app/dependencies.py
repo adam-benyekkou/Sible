@@ -2,7 +2,7 @@ from sqlmodel import Session
 from app.core.database import engine
 from typing import Generator
 from fastapi import Depends
-from app.services import PlaybookService, RunnerService, HistoryService, SettingsService, NotificationService, InventoryService
+from app.services import PlaybookService, RunnerService, HistoryService, SettingsService, NotificationService
 
 def get_db() -> Generator[Session, None, None]:
     with Session(engine) as session:

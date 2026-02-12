@@ -114,17 +114,17 @@ class RunnerService:
             the error_message will contain details on what failed.
         """
         base = playbooks_dir or settings.PLAYBOOKS_DIR
-        inventory_file = "inventory.ini"
+        inventory_file_name = "inventory.ini"
         
         if inventory_path:
              if inventory_path.is_absolute():
                  try:
                      rel_inv = inventory_path.resolve().relative_to(base.resolve())
-                     inventory_file = rel_inv.as_posix()
+                     inventory_file_name = rel_inv.as_posix()
                  except ValueError:
-                     inventory_file = "inventory.ini"
+                     inventory_file_name = "inventory.ini"
              else:
-                 inventory_file = str(inventory_path).replace("\\", "/")
+                 inventory_file_name = str(inventory_path).replace("\\", "/")
         
         # 1. Try Docker execution if enabled
         if settings.USE_DOCKER:
@@ -142,7 +142,7 @@ class RunnerService:
                     except ValueError:
                          container_playbook_path = f"{container_workdir}/{playbook_path.name}"
                     
-                    inner_cmd = f"ansible-playbook {shlex.quote(container_playbook_path)} -i {shlex.quote(container_workdir + '/' + inventory_file)}"
+                    inner_cmd = f"ansible-playbook {shlex.quote(container_playbook_path)} -i {shlex.quote(container_workdir + '/' + inventory_file_name)}"
                     if check_mode: inner_cmd += " --check"
                     if limit: inner_cmd += f" --limit {shlex.quote(limit)}"
                     if tags: inner_cmd += f" --tags {shlex.quote(tags)}"
@@ -191,7 +191,7 @@ class RunnerService:
             if galaxy:
                  cmd = [ansible_bin, "install", "-r", galaxy_req_file or "requirements.yml", "-p", "./roles"]
             else:
-                 cmd = [ansible_bin, str(playbook_path), "-i", inventory_file]
+                 cmd = [ansible_bin, str(playbook_path), "-i", inventory_file_name]
                  if check_mode: cmd.append("--check")
                  if limit: cmd.extend(["--limit", limit])
                  if tags: cmd.extend(["--tags", tags])
@@ -216,7 +216,7 @@ class RunnerService:
                      bash_cmd = f"cd {shlex.quote(wsl_cwd)} && ansible-galaxy install -r {shlex.quote(galaxy_req_file)} -p ./roles"
                 else:
                     wsl_playbook_path = to_wsl_path(playbook_path)
-                    wsl_inventory_path = to_wsl_path(base / inventory_file)
+                    wsl_inventory_path = to_wsl_path(base / inventory_file_name)
                     
                     env_prefix = ""
                     if env_vars:
@@ -397,7 +397,7 @@ class RunnerService:
         finally:
             if job_inv_dir and job_inv_dir.exists():
                 try: shutil.rmtree(job_inv_dir)
-                except: pass
+                except Exception: pass
  
     def stop_playbook(self, playbook_name: str) -> bool:
         """Terminates a running playbook process by its name.
@@ -447,18 +447,6 @@ class RunnerService:
         Yields:
             HTML-formatted log lines.
         """
-        # Prepare isolated job directory
-        from app.services.inventory import InventoryService
-        job_inv_dir = InventoryService.create_job_inventory(self.db, job.id)
-        if not job_inv_dir:
-             msg = '<div class="log-error">Error: Failed to create isolated job inventory.</div>'
-             yield msg
-             job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = msg; job.exit_code = 1
-             self.db.add(job); self.db.commit()
-             return
-
-        inventory_file = "inventory.ini"
-        
         playbook_name = playbook_name.replace("\\", "/")
         trigger = "manual" if not check_mode else "manual_check"
         
@@ -476,6 +464,16 @@ class RunnerService:
         job = JobRun(playbook=playbook_name, status="running", trigger=trigger, params=db_params, target=job_target, username=username)
         
         self.db.add(job); self.db.commit(); self.db.refresh(job); job_id = job.id
+
+        # Prepare isolated job directory
+        from app.services.inventory import InventoryService
+        job_inv_dir = InventoryService.create_job_inventory(self.db, job_id)
+        if not job_inv_dir:
+             msg = '<div class="log-error">Error: Failed to create isolated job inventory.</div>'
+             yield msg
+             job.status = "failed"; job.end_time = datetime.utcnow(); job.log_output = msg; job.exit_code = 1
+             self.db.add(job); self.db.commit()
+             return
             
         log_buffer = []
         lock = self._get_lock(playbook_name)
@@ -584,7 +582,7 @@ class RunnerService:
                     del RunnerService._processes[playbook_name]
                 if job_inv_dir and job_inv_dir.exists():
                     try: shutil.rmtree(job_inv_dir)
-                    except: pass
+                    except Exception: pass
  
     async def install_requirements(self, playbook_name: str) -> AsyncGenerator[str, None]:
         """Installs Ansible galaxy requirements for a playbook directory.
@@ -650,11 +648,11 @@ class RunnerService:
         running_jobs = self.db.exec(select(JobRun).where(JobRun.status == "running")).all()
         count = len(running_jobs)
         if count > 0:
-            print(f"[RunnerService] Found {count} zombie jobs. Cleaning up...")
+            logger.info(f"Found {count} zombie jobs. Cleaning up...")
             for job in running_jobs:
                 job.status = "failed"
                 if job.log_output: job.log_output += "\\n[SYSTEM] Job interrupted by server restart."
                 else: job.log_output = "[SYSTEM] Job interrupted by server restart."
                 self.db.add(job)
             self.db.commit()
-            print(f"[RunnerService] Cleaned up {count} zombie jobs.")
+            logger.info(f"Cleaned up {count} zombie jobs.")

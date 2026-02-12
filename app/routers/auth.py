@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Request, Response, Form, Depends, status, HTTPException
+from fastapi import APIRouter, Request, Response, Form, Depends, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from app.templates import templates
 from app.services.auth import AuthService
 from app.dependencies import get_db
 from sqlmodel import Session
-from datetime import timedelta
 
 router = APIRouter(tags=["auth"])
 

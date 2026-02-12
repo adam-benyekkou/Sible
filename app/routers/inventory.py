@@ -13,7 +13,7 @@ router = APIRouter()
 # --- Page Routes ---
 
 @router.get("/inventory", response_class=HTMLResponse)
-async def get_inventory_page(
+def get_inventory_page(
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ) -> Response:
@@ -107,7 +107,7 @@ async def ping_inventory(
 # --- API Routes ---
 
 @router.get("/api/inventory/hosts")
-async def list_hosts(
+def list_hosts(
     request: Request, 
     page: int = 1,
     search: str = None,
@@ -156,7 +156,7 @@ async def list_hosts(
     })
 
 @router.post("/api/inventory/hosts/{host_id}/favorite")
-async def toggle_favorite_host(
+def toggle_favorite_host(
     host_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
@@ -306,7 +306,7 @@ async def update_host(
     return response
 
 @router.delete("/api/inventory/hosts/{host_id}")
-async def delete_host(
+def delete_host(
     host_id: int, 
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
@@ -356,7 +356,7 @@ async def import_inventory(
     return response
 
 @router.get("/api/inventory/secrets")
-async def get_inventory_secrets(
+def get_inventory_secrets(
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
 ):
@@ -367,7 +367,7 @@ async def get_inventory_secrets(
     return [{"key": s.key, "is_secret": s.is_secret} for s in secrets]
 
 @router.get("/api/inventory/targets")
-async def get_inventory_targets(
+def get_inventory_targets(
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator"]))
 ):
@@ -384,7 +384,7 @@ async def get_inventory_targets(
     }
 
 @router.get("/api/inventory/targets/picker")
-async def get_inventory_targets_picker(
+def get_inventory_targets_picker(
     request: Request,
     q: str = "",
     db: Session = Depends(get_db),
@@ -410,7 +410,7 @@ async def get_inventory_targets_picker(
     })
 
 @router.get("/api/inventory/host/{host_id}/card")
-async def get_host_card(
+def get_host_card(
     request: Request, 
     host_id: int, 
     db: Session = Depends(get_db),
@@ -440,7 +440,7 @@ async def get_host_card(
     })
 
 @router.get("/api/dashboard/stats")
-async def get_dashboard_stats(db: Session = Depends(get_db)):
+def get_dashboard_stats(db: Session = Depends(get_db)):
     hosts = db.exec(select(Host)).all()
     total = len(hosts)
     online = len([h for h in hosts if h.status == "online"])

@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form, Response
-from typing import List, Optional, Any
+from fastapi import APIRouter, Depends, HTTPException, status, Form
+from typing import List, Optional
 from sqlmodel import Session, select
-from app.dependencies import get_db, get_current_user, requires_role
+from app.dependencies import get_db, requires_role
 from app.models import User
 from app.models.user import UserRole
 from app.core.hashing import get_password_hash
@@ -20,7 +20,7 @@ class UserRead(BaseModel):
     role: UserRole
 
 @router.get("/", response_model=List[UserRead])
-async def list_users(
+def list_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
 ) -> List[User]:
@@ -37,7 +37,7 @@ async def list_users(
     return list(users)
 
 @router.post("/", response_model=UserRead)
-async def create_user(
+def create_user(
     username: str = Form(...),
     password: str = Form(...),
     role: UserRole = Form(...),
@@ -69,7 +69,7 @@ async def create_user(
     return user
 
 @router.delete("/{user_id}")
-async def delete_user(
+def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role("admin"))
@@ -107,7 +107,7 @@ class UserUpdate(BaseModel):
     role: UserRole | None = None
 
 @router.put("/{user_id}", response_model=UserRead)
-async def update_user(
+def update_user(
     user_id: int,
     username: Optional[str] = Form(None),
     password: Optional[str] = Form(None),

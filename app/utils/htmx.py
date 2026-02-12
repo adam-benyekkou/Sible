@@ -18,7 +18,7 @@ def trigger_toast(response: Response, message: str, level: str = "success"):
                 response.headers["HX-Trigger"] = json.dumps(current_dict)
             else:
                 response.headers["HX-Trigger"] = json.dumps(trigger_data)
-        except:
+        except Exception:
             response.headers["HX-Trigger"] = json.dumps(trigger_data)
     else:
         response.headers["HX-Trigger"] = json.dumps(trigger_data)

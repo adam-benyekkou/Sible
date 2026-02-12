@@ -44,7 +44,7 @@ async def stream_playbook_endpoint(
         try:
             import json
             ev_dict = json.loads(extra_vars)
-        except:
+        except Exception:
              pass
 
     async def event_generator():
