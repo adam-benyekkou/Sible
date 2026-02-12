@@ -18,9 +18,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create a non-root user and add to docker group for socket access
-RUN groupadd -r sible && useradd -r -m -g sible -u 1000 sible \
-    && groupadd -g 999 docker_host && usermod -aG docker_host sible
+# Create a non-root user and handle docker group for socket access
+RUN groupadd -g 1000 sible && \
+    useradd -u 1000 -g sible -m -s /bin/bash sible && \
+    (getent group 999 || groupadd -g 999 docker) && \
+    usermod -aG $(getent group 999 | cut -d: -f1) sible
 
 # Setup application directory
 WORKDIR /sible
