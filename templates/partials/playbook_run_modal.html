@@ -28,8 +28,8 @@
     }" x-init="fetchTargets(); lucide.createIcons();" @keydown.escape.window="$root.remove()"
     @click.self="$root.remove()">
 
-    <article :style="running ? 'max-width: 90vw; width: 1000px;' : 'max-width: 600px; width: 100%;'"
-        style="border: 1px solid var(--border-subtle); box-shadow: 0 20px 40px rgba(0,0,0,0.15); background: var(--surface-primary); border-radius: 12px; overflow: hidden; animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); transition: all 0.3s ease;">
+    <article :style="running ? 'max-width: 90vw; width: 1000px;' : 'max-width: 700px; min-width: 500px; width: 100%;'"
+        style="border: 1px solid var(--border-subtle); box-shadow: 0 20px 40px rgba(0,0,0,0.15); background: var(--surface-primary); border-radius: 12px; overflow: hidden; animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); transition: all 0.3s ease; margin-bottom: 0 !important;">
 
 
         <header
@@ -46,7 +46,7 @@
         </header>
 
 
-        <section style="padding: 1.5rem;">
+        <section style="padding: 2rem;">
             <!-- Configuration Form -->
             <form x-show="!running" @submit.prevent=" 
                 running = true;
@@ -58,9 +58,9 @@
                 }; 
                 htmx.ajax('POST', '/run/{{ name | safe }}', { values: vals, target: '#modal-terminal-swap', swap: 'innerHTML' }); 
             ">
-                <div style="margin-bottom: 2rem; position: relative;">
+                <div style="margin-bottom: 1.5rem; position: relative;">
                     <label
-                        style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px;">Target
+                        style="display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">Target
                         Hosts / Groups</label>
 
                     <div x-data="{ initialTargets: launchParams.limit.join(',') }"
@@ -71,7 +71,7 @@
                     </div>
                 </div>
 
-                <div class="grid">
+                <div class="grid" style="gap: 24px; margin-bottom: 1.5rem;">
                     <label>
                         <span style="font-size: 13px; font-weight: 500; color: var(--text-muted);">Tags</span>
                         <input type="text" x-model="launchParams.tags" placeholder="e.g. deploy, !db"
