@@ -13,7 +13,7 @@ router = APIRouter()
 # --- Page Routes ---
 
 @router.get("/inventory", response_class=HTMLResponse)
-def get_inventory_page(
+async def get_inventory_page(
     request: Request,
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ) -> Response:
@@ -107,7 +107,7 @@ async def ping_inventory(
 # --- API Routes ---
 
 @router.get("/api/inventory/hosts")
-def list_hosts(
+async def list_hosts(
     request: Request, 
     page: int = 1,
     search: str = None,
@@ -156,7 +156,7 @@ def list_hosts(
     })
 
 @router.post("/api/inventory/hosts/{host_id}/favorite")
-def toggle_favorite_host(
+async def toggle_favorite_host(
     host_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
@@ -306,7 +306,7 @@ async def update_host(
     return response
 
 @router.delete("/api/inventory/hosts/{host_id}")
-def delete_host(
+async def delete_host(
     host_id: int, 
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
@@ -356,7 +356,7 @@ async def import_inventory(
     return response
 
 @router.get("/api/inventory/secrets")
-def get_inventory_secrets(
+async def get_inventory_secrets(
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin"]))
 ):
@@ -367,7 +367,7 @@ def get_inventory_secrets(
     return [{"key": s.key, "is_secret": s.is_secret} for s in secrets]
 
 @router.get("/api/inventory/targets")
-def get_inventory_targets(
+async def get_inventory_targets(
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator"]))
 ):
@@ -384,7 +384,7 @@ def get_inventory_targets(
     }
 
 @router.get("/api/inventory/targets/picker")
-def get_inventory_targets_picker(
+async def get_inventory_targets_picker(
     request: Request,
     q: str = "",
     db: Session = Depends(get_db),
@@ -410,7 +410,7 @@ def get_inventory_targets_picker(
     })
 
 @router.get("/api/inventory/host/{host_id}/card")
-def get_host_card(
+async def get_host_card(
     request: Request, 
     host_id: int, 
     db: Session = Depends(get_db),

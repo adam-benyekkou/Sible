@@ -13,7 +13,7 @@ settings = get_settings()
 router = APIRouter()
 
 @router.get("/schedules", response_class=HTMLResponse)
-def get_queue_view(
+async def get_queue_view(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(requires_role(["admin", "operator"]))
@@ -42,7 +42,7 @@ def get_queue_view(
     })
 
 @router.post("/schedule")
-def create_schedule(
+async def create_schedule(
     playbook: str = Form(...), 
     cron: str = Form(...),
     target: Optional[str] = Form(default=None),
@@ -75,7 +75,7 @@ def create_schedule(
     return response
 
 @router.delete("/schedule/{job_id}")
-def delete_schedule(
+async def delete_schedule(
     job_id: str,
     current_user: Any = Depends(requires_role(["admin"]))
 ) -> Response:
@@ -97,7 +97,7 @@ def delete_schedule(
     return response
 
 @router.put("/schedule/{job_id}")
-def update_schedule(
+async def update_schedule(
     job_id: str, 
     request: Request, 
     cron: Optional[str] = Form(default=None),
@@ -162,7 +162,7 @@ def update_schedule(
         return response
 
 @router.post("/schedule/{job_id}/pause")
-def pause_schedule(
+async def pause_schedule(
     job_id: str,
     request: Request,
     db: Session = Depends(get_db),
@@ -192,7 +192,7 @@ def pause_schedule(
     return templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job, "groups": groups})
 
 @router.post("/schedule/{job_id}/resume")
-def resume_schedule(
+async def resume_schedule(
     job_id: str,
     request: Request,
     db: Session = Depends(get_db),
@@ -223,7 +223,7 @@ def resume_schedule(
     return templates.TemplateResponse("partials/schedules_row.html", {"request": request, "job": job, "groups": groups})
 
 @router.get("/partials/schedules/row/{job_id}")
-def get_job_row(
+async def get_job_row(
     job_id: str, 
     request: Request,
     db: Session = Depends(get_db),
@@ -254,7 +254,7 @@ def get_job_row(
     })
 
 @router.get("/partials/schedules/row/{job_id}/edit")
-def get_job_row_edit(
+async def get_job_row_edit(
     job_id: str, 
     request: Request,
     db: Session = Depends(get_db),

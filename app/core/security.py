@@ -151,7 +151,7 @@ class RoleChecker:
     def __init__(self, allowed_roles: list[str]):
         self.allowed_roles = allowed_roles
 
-    def __call__(self, user: str = Depends(get_current_user)):
+    async def __call__(self, user: str = Depends(get_current_user)):
         with Session(engine) as session:
             from app.models import User
             statement = select(User).where(User.username == user)

@@ -130,7 +130,7 @@ async def get_settings_users(
     return await render_settings_page(request, "users", context)
 
 @router.get("/settings/users/{user_id}/edit")
-def get_user_edit_form(
+async def get_user_edit_form(
     request: Request,
     user_id: int,
     db: Session = Depends(get_db),
@@ -157,7 +157,7 @@ def get_user_edit_form(
     })
 
 @router.get("/settings/retention")
-def get_settings_retention(
+async def get_settings_retention(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     playbook_service: PlaybookService = Depends(get_playbook_service),
@@ -359,7 +359,7 @@ async def update_theme(
 # REDUNDANT ENDPOINT REMOVED (Handled in @router.get("/settings/secrets") above)
 
 @router.post("/settings/secrets")
-def create_env_var(
+async def create_env_var(
     request: Request, 
     key: str = Form(...), 
     value: str = Form(...), 
@@ -392,7 +392,7 @@ def create_env_var(
     return response
 
 @router.delete("/settings/secrets/{env_id}")
-def delete_env_var(
+async def delete_env_var(
     env_id: int,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))
@@ -415,7 +415,7 @@ def delete_env_var(
     return Response(status_code=404)
 
 @router.get("/partials/settings/secrets/edit/{env_id}")
-def get_settings_secrets_edit(
+async def get_settings_secrets_edit(
     request: Request, 
     env_id: int,
     service: SettingsService = Depends(get_settings_service),
@@ -479,7 +479,7 @@ async def update_env_var(
     return response
 
 @router.get("/partials/settings/secrets/list")
-def get_secrets_list(
+async def get_secrets_list(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
     current_user: User = Depends(requires_role(["admin"]))

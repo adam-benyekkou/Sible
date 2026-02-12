@@ -14,7 +14,7 @@ settings = get_settings()
 router = APIRouter()
 
 @router.get("/history")
-def get_history_page(
+async def get_history_page(
     request: Request,
     page: int = 1,
     search: Optional[str] = None,
@@ -109,7 +109,7 @@ def delete_all_history(
     return response
 
 @router.delete("/history/run/{run_id}")
-def delete_run(
+async def delete_run(
     run_id: int,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))
@@ -130,7 +130,7 @@ def delete_run(
     return Response(status_code=404)
 
 @router.get("/history/run/{run_id}")
-def get_run_details(
+async def get_run_details(
     run_id: int, 
     request: Request,
     service: HistoryService = Depends(get_history_service),
@@ -152,7 +152,7 @@ def get_run_details(
     return templates.TemplateResponse("partials/log_viewer_modal.html", {"request": request, "run": run})
 
 @router.get("/history/{name:path}")
-def get_playbook_history(
+async def get_playbook_history(
     name: str,
     request: Request,
     page: int = 1,
@@ -187,7 +187,7 @@ def get_playbook_history(
     })
 
 @router.delete("/history/playbook/{name:path}/all")
-def delete_playbook_history(
+async def delete_playbook_history(
     name: str,
     service: HistoryService = Depends(get_history_service),
     current_user: User = Depends(requires_role("admin"))

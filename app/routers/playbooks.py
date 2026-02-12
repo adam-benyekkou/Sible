@@ -12,7 +12,7 @@ import json
 settings = get_settings()
 router = APIRouter()
 @router.get("/playbooks/dashboard", response_class=HTMLResponse)
-def get_dashboard(
+async def get_dashboard(
     request: Request,
     page: int = 1,
     playbook_service: PlaybookService = Depends(get_playbook_service),
@@ -49,7 +49,7 @@ def get_dashboard(
     })
 
 @router.get("/api/playbooks/list")
-def list_playbooks_api(
+async def list_playbooks_api(
     request: Request,
     page: int = 1,
     search: Optional[str] = Query(None),
@@ -92,7 +92,7 @@ def list_playbooks_api(
     })
 
 @router.post("/api/playbooks/toggle-favorite")
-def toggle_favorite(
+async def toggle_favorite(
     request: Request,
     playbook_path: str = Form(...),
     playbook_service: PlaybookService = Depends(get_playbook_service),
@@ -137,7 +137,7 @@ def toggle_favorite(
     return Response(content=f"{icon_content}\n{sidebar_content}", media_type="text/html")
 
 @router.get("/api/sidebar/favorites")
-def get_sidebar_favorites(
+async def get_sidebar_favorites(
     request: Request,
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
@@ -167,7 +167,7 @@ def get_sidebar_favorites(
     })
 
 @router.delete("/api/playbooks/bulk")
-def delete_playbooks_bulk(
+async def delete_playbooks_bulk(
     names: List[str] = Query(...),
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role("admin"))
@@ -190,7 +190,7 @@ def delete_playbooks_bulk(
 
 
 @router.get("/api/playbook-vars/{name:path}")
-def get_playbook_variables_form(
+async def get_playbook_variables_form(
     name: str,
     request: Request,
     service: PlaybookService = Depends(get_playbook_service),
@@ -224,7 +224,7 @@ def get_playbook_variables_form(
     })
 
 @router.get("/playbooks/{name:path}")
-def get_playbook_view(
+async def get_playbook_view(
     name: str, 
     request: Request, 
     service: PlaybookService = Depends(get_playbook_service),
@@ -331,7 +331,7 @@ async def create_playbook(
     return response
 
 @router.delete("/playbooks/{name:path}")
-def delete_playbook(
+async def delete_playbook(
     name: str,
     service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin"]))
@@ -442,7 +442,7 @@ async def check_playbook_endpoint(
     })
 
 @router.post("/stop/{name:path}")
-def stop_playbook_endpoint(
+async def stop_playbook_endpoint(
     name: str,
     service: RunnerService = Depends(get_runner_service),
     current_user: User = Depends(requires_role(["admin", "operator"]))
