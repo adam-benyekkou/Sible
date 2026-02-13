@@ -70,12 +70,12 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
                 env_var = db.exec(select(EnvVar).where(EnvVar.key == host.ssh_key_secret)).first()
                 if env_var:
                     from app.core.security import decrypt_secret
-                    ssh_key_data = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
-                    if "\\n" in ssh_key_data:
-                        ssh_key_data = ssh_key_data.replace("\\n", "\n")
-                    if not ssh_key_data.endswith("\n"):
+                    raw_key = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
+                    if raw_key:
+                        # Normalize newlines and remove any accidental whitespace around the block
+                        ssh_key_data = raw_key.replace("\\n", "\n").replace("\\r", "").replace("\r\n", "\n").strip()
                         ssh_key_data += "\n"
-                    logger.info(f"DEBUG: Using SSH Key Secret '{host.ssh_key_secret}' (length: {len(ssh_key_data)})")
+                        logger.info(f"DEBUG: Using SSH Key Secret '{host.ssh_key_secret}' (length: {len(ssh_key_data)})")
 
         # 3. Inform user of progress
         await websocket.send_text(f"\x1b[36mConnecting to {host.alias} ({host.hostname})...\x1b[0m\r\n")

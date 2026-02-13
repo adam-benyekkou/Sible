@@ -128,16 +128,13 @@ class InventoryService:
                     elif h.ssh_key_secret:
                         env_var = secrets_map.get(h.ssh_key_secret)
                         if env_var and env_var.value:
-                            secret_val = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
-                            
-                            keys_dir = settings.PLAYBOOKS_DIR / "keys"
-                            keys_dir.mkdir(parents=True, exist_ok=True)
+                            raw_val = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
                             key_file = keys_dir / f"{h.alias}.pem"
                             
-                            if "\\n" in secret_val: secret_val = secret_val.replace("\\n", "\n")
-                            # Also handle literal newlines that might be stored as escaped characters
-                            secret_val = secret_val.replace("\\r", "")
-                            if not secret_val.endswith("\n"): secret_val += "\n"
+                            if raw_val:
+                                # Normalize all newline variations and strip accidental outer spaces
+                                secret_val = raw_val.replace("\\n", "\n").replace("\\r", "").replace("\r\n", "\n").strip()
+                                secret_val += "\n"
                             
                             try:
                                 key_file.write_text(secret_val, encoding="utf-8")
@@ -426,13 +423,13 @@ class InventoryService:
                         # Resolve secret to file in job_dir/keys
                         env_var = secrets_map.get(h.ssh_key_secret)
                         if env_var and env_var.value:
-                            secret_val = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
+                            raw_val = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
                             key_file = keys_dir / f"{h.alias}.pem"
                             
-                            # Ensure valid format
-                            if "\\n" in secret_val: secret_val = secret_val.replace("\\n", "\n")
-                            secret_val = secret_val.replace("\\r", "")
-                            if not secret_val.endswith("\n"): secret_val += "\n"
+                            if raw_val:
+                                # Normalize all newline variations and strip accidental outer spaces
+                                secret_val = raw_val.replace("\\n", "\n").replace("\\r", "").replace("\r\n", "\n").strip()
+                                secret_val += "\n"
                             
                             try:
                                 key_file.write_text(secret_val, encoding="utf-8")
