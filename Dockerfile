@@ -1,20 +1,33 @@
-# Stage 1: Builder
+# Stage 1: Build Toolchain
 FROM python:3.11-slim as builder
+
+# Build-time metadata
+LABEL maintainer="cavy.protocol.dev@proton.me"
 
 WORKDIR /build
 
-# Install build dependencies if needed (e.g., for some python packages)
+# Install build-toolchain dependencies (gcc, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
+# Optimize Build Cache: Copy requirements and install before app source
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# Stage 2: Runtime
+# Stage 2: Slim Runtime Image
 FROM python:3.11-slim
 
-# Install system dependencies
+# Task 2: GHCR Metadata & OCI Labels
+LABEL org.opencontainers.image.source="https://github.com/adam-benyekkou/Sible" \
+      org.opencontainers.image.description="Sible - Secure Infrastructure & Building Logic Engine" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.authors="cavy.protocol.dev@proton.me" \
+      org.opencontainers.image.title="Sible" \
+      org.opencontainers.image.vendor="Cavy Protocol"
+
+# Install minimal runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ssh-client \
     sshpass \
@@ -27,36 +40,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get update && apt-get install -y docker-ce-cli \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root system user named sible
+# Create a non-root system user for security
 RUN groupadd -g 1000 sible && \
     useradd -u 1000 -g sible -m -s /bin/bash sible
 
-# Set work directory
 WORKDIR /app
 
-# Copy installed python packages from builder
+# Copy installed python packages from builder stage
 COPY --from=builder /install /usr/local
 
-# Copy application code with correct ownership
+# Copy application source code with correct ownership
+# This step is last to maximize layer caching for dependency installs
 COPY --chown=sible:sible . .
 
-# Setup infrastructure and data directories
+# Ensure necessary directories exist with correct permissions
 RUN mkdir -p /app/infrastructure /data && chown -R sible:sible /app/infrastructure /data
 
 # Environment Branding
 ENV SIBLE_THEME_LIGHT="Geist Light"
 ENV SIBLE_THEME_DARK="Catppuccin Dark"
 
-# Healthcheck
+# Healthcheck for container reliability
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8000/health || exit 1
 
-# Expose port
 EXPOSE 8000
 
 # Switch to non-root user
 USER sible
 
-# Run the application
-# We use a shell to ensure we can handle volume permissions if needed on entry
+# Execute application
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8000"]
