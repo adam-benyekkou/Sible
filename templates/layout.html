@@ -162,7 +162,9 @@
             Alpine.data('toastManager', () => ({
                 toasts: [],
                 add(detail) {
-                    // detail: { message: "Saved", level: "success" }
+                    // Check for existing toast with same message to prevent duplicates
+                    if (this.toasts.some(t => t.message === detail.message)) return;
+
                     const id = Date.now();
                     this.toasts.push({
                         id: id,
@@ -211,7 +213,6 @@
     {% include "partials/new_playbook_modal.html" %}
     {% include "partials/ssh_terminal_modal.html" %}
     {% include "partials/default_password_warning_modal.html" %}
-    {% include "partials/toast.html" %}
     <script>
         lucide.createIcons();
         // Re-run on HTMX swaps
