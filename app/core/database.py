@@ -6,18 +6,21 @@ import os
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
-# Ensure database directory exists before engine creation
-if settings.DATABASE_URL.startswith("sqlite:///"):
-    db_path = settings.DATABASE_URL.replace("sqlite:///", "")
-    if db_path:
-        db_dir = os.path.dirname(os.path.abspath(db_path))
-        if db_dir:
-            os.makedirs(db_dir, exist_ok=True)
-
 connect_args = {"check_same_thread": False}
 engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
 
 def create_db_and_tables():
+    # Ensure database directory exists
+    if settings.DATABASE_URL.startswith("sqlite:///"):
+        db_path = settings.DATABASE_URL.replace("sqlite:///", "")
+        if db_path:
+            db_dir = os.path.dirname(os.path.abspath(db_path))
+            if db_dir:
+                try:
+                    os.makedirs(db_dir, exist_ok=True)
+                except Exception as e:
+                    logger.error(f"Could not create database directory {db_dir}: {e}")
+
     # Import models here to ensure they are registered with SQLModel metadata
     from app.models import JobRun, AppSettings, PlaybookConfig, EnvVar, Host, User, FavoriteServer
     SQLModel.metadata.create_all(engine)
