@@ -49,6 +49,12 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     logger.info("Sible starting up...")
+    from app.services.settings import SettingsService
+    with Session(engine) as session:
+        app_settings = SettingsService(session).get_settings()
+        logger.info(f"App Settings: playbooks_path={app_settings.playbooks_path}")
+        logger.info(f"Config Settings: PLAYBOOKS_DIR={settings.PLAYBOOKS_DIR}")
+    
     create_db_and_tables()
     
     # Cleanup jobs needs DB session

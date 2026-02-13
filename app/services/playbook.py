@@ -82,7 +82,9 @@ class PlaybookService:
             A nested list structure suitable for tree-view rendering.
         """
         base = self.base_dir
+        logger.info(f"Listing playbooks in: {base}")
         if not base.exists():
+            logger.warning(f"Playbooks directory does not exist: {base}")
             base.mkdir(parents=True, exist_ok=True)
             return []
 
@@ -213,7 +215,10 @@ class PlaybookService:
             A tuple of (metadata_list, total_filtered_count).
         """
         base = self.base_dir
+        logger.info(f"Scanning for playbooks in: {base}")
         if not base.exists():
+            logger.warning(f"Playbooks directory does not exist: {base}")
+            base.mkdir(parents=True, exist_ok=True)
             return [], 0
             
         # Fetch user favorites if user_id is provided
@@ -238,7 +243,14 @@ class PlaybookService:
         jobs_map = {job.playbook: job for job in latest_jobs}
 
         playbooks = []
-        for file_path in base.rglob("*"):
+        try:
+            files = list(base.rglob("*"))
+            logger.info(f"Found {len(files)} total files/dirs in {base}")
+        except Exception as e:
+            logger.error(f"Error scanning playbooks directory: {e}")
+            return [], 0
+
+        for file_path in files:
             if file_path.is_file() and file_path.suffix.lower() in {".yaml", ".yml"}:
                 rel_path = str(file_path.relative_to(base)).replace("\\", "/")
                 content = self.get_playbook_content(rel_path) or ""
