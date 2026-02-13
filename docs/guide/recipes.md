@@ -34,9 +34,9 @@ Standardized playbook patterns for rapid infrastructure management.
       register: disk_out
     - name: Display status
       debug:
-        msg: "Host {{ inventory_hostname }} Disk: {{ disk_out.stdout_lines[1] }}"
+        msg: "Host {{ '{{' }} inventory_hostname {{ '}}' }} Disk: {{ '{{' }} disk_out.stdout_lines[1] {{ '}}' }}"
 ```
 
 ## 3. Ephemeral Registry Authentication
 **Objective**: Inject a GHCR token for short-lived pull operations without persisting credentials.
-**Sible Implementation**: Use `{{ lookup('env', 'GHCR_TOKEN') }}` in your playbook, and define `GHCR_TOKEN` in **Settings > Secrets**.
+**Sible Implementation**: Use <code>{{ '{{' }} lookup('env', 'GHCR_TOKEN') {{ '}}' }}</code> in your playbook, and define `GHCR_TOKEN` in **Settings > Secrets**.
