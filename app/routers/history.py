@@ -129,6 +129,64 @@ async def delete_run(
         return Response(status_code=200)
     return Response(status_code=404)
 
+@router.get("/api/history/debug/{run_id}")
+async def debug_run_status(
+    run_id: int,
+    service: HistoryService = Depends(get_history_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+):
+    """Debug endpoint to see raw job data."""
+    run = service.get_run(run_id)
+    if not run:
+        return {"error": "Run not found"}
+    return {
+        "id": run.id,
+        "playbook": run.playbook,
+        "status": run.status,
+        "start_time": str(run.start_time),
+        "end_time": str(run.end_time) if run.end_time else None,
+        "exit_code": run.exit_code,
+        "trigger": run.trigger
+    }
+
+@router.get("/api/history/status/{run_id}")
+async def get_run_status(
+    run_id: int,
+    request: Request,
+    service: HistoryService = Depends(get_history_service),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+) -> Response:
+    """Returns the updated row for a job run, used for polling running jobs.
+
+    Args:
+        run_id: Target run ID.
+        request: Request object.
+        service: Injected service.
+        current_user: Authenticated user.
+
+    Returns:
+        Partial template with the updated row HTML.
+    """
+    run = service.get_run(run_id)
+    if not run:
+        return Response("Run not found", status_code=404)
+    
+    # Get groups for UI distinction in Target column
+    from sqlmodel import select
+    from app.models import Host
+    groups = service.db.exec(select(Host.group_name).where(Host.group_name.is_not(None)).distinct()).all()
+    groups.append("all")
+    
+    # Get user info
+    _, _, users = service.get_recent_runs(limit=1, offset=0)
+    
+    return templates.TemplateResponse("partials/history_rows.html", {
+        "request": request,
+        "runs": [run],
+        "groups": groups,
+        "users": {u.username: u for u in users}
+    })
+
 @router.get("/history/run/{run_id}")
 async def get_run_details(
     run_id: int, 

@@ -34,6 +34,68 @@ async def periodic_status_refresh() -> None:
     with Session(engine) as session:
         await InventoryService.refresh_all_statuses(session)
 
+async def monitor_running_processes() -> None:
+    """Monitors running playbook processes and updates job status when complete.
+    
+    Why: When SSE connections are interrupted, jobs may remain marked as 'running'
+    even after the process completes. This task monitors actual process status
+    and updates the database accordingly.
+    """
+    from app.models import JobRun
+    from app.services.runner import RunnerService
+    from datetime import datetime
+    
+    monitors = getattr(RunnerService, '_process_monitors', {})
+    
+    logger.debug(f"Scheduler: Checking {len(monitors)} monitored processes")
+    
+    if not monitors:
+        return
+    
+    completed_jobs = []
+    
+    for job_id, monitor_info in list(monitors.items()):
+        process = monitor_info['process']
+        
+        # Check if process has finished
+        if process.returncode is not None:
+            logger.info(f"🎉 Process for job {job_id} completed with return code {process.returncode}")
+            
+            with Session(engine) as session:
+                job = session.get(JobRun, job_id)
+                if job:
+                    logger.info(f"Job {job_id} current status in DB: {job.status}")
+                    if job.status == "running":
+                        job.status = "success" if process.returncode == 0 else "failed"
+                        job.end_time = datetime.utcnow()
+                        job.log_output = "\n".join(monitor_info['log_buffer']) if monitor_info['log_buffer'] else "Process completed"
+                        job.exit_code = process.returncode
+                        session.add(job)
+                        session.commit()
+                        
+                        # Apply retention policies
+                        from app.services.history import HistoryService
+                        HistoryService(session).apply_retention_policies(monitor_info['playbook_name'])
+                        
+                        # Send notification
+                        from app.services.notification import NotificationService
+                        NotificationService(session).send_playbook_notification(monitor_info['playbook_name'], job)
+                        
+                        logger.info(f"✅ Successfully updated job {job_id} status to {job.status}")
+                    else:
+                        logger.info(f"⏭️  Job {job_id} already updated (status={job.status})")
+                else:
+                    logger.warning(f"⚠️  Job {job_id} not found in database!")
+            
+            completed_jobs.append(job_id)
+        else:
+            logger.debug(f"Job {job_id} still running (returncode=None)")
+    
+    # Clean up completed monitors
+    for job_id in completed_jobs:
+        del monitors[job_id]
+        logger.info(f"🧹 Cleaned up monitor for job {job_id}")
+
 
 async def execute_playbook_job(playbook_name: str, **kwargs: Any) -> None:
     """The function triggering the actual playbook execution for a scheduled job.
@@ -82,8 +144,16 @@ class SchedulerService:
                 id="refresh_inventory_status",
                 replace_existing=True
             )
+            
+            # Add Process Monitor (every 10 seconds)
+            scheduler.add_job(
+                monitor_running_processes,
+                IntervalTrigger(seconds=10),
+                id="monitor_running_processes",
+                replace_existing=True
+            )
                 
-            logger.info("Scheduler started with periodic health checks.")
+            logger.info("Scheduler started with periodic health checks and process monitoring.")
 
     @staticmethod
     def shutdown():
@@ -130,7 +200,7 @@ class SchedulerService:
         """
         jobs = []
         for job in scheduler.get_jobs():
-            if job.id == "refresh_inventory_status":
+            if job.id in ("refresh_inventory_status", "monitor_running_processes"):
                 continue
             
             is_paused = job.next_run_time is None

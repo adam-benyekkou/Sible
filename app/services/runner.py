@@ -223,6 +223,11 @@ class RunnerService:
             r'ansible_become_pass\s*[=:]\s*(\S+)',
             r'ansible_password\s*[=:]\s*(\S+)',
             r'ansible_ssh_pass\s*[=:]\s*(\S+)',
+            r'ansible_ssh_private_key\s*[=:]\s*(\S+)',
+            r'ansible_ssh_private_key_file\s*[=:]\s*(\S+)',
+            r'vault_password\s*[=:]\s*(\S+)',
+            r'ansible_vault_password\s*[=:]\s*(\S+)',
+            r'ANSIBLE_VAULT;[^\s]+',
             r'password\s*[=:]\s*(\S+)',
             r'secret\s*[=:]\s*(\S+)',
             r'token\s*[=:]\s*(\S+)',
@@ -481,6 +486,16 @@ class RunnerService:
                  yield f'<div class="log-meta">Starting Mock Execution...</div>'
                  await asyncio.sleep(1)
                  yield f'<div class="log-success">Mock Process finished</div>'
+                 
+                 # Update job status for mock playbook
+                 job = self.db.get(JobRun, job_id)
+                 if job:
+                     job.status = "success"
+                     job.end_time = datetime.utcnow()
+                     job.log_output = "Mock execution completed"
+                     job.exit_code = 0
+                     self.db.add(job)
+                     self.db.commit()
                  return
  
             env_vars_db = self.db.exec(select(EnvVar)).all()
@@ -512,16 +527,32 @@ class RunnerService:
  
             try:
                 env = os.environ.copy(); env.update(custom_env)
-                logger.info(f"Executing playbook {playbook_name}")
+                logger.info(f"[Job {job_id}] Executing playbook {playbook_name}")
                 
-                process = await asyncio.create_subprocess_exec(
-                    *cmd, 
-                    stdout=asyncio.subprocess.PIPE, 
-                    stderr=asyncio.subprocess.STDOUT, 
-                    env=env,
-                    cwd=str(playbook_path.parent) if not settings.USE_DOCKER else None
-                )
+                try:
+                    process = await asyncio.create_subprocess_exec(
+                        *cmd, 
+                        stdout=asyncio.subprocess.PIPE, 
+                        stderr=asyncio.subprocess.STDOUT, 
+                        env=env,
+                        cwd=str(playbook_path.parent) if not settings.USE_DOCKER else None
+                    )
+                    logger.info(f"Process created for {playbook_name}, PID: {process.pid}")
+                except Exception as proc_error:
+                    logger.error(f"Failed to create subprocess: {proc_error}")
+                    raise
+                    
                 RunnerService._processes[playbook_name] = process
+                
+                # Store PID for monitoring
+                RunnerService._process_monitors = getattr(RunnerService, '_process_monitors', {})
+                RunnerService._process_monitors[job_id] = {
+                    'process': process,
+                    'playbook_name': playbook_name,
+                    'log_buffer': log_buffer,
+                    'start_time': datetime.utcnow()
+                }
+                logger.info(f"Added job {job_id} ({playbook_name}) to process monitors")
                 
                 if check_mode:
                     yield '<div class="log-changed" style="font-weight: bold; padding: 10px; border: 1px dashed #fbbf24; margin-bottom: 10px;">⚠️ DRY RUN MODE: No changes will be applied.</div>'
@@ -529,29 +560,62 @@ class RunnerService:
                 msg = f'<div class="log-meta">Sible: Starting execution of {playbook_name}...</div>'
                 yield msg; log_buffer.append(msg)
                 
-                while True:
-                    line = await process.stdout.readline()
-                    if not line: break
-                    formatted_line = self.format_log_line(line.decode('utf-8', errors='replace').rstrip())
-                    log_buffer.append(formatted_line); yield formatted_line
-                
-                await process.wait()
-                exit_class = "log-success" if process.returncode == 0 else "log-error"
-                yield f'<div class="{exit_class}">Sible: Process finished with exit code {process.returncode}</div>'
-                
-                job = self.db.get(JobRun, job_id)
-                if job:
-                    job.status = "success" if process.returncode == 0 else "failed"
-                    job.end_time = datetime.utcnow()
-                    job.log_output = "\n".join(log_buffer)
-                    job.exit_code = process.returncode
-                    self.db.add(job); self.db.commit()
+                # Stream output to client
+                try:
+                    while True:
+                        line = await process.stdout.readline()
+                        if not line: break
+                        formatted_line = self.format_log_line(line.decode('utf-8', errors='replace').rstrip())
+                        log_buffer.append(formatted_line)
+                        yield formatted_line
                     
-                    # Apply retention policies
-                    from app.services.history import HistoryService
-                    HistoryService(self.db).apply_retention_policies(playbook_name)
+                    # If we made it here, the client is still connected
+                    await process.wait()
+                    exit_class = "log-success" if process.returncode == 0 else "log-error"
+                    yield f'<div class="{exit_class}">Sible: Process finished with exit code {process.returncode}</div>'
                     
-                    self.notification_service.send_playbook_notification(playbook_name, job)
+                    # Update job status (monitor will skip if already updated)
+                    job = self.db.get(JobRun, job_id)
+                    if job and job.status == "running":
+                        job.status = "success" if process.returncode == 0 else "failed"
+                        job.end_time = datetime.utcnow()
+                        job.log_output = "\n".join(log_buffer)
+                        job.exit_code = process.returncode
+                        self.db.add(job)
+                        self.db.commit()
+                        
+                        # Apply retention policies
+                        from app.services.history import HistoryService
+                        HistoryService(self.db).apply_retention_policies(playbook_name)
+                        
+                        self.notification_service.send_playbook_notification(playbook_name, job)
+                        
+                        # Remove from monitors since we updated it
+                        if job_id in RunnerService._process_monitors:
+                            del RunnerService._process_monitors[job_id]
+                            logger.info(f"Removed job {job_id} from monitors (client stayed connected)")
+                except (GeneratorExit, asyncio.CancelledError):
+                    # Client disconnected - start background task to continue reading stdout
+                    logger.info(f"Client disconnected from {playbook_name}, starting background reader (job_id={job_id})")
+                    
+                    async def continue_reading_stdout():
+                        """Continue reading stdout to prevent process from blocking."""
+                        try:
+                            while True:
+                                line = await process.stdout.readline()
+                                if not line:
+                                    break
+                                formatted_line = self.format_log_line(line.decode('utf-8', errors='replace').rstrip())
+                                log_buffer.append(formatted_line)
+                            await process.wait()
+                            logger.info(f"Background reader completed for job {job_id}, exit code: {process.returncode}")
+                        except Exception as e:
+                            logger.exception(f"Error in background reader for job {job_id}: {e}")
+                    
+                    # Start the background reader task
+                    asyncio.create_task(continue_reading_stdout())
+                    raise
+                
             except Exception as e:
                 logger.exception(f"Error during playbook execution of {playbook_name}")
                 err_msg = str(e) or type(e).__name__

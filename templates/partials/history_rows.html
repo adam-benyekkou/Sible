@@ -1,5 +1,5 @@
 {% for run in runs %}
-<tr id="run-row-{{ run.id }}" class="history-row">
+<tr id="run-row-{{ run.id }}" class="history-row" {% if run.status == 'running' %}hx-get="/api/history/status/{{ run.id }}" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
     <!-- Date -->
     <td
         style="padding: 12px; border-bottom: 1px solid var(--border-subtle); font-size: 14px; color: var(--text-primary);">

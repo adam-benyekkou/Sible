@@ -1,7 +1,7 @@
 <div class="modal-wrapper"
-    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px); z-index: 2000; display: flex; justify-content: center; align-items: center;"
     x-data="{ 
         running: false,
+        hidden: false,
         launchParams: {
             limit: ['all'],
             availableTargets: { hosts: [], groups: [], all: ['all'] },
@@ -24,9 +24,23 @@
                 });
             }
             return JSON.stringify(obj);
+        },
+        closeModal() {
+            if (this.running) {
+                // Hide modal but keep it in DOM so background process can complete
+                this.hidden = true;
+                // Clean up after 5 minutes (just in case)
+                setTimeout(() => {
+                    if ($root.parentNode) $root.remove();
+                }, 300000);
+            } else {
+                $root.remove();
+            }
         }
-    }" x-init="fetchTargets(); lucide.createIcons();" @keydown.escape.window="$root.remove()"
-    @click.self="$root.remove()">
+    }" x-init="fetchTargets(); lucide.createIcons();" 
+    @keydown.escape.window="closeModal()"
+    @click.self="closeModal()" 
+    :style="'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(4px); z-index: 2000; display: flex; justify-content: center; align-items: center;' + (hidden ? ' visibility: hidden; pointer-events: none;' : '')">
 
     <article :style="running ? 'max-width: 90vw; width: 1000px;' : 'max-width: 700px; min-width: 500px; width: 100%;'"
         style="border: 1px solid var(--border-subtle); box-shadow: 0 20px 40px rgba(0,0,0,0.15); background: var(--surface-primary); border-radius: 12px; overflow: hidden; animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); transition: all 0.3s ease; margin-bottom: 0 !important;">
@@ -39,7 +53,7 @@
                 <h5 style="margin: 0; font-weight: 600; color: var(--text-primary);"
                     x-text="running ? 'Executing: {{ name }}' : 'Launch Playbook: {{ name }}'"></h5>
             </div>
-            <button type="button" aria-label="Close" @click="$root.remove()" class="action-btn">
+            <button type="button" aria-label="Close" @click="closeModal()" class="action-btn">
                 <i data-lucide="x" style="width: 20px; height: 20px;"></i>
             </button>
 
