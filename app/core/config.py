@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("SIBLE_DATABASE_URL", "sqlite:////data/sible.db")
     USE_DOCKER: bool = True
     DOCKER_IMAGE: str = "quay.io/ansible/ansible-runner:latest"
-    DOCKER_WORKSPACE_PATH: str = "/app/infrastructure"
+    DOCKER_WORKSPACE_PATH: str = os.getenv("SIBLE_DOCKER_WORKSPACE_PATH", str(INFRASTRUCTURE_DIR))
     HOST_WORKSPACE_PATH: Optional[str] = os.getenv("SIBLE_HOST_INFRA_PATH")
     
     class Config:
