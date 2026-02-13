@@ -93,6 +93,12 @@ class SettingsService:
         self.db.commit()
         return env_var
 
+    def get_env_var(self, env_id: int) -> Optional[Any]:
+        """Retrieves a single environment variable by ID.
+        """
+        from app.models import EnvVar
+        return self.db.get(EnvVar, env_id)
+
     def delete_env_var(self, env_id: int) -> Optional[str]:
         """Deletes an environment variable by ID.
 
