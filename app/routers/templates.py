@@ -5,7 +5,7 @@ from typing import Any
 from app.services.template import TemplateService
 from app.models import User
 from app.core.security import get_current_user
-from app.dependencies import requires_role
+from app.dependencies import requires_role, check_default_password
 
 router = APIRouter(
     tags=["templates"],
@@ -15,16 +15,23 @@ router = APIRouter(
 from app.schemas.template import TemplateCreate, TemplateUpdate
 
 @router.get("/templates", response_class=HTMLResponse)
-async def templates_index(request: Request) -> Response:
+async def templates_index(
+    request: Request,
+    show_default_password_warning: bool = Depends(check_default_password)
+) -> Response:
     """Renders the Template Library management page.
 
     Args:
         request: Request object.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for the templates index.
     """
-    return templates.TemplateResponse("templates_index.html", {"request": request})
+    return templates.TemplateResponse("templates_index.html", {
+        "request": request,
+        "show_default_password_warning": show_default_password_warning
+    })
 
 @router.get("/api/templates")
 def list_templates(page: int = 1) -> dict[str, Any]:

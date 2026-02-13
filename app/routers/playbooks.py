@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from typing import Any, List, Optional
 from app.templates import templates
 from app.core.config import get_settings
-from app.dependencies import get_playbook_service, get_runner_service, requires_role
+from app.dependencies import get_playbook_service, get_runner_service, requires_role, check_default_password
 from app.services import PlaybookService, RunnerService, LinterService
 from app.models import User
 from app.utils.htmx import trigger_toast
@@ -16,7 +16,8 @@ async def get_dashboard(
     request: Request,
     page: int = 1,
     playbook_service: PlaybookService = Depends(get_playbook_service),
-    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the main playbook dashboard.
 
@@ -25,6 +26,7 @@ async def get_dashboard(
         page: Current page number.
         playbook_service: Injected service for metadata.
         current_user: Authenticated user.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for the dashboard.
@@ -45,7 +47,8 @@ async def get_dashboard(
         "total_pages": total_pages,
         "has_next": has_next,
         "has_prev": has_prev,
-        "total_count": total_count
+        "total_count": total_count,
+        "show_default_password_warning": show_default_password_warning
     })
 
 @router.get("/api/playbooks/list")
@@ -228,7 +231,8 @@ async def get_playbook_view(
     name: str, 
     request: Request, 
     service: PlaybookService = Depends(get_playbook_service),
-    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the playbook editor view or returns the partial editor fragment.
 
@@ -237,6 +241,7 @@ async def get_playbook_view(
         request: Request object.
         service: Injected service.
         current_user: Authenticated user.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         Full page or partial editor template.
@@ -249,7 +254,8 @@ async def get_playbook_view(
         "request": request, 
         "name": name, 
         "content": content,
-        "has_requirements": service.has_requirements(name)
+        "has_requirements": service.has_requirements(name),
+        "show_default_password_warning": show_default_password_warning
     }
 
     if request.headers.get("HX-Request"):

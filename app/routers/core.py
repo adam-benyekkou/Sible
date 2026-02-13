@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, Form, status, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from app.templates import templates
 from app.core.config import get_settings
-from app.dependencies import get_settings_service, get_playbook_service, requires_role
+from app.dependencies import get_settings_service, get_playbook_service, requires_role, check_default_password
 from app.services import SettingsService, PlaybookService
 from app.models import User, Host, FavoriteServer
 
@@ -24,7 +24,8 @@ async def health_check():
 @router.get("/")
 async def root(
     request: Request,
-    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the main landing page (Dashboard).
 
@@ -34,12 +35,14 @@ async def root(
     Args:
         request: Request object.
         current_user: Authenticated user.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for the index page.
     """
     from app.core.database import engine
     from sqlmodel import Session, select
+    
     with Session(engine) as session:
         # Get user favorites
         fav_ids = set()
@@ -53,7 +56,12 @@ async def root(
         else:
             hosts = session.exec(select(Host)).all()
             
-    return templates.TemplateResponse("index.html", {"request": request, "hosts": hosts, "fav_ids": fav_ids})
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "hosts": hosts, 
+        "fav_ids": fav_ids,
+        "show_default_password_warning": show_default_password_warning
+    })
 
 @router.get("/partials/sidebar")
 async def get_sidebar(

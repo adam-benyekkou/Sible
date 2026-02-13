@@ -24,8 +24,17 @@ def get_notification_service(db: Session = Depends(get_db)) -> NotificationServi
     return NotificationService(db)
 
 
-from app.core.security import get_current_user, RoleChecker
+from app.core.security import get_current_user, RoleChecker, is_using_default_password
+from app.models import User
 
 def requires_role(role: str | list[str]):
     roles = role if isinstance(role, list) else [role]
     return RoleChecker(roles)
+
+def check_default_password(current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))) -> bool:
+    """Dependency that checks if the current user is using a default password.
+    
+    Returns:
+        True if the user is using a default password (username == password), False otherwise.
+    """
+    return is_using_default_password(current_user)

@@ -4,7 +4,7 @@ from typing import Any, Optional, List
 from app.templates import templates
 from app.core.config import get_settings
 from app.services import SchedulerService
-from app.dependencies import get_db, requires_role
+from app.dependencies import get_db, requires_role, check_default_password
 from app.models import User
 from sqlmodel import Session, select
 from app.utils.htmx import trigger_toast
@@ -16,7 +16,8 @@ router = APIRouter()
 async def get_queue_view(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(requires_role(["admin", "operator"]))
+    current_user: User = Depends(requires_role(["admin", "operator"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the main scheduled jobs (queue) management page.
 
@@ -24,6 +25,7 @@ async def get_queue_view(
         request: FastAPI request.
         db: Database session.
         current_user: Authenticated operator+.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for the schedules page.
@@ -38,7 +40,8 @@ async def get_queue_view(
         "request": request, 
         "jobs": jobs, 
         "active_tab": "queue",
-        "groups": groups
+        "groups": groups,
+        "show_default_password_warning": show_default_password_warning
     })
 
 @router.post("/schedule")

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Response, Depends, Form
 from app.templates import templates
 from sqlmodel import Session, select
-from app.dependencies import get_db, requires_role
+from app.dependencies import get_db, requires_role, check_default_password
 from app.models import Host, User, FavoriteServer
 from app.schemas.host import HostCreate, HostUpdate
 from app.services.inventory import InventoryService
@@ -15,19 +15,25 @@ router = APIRouter()
 @router.get("/inventory", response_class=HTMLResponse)
 async def get_inventory_page(
     request: Request,
-    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the main inventory management page.
 
     Args:
         request: FastAPI request object.
         current_user: Authenticated user with at least watcher role.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for the inventory page.
     """
     content = InventoryService.get_inventory_content()
-    context = {"request": request, "content": content}
+    context = {
+        "request": request, 
+        "content": content,
+        "show_default_password_warning": show_default_password_warning
+    }
     return templates.TemplateResponse("inventory.html", context)
 
 @router.post("/inventory/save")
@@ -440,7 +446,10 @@ async def get_host_card(
     })
 
 @router.get("/api/dashboard/stats")
-def get_dashboard_stats(db: Session = Depends(get_db)):
+def get_dashboard_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+):
     hosts = db.exec(select(Host)).all()
     total = len(hosts)
     online = len([h for h in hosts if h.status == "online"])

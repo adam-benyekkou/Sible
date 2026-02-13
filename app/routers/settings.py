@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from typing import Optional, Any, List
 from app.templates import templates
 from app.core.config import get_settings
-from app.dependencies import get_settings_service, get_playbook_service, get_notification_service, get_db, requires_role, get_current_user
+from app.dependencies import get_settings_service, get_playbook_service, get_notification_service, get_db, requires_role, get_current_user, check_default_password
 from app.services import SettingsService, PlaybookService, NotificationService, InventoryService
 from app.utils.htmx import trigger_toast
 from app.core.hashing import get_password_hash
@@ -17,13 +17,14 @@ settings_conf = get_settings()
 router = APIRouter()
 
 # Helper to render the common settings shell with active tab
-async def render_settings_page(request: Request, active_tab: str, context: dict[str, Any] = {}) -> Response:
+async def render_settings_page(request: Request, active_tab: str, context: dict[str, Any] = {}, show_default_password_warning: bool = False) -> Response:
     """Helper to render the common settings shell with active tab.
 
     Args:
         request: FastAPI request.
         active_tab: ID for the active sidebar navigation item.
         context: Additional data for the child templates.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for the settings layout.
@@ -34,7 +35,8 @@ async def render_settings_page(request: Request, active_tab: str, context: dict[
     
     full_context = {
         "request": request,
-        "active_tab": active_tab, 
+        "active_tab": active_tab,
+        "show_default_password_warning": show_default_password_warning,
         **context
     }
     return templates.TemplateResponse("settings.html", full_context)
@@ -58,7 +60,8 @@ async def get_settings_root(request: Request) -> RedirectResponse:
 async def get_settings_general(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
-    current_user: User = Depends(requires_role(["admin"]))
+    current_user: User = Depends(requires_role(["admin"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the general configuration page (App name, Auth, Paths).
 
@@ -66,6 +69,7 @@ async def get_settings_general(
         request: Request object.
         service: Injected settings service.
         current_user: Admin access required.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for general settings.
@@ -76,13 +80,14 @@ async def get_settings_general(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_general.html", {"request": request, **context})
         
-    return await render_settings_page(request, "general", context)
+    return await render_settings_page(request, "general", context, show_default_password_warning)
 
 @router.get("/settings/secrets")
 async def get_settings_secrets(
     request: Request,
     service: SettingsService = Depends(get_settings_service),
-    current_user: User = Depends(requires_role(["admin"]))
+    current_user: User = Depends(requires_role(["admin"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the environment variables and secrets management page.
 
@@ -90,6 +95,7 @@ async def get_settings_secrets(
         request: Request object.
         service: Injected service.
         current_user: Admin access required.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for secrets management (full or partial).
@@ -100,7 +106,7 @@ async def get_settings_secrets(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_secrets.html", {"request": request, **context})
 
-    return await render_settings_page(request, "secrets", context)
+    return await render_settings_page(request, "secrets", context, show_default_password_warning)
 
 
 
@@ -108,7 +114,8 @@ async def get_settings_secrets(
 async def get_settings_users(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(requires_role("admin"))
+    current_user: User = Depends(requires_role("admin")),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the user management table.
 
@@ -116,6 +123,7 @@ async def get_settings_users(
         request: Request object.
         db: Database session.
         current_user: Admin access required.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for user management.
@@ -127,7 +135,7 @@ async def get_settings_users(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_users.html", {"request": request, **context})
 
-    return await render_settings_page(request, "users", context)
+    return await render_settings_page(request, "users", context, show_default_password_warning)
 
 @router.get("/settings/users/{user_id}/edit")
 async def get_user_edit_form(
@@ -162,7 +170,8 @@ async def get_settings_retention(
     service: SettingsService = Depends(get_settings_service),
     playbook_service: PlaybookService = Depends(get_playbook_service),
     db: Session = Depends(get_db),
-    current_user: User = Depends(requires_role(["admin", "operator"]))
+    current_user: User = Depends(requires_role(["admin", "operator"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the log retention and cleanup policy page.
 
@@ -175,6 +184,7 @@ async def get_settings_retention(
         playbook_service: Playbook service for directory listing.
         db: Database session.
         current_user: Operator or admin.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for retention settings.
@@ -219,7 +229,7 @@ async def get_settings_retention(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_retention.html", {"request": request, **context})
 
-    return await render_settings_page(request, "retention", context)
+    return await render_settings_page(request, "retention", context, show_default_password_warning)
 
 @router.post("/settings/general")
 async def save_settings_general(
@@ -604,7 +614,8 @@ async def get_settings_notifications(
     db: Session = Depends(get_db),
     service: SettingsService = Depends(get_settings_service),
     ps: PlaybookService = Depends(get_playbook_service),
-    current_user: User = Depends(requires_role(["admin"]))
+    current_user: User = Depends(requires_role(["admin"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the notifications configuration page.
 
@@ -614,6 +625,7 @@ async def get_settings_notifications(
         service: Settings service.
         ps: Playbook service.
         current_user: Admin access required.
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         TemplateResponse for notification settings.
@@ -645,7 +657,7 @@ async def get_settings_notifications(
     if request.headers.get("HX-Request"):
         return templates.TemplateResponse("partials/settings_notifications.html", {"request": request, **context})
 
-    return await render_settings_page(request, "notifications", context)
+    return await render_settings_page(request, "notifications", context, show_default_password_warning)
 
 @router.post("/settings/notifications")
 async def save_notification_settings(

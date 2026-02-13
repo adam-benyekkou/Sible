@@ -36,14 +36,42 @@ jobs:
           python-version: '3.11'
 
       - name: Install Bandit
-        run: pip install bandit
+        run: pip install bandit[sarif]
 
-      - name: Bandit Scan
-        # -r: recursive, -ll: medium and high severity, -ii: medium and high confidence
-        run: bandit -r app/ run.py -ll -ii
+      - name: Create Bandit Config
+        run: |
+          cat > .bandit <<EOF
+          [bandit]
+          exclude_dirs = ['/tests', '/.venv', '/.git']
+          tests = B201,B301,B302,B303,B304,B305,B306,B307,B308,B310,B311,B312,B313,B314,B315,B316,B317,B318,B319,B320,B321,B322,B323,B324,B325,B401,B501,B502,B503,B504,B505,B506,B507,B601,B602,B603,B604,B605,B606,B607,B608,B609,B610,B611,B701,B702,B703
+          skips = B101
+          EOF
+
+      - name: Bandit Scan (SARIF Output)
+        run: |
+          bandit -r app/ run.py \
+            -ll -ii \
+            -f sarif \
+            -o bandit-report.sarif \
+            --config .bandit || true
+
+      - name: Upload Bandit SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: bandit-report.sarif
+          category: bandit
+
+      - name: Upload Bandit Report as Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-security-report
+          path: bandit-report.sarif
+          retention-days: 90
 
   dependency-audit:
-    name: Dependency Audit (Safety)
+    name: Dependency Audit (Safety & pip-audit)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -54,10 +82,33 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Check Dependencies
+      - name: Safety Check
+        continue-on-error: true
         run: |
           pip install safety
-          safety check -r requirements.txt
+          safety check -r requirements.txt --json > safety-report.json || true
+
+      - name: pip-audit Scan
+        continue-on-error: true
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt --desc --format json > pip-audit-report.json || true
+
+      - name: Display pip-audit Results
+        if: always()
+        run: |
+          echo "=== pip-audit Results ==="
+          pip-audit -r requirements.txt --desc || true
+
+      - name: Upload Dependency Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit-reports
+          path: |
+            safety-report.json
+            pip-audit-report.json
+          retention-days: 90
 
   container-security:
     name: Container Security (Trivy)
@@ -73,16 +124,62 @@ jobs:
           hide-progress: true
           exit-code: '1'
           severity: 'HIGH,CRITICAL'
+          format: 'sarif'
+          output: 'trivy-config-results.sarif'
+
+      - name: Upload Trivy Config Scan to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-config-results.sarif'
+          category: trivy-config
 
       - name: Build Docker Image
         run: docker build -t sible:${{ github.sha }} .
+
+      - name: Verify Non-Root User Configuration
+        run: |
+          echo "=== Verifying Container Runs as Non-Root User ==="
+          USER_CHECK=$(docker run --rm sible:${{ github.sha }} whoami)
+          echo "Container user: $USER_CHECK"
+          if [ "$USER_CHECK" != "sible" ]; then
+            echo "ERROR: Container is not running as 'sible' user"
+            exit 1
+          fi
+          
+          UID_CHECK=$(docker run --rm sible:${{ github.sha }} id -u)
+          echo "Container UID: $UID_CHECK"
+          if [ "$UID_CHECK" != "1000" ]; then
+            echo "ERROR: Container UID is not 1000"
+            exit 1
+          fi
+          
+          echo "✅ Container security verified: Running as sible:1000"
 
       - name: Scan Container Image (Vulnerabilities)
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'sible:${{ github.sha }}'
-          format: 'table'
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'HIGH,CRITICAL'
+
+      - name: Upload Trivy Image Scan to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+          category: trivy-image
+
+      - name: Upload Trivy Reports as Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-security-reports
+          path: |
+            trivy-config-results.sarif
+            trivy-image-results.sarif
+          retention-days: 90

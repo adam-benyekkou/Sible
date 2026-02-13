@@ -5,7 +5,7 @@ from fastapi import APIRouter, Request, Response, Depends
 from typing import List, Optional, Any
 from app.templates import templates
 from app.core.config import get_settings
-from app.dependencies import get_history_service, requires_role
+from app.dependencies import get_history_service, requires_role, check_default_password
 from app.models import User
 from app.services import HistoryService
 from app.utils.htmx import trigger_toast
@@ -20,7 +20,8 @@ async def get_history_page(
     search: Optional[str] = None,
     status: Optional[str] = None,
     service: HistoryService = Depends(get_history_service),
-    current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
+    current_user: User = Depends(requires_role(["admin", "operator", "watcher"])),
+    show_default_password_warning: bool = Depends(check_default_password)
 ) -> Response:
     """Renders the execution history page with filters and pagination.
 
@@ -35,6 +36,7 @@ async def get_history_page(
         status: Exact status filter (success, failed, running).
         service: Injected HistoryService.
         current_user: Authenticated user (watcher+).
+        show_default_password_warning: Whether to show the default password warning.
 
     Returns:
         Full page or partial table template response.
@@ -66,7 +68,8 @@ async def get_history_page(
         "has_prev": has_prev,
         "total_count": total_count,
         "groups": groups,
-        "users": {u.username: u for u in users}
+        "users": {u.username: u for u in users},
+        "show_default_password_warning": show_default_password_warning
     }
     
     if request.headers.get("HX-Request"):
