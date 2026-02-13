@@ -1,6 +1,7 @@
 {
   "name": "sible-docs",
   "version": "1.0.0",
+  "type": "module",
   "description": "Sible Documentation",
   "main": "index.js",
   "scripts": {
