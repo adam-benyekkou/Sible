@@ -86,6 +86,22 @@ async def list_playbooks_api(
         "total_count": total_count,
         "search": search
     })
+    
+    import math
+    total_pages = math.ceil(total_count / limit)
+    has_next = page < total_pages
+    has_prev = page > 1
+    
+    return templates.TemplateResponse("partials/playbooks_table.html", {
+        "request": request,
+        "playbooks": playbooks,
+        "page": page,
+        "total_pages": total_pages,
+        "has_next": has_next,
+        "has_prev": has_prev,
+        "total_count": total_count,
+        "search": search
+    })
 
 @router.post("/api/playbooks/toggle-favorite")
 async def toggle_favorite(

@@ -247,47 +247,49 @@ class PlaybookService:
         playbooks = []
         try:
             files = list(base.rglob("*"))
-            logger.info(f"Found {len(files)} total files/dirs in {base}")
+            logger.info(f"Scanning {base}. Found {len(files)} total files/dirs.")
         except Exception as e:
             logger.error(f"Error scanning playbooks directory: {e}")
             return [], 0
 
         for file_path in files:
-            if file_path.is_file() and file_path.suffix.lower() in {".yaml", ".yml"}:
-                rel_path = str(file_path.relative_to(base)).replace("\\", "/")
-                content = self.get_playbook_content(rel_path) or ""
-                description = self._extract_description(content)
-                
-                # Search filtering
-                if search:
-                    s = search.lower()
-                    if s not in rel_path.lower() and s not in file_path.stem.lower() and s not in description.lower():
-                        continue
+            try:
+                if file_path.is_file() and file_path.suffix.lower() in {".yaml", ".yml"}:
+                    rel_path = str(file_path.relative_to(base)).replace("\\", "/")
+                    
+                    # Search filtering
+                    if search:
+                        s = search.lower()
+                        if s not in rel_path.lower() and s not in file_path.stem.lower():
+                             continue
+                             
+                    last_job = jobs_map.get(rel_path)
 
-                last_job = jobs_map.get(rel_path)
+                    mtime = file_path.stat().st_mtime
+                    last_modified = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                    
+                    # Folder prefix
+                    folder_parts = rel_path.split("/")
+                    folder_prefix = " / ".join(folder_parts[:-1]) if len(folder_parts) > 1 else ""
 
-                mtime = file_path.stat().st_mtime
-                last_modified = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
-                
-                # Folder prefix
-                folder_parts = rel_path.split("/")
-                folder_prefix = " / ".join(folder_parts[:-1]) if len(folder_parts) > 1 else ""
+                    duration = self._format_duration(last_job) if last_job else ""
 
-                duration = self._format_duration(last_job) if last_job else ""
-
-                playbooks.append({
-                    "name": file_path.stem,
-                    "path": rel_path,
-                    "folder": folder_prefix,
-                    "description": description,
-                    "last_modified": last_modified,
-                    "status": last_job.status if last_job else "never_run",
-                    "last_run": self._get_relative_time(last_job.start_time) if last_job else "Never executed",
-                    "duration": duration,
-                    "last_job_id": last_job.id if last_job else None,
-                    "author": last_job.username if last_job and last_job.username else "System",
-                    "is_favorited": rel_path in favorites
-                })
+                    playbooks.append({
+                        "name": file_path.stem,
+                        "path": rel_path,
+                        "folder": folder_prefix,
+                        "description": "Infrastructure playbook",
+                        "last_modified": last_modified,
+                        "status": last_job.status if last_job else "never_run",
+                        "last_run": self._get_relative_time(last_job.start_time) if last_job else "Never executed",
+                        "duration": duration,
+                        "last_job_id": last_job.id if last_job else None,
+                        "author": last_job.username if last_job and last_job.username else "System",
+                        "is_favorited": rel_path in favorites
+                    })
+            except Exception as e:
+                logger.error(f"Error processing playbook file {file_path}: {e}")
+                continue
         
         # Sort
         sorted_playbooks = sorted(playbooks, key=lambda x: x["name"].lower())
