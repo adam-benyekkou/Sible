@@ -2,32 +2,46 @@
 
 This guide addresses common operational friction points and provides resolutions for the Sible orchestration engine.
 
-## 1. SSH Authentication Failure (Permission Denied)
-**Cause**: The Sible controller's public key is missing from the target's `authorized_keys`, or the remote user lacks appropriate permissions.
+## 1. Permission Denied (Database / Data)
+**Symptoms**: Container fails to start or shows `sqlite3.OperationalError: unable to open database file`.
+**Cause**: The Sible container user (UID 1000) does not have write access to the mounted `./data` volume.
 **Resolution**: 
-*   Verify the remote user in **Inventory > Edit Host**.
-*   Ensure the controller key (found in `Settings > SSH`) is appended to `~/.ssh/authorized_keys` on the target.
-*   Test manual connectivity from the Sible container: `docker exec -it sible ssh <user>@<host>`.
+```bash
+sudo chown -R 1000:1000 ./data
+```
 
-## 2. Infrastructure Volume Permission Mismatch
-**Cause**: The host directory mounted to `/app/infrastructure` has ownership restricted to `root`, while Sible runs as a non-privileged user.
-**Resolution**: Adjust host permissions to match the Sible UID:
-`chown -R 1000:1000 /path/to/your/infrastructure`
+## 2. Playbooks Not Visible in Dashboard
+**Symptoms**: Dashboard shows "No automation found" even though files exist on the host.
+**Cause**: Sible cannot read the playbooks directory due to permission restrictions.
+**Resolution**: Ensure the files are readable by UID 1000:
+```bash
+sudo chown -R 1000:1000 /path/to/your/ansible/files
+```
 
-## 3. Ansible Executable Not Found
-**Cause**: The environment PATH does not include `ansible-playbook`, often occurring when running Sible outside of the official Docker image.
+## 3. Terminal Error: "Invalid Private Key"
+**Symptoms**: SSH terminal fails immediately with "Error importing Private Key Secret".
+**Cause**: The SSH key in **Settings > Environments** has incorrect formatting (missing newlines or accidental trailing spaces).
 **Resolution**: 
-*   If using Docker: Ensure you are using the `ghcr.io` image which includes all dependencies.
-*   If Native: Verify installation with `ansible --version` and ensure the binary is in the system PATH.
+*   Ensure the key starts with `-----BEGIN...` and ends with `-----END...`.
+*   Re-paste the key into the secret field and save. Sible automatically cleans up most formatting issues, but a clean paste is recommended.
 
-## 4. WebSocket Handshake Failure
-**Cause**: A reverse proxy (Nginx/Traefik) is stripping WebSocket headers or blocking the `/ws/` route.
+## 4. Docker API Permission Denied
+**Symptoms**: Running a playbook fails with `permission denied while trying to connect to the docker API`.
+**Cause**: The Sible container is trying to launch another container for Ansible but doesn't have access to the host's Docker socket.
+**Resolution**:
+*   **Recommended**: Disable the Docker runner by setting `SIBLE_USE_DOCKER=False` in your environment variables. This will run Ansible natively inside the Sible container.
+*   **Alternative**: Grant access to the socket (less secure): `sudo chmod 666 /var/run/docker.sock`.
+
+## 5. Connection Error: ('127.0.0.1', 22)
+**Symptoms**: Cannot connect to `local_server`.
+**Cause**: `127.0.0.1` inside a container refers to the container itself, not the host machine.
+**Resolution**: Change the server Hostname/IP to your VPS Public IP or the Docker gateway IP (usually `172.17.0.1`).
+
+## 6. WebSocket Handshake Failure
+**Symptoms**: Real-time logs or Terminal don't load.
+**Cause**: A reverse proxy (Nginx/Traefik) is stripping WebSocket headers.
 **Resolution**: Ensure your proxy configuration supports 'Upgrade' headers:
 ```nginx
 proxy_set_header Upgrade $http_upgrade;
 proxy_set_header Connection "upgrade";
 ```
-
-## 5. Zombie Job States (Stuck in 'Running')
-**Cause**: Sudden container termination or server crash before a job could signal completion.
-**Resolution**: Sible automatically cleans up zombie jobs on startup. If a job remains stuck, navigate to **History**, select the job, and use the **Force Terminate** action to reset the state.
