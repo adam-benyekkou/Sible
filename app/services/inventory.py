@@ -135,6 +135,8 @@ class InventoryService:
                             key_file = keys_dir / f"{h.alias}.pem"
                             
                             if "\\n" in secret_val: secret_val = secret_val.replace("\\n", "\n")
+                            # Also handle literal newlines that might be stored as escaped characters
+                            secret_val = secret_val.replace("\\r", "")
                             if not secret_val.endswith("\n"): secret_val += "\n"
                             
                             try:
@@ -429,6 +431,7 @@ class InventoryService:
                             
                             # Ensure valid format
                             if "\\n" in secret_val: secret_val = secret_val.replace("\\n", "\n")
+                            secret_val = secret_val.replace("\\r", "")
                             if not secret_val.endswith("\n"): secret_val += "\n"
                             
                             try:
