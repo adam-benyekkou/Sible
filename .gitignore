@@ -20,3 +20,9 @@ playbooks/.jobs/
 playbooks/keys/
 playbooks/inventory.ini
 .ansible/
+
+# Frontend/Docs
+node_modules/
+dist/
+.vitepress/dist/
+
