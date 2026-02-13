@@ -31,7 +31,9 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm ci || npm install
+          chmod -R +x node_modules/.bin
 
       - name: Build with VitePress
         run: npm run docs:build
