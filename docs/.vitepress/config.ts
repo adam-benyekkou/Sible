@@ -3,13 +3,13 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "Sible",
   description: "Lightweight Ansible Orchestrator",
-  base: '/sible/',
+  base: '/Sible/',
   head: [
-    ['link', { rel: 'icon', href: '/sible/favicon.ico' }],
+    ['link', { rel: 'icon', href: '/Sible/favicon.ico' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Sible | Lightweight Ansible Orchestrator' }],
     ['meta', { property: 'og:description', content: 'Sovereign Infrastructure Management for SREs and DevOps.' }],
-    ['meta', { property: 'og:image', content: 'https://your-org.github.io/sible/og-image.png' }]
+    ['meta', { property: 'og:image', content: 'https://adam-benyekkou.github.io/Sible/og-image.png' }]
   ],
   themeConfig: {
     logo: '/logo.png',
