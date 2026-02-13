@@ -14,7 +14,7 @@ class User(SQLModel, table=True):
     role: str = Field(default=UserRole.WATCHER)
     is_active: bool = Field(default=True)
     timezone: str = Field(default="UTC")
-    theme: str = Field(default="light")
+    theme: str = Field(default="Geist Light")
 
 class FavoritePlaybook(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

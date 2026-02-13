@@ -36,7 +36,7 @@ def _run_migrations():
     
     migrations = [
         ("user", "timezone", "TEXT DEFAULT 'UTC'"),
-        ("user", "theme", "TEXT DEFAULT 'light'"),
+        ("user", "theme", "TEXT DEFAULT 'Geist Light'"),
         ("appsettings", "playbooks_path", "TEXT DEFAULT '/app/infrastructure/playbooks'"),
     ]
     
