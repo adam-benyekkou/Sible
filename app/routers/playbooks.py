@@ -59,24 +59,17 @@ async def list_playbooks_api(
     playbook_service: PlaybookService = Depends(get_playbook_service),
     current_user: User = Depends(requires_role(["admin", "operator", "watcher"]))
 ) -> Response:
-    """Returns a paginated list of playbooks as an HTML table fragment.
-
-    Why: Supports HTMX-based infinity scroll or pagination in the dashboard,
-    offloading filtering (search) to the PlaybookService.
-
-    Args:
-        request: Request object.
-        page: Page to retrieve.
-        search: Optional fuzzy filter for playbook names.
-        playbook_service: Injected service.
-        current_user: Authenticated user.
-
-    Returns:
-        Partial template for the table rows.
-    """
+    """Returns a paginated list of playbooks as an HTML table fragment."""
     limit = 20
     offset = (page - 1) * limit
+    
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"API Request to list playbooks. search={search}, user={current_user.username}")
+    
     playbooks, total_count = playbook_service.get_playbooks_metadata(search=search, user_id=current_user.id, limit=limit, offset=offset)
+    
+    logger.info(f"API Returning {len(playbooks)} playbooks. Total count: {total_count}")
     
     import math
     total_pages = math.ceil(total_count / limit)
