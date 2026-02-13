@@ -6,6 +6,14 @@ import os
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+# Ensure database directory exists before engine creation
+if settings.DATABASE_URL.startswith("sqlite:///"):
+    db_path = settings.DATABASE_URL.replace("sqlite:///", "")
+    if db_path:
+        db_dir = os.path.dirname(os.path.abspath(db_path))
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+
 connect_args = {"check_same_thread": False}
 engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
 
@@ -20,16 +28,11 @@ def create_db_and_tables():
 def _run_migrations():
     """Add missing columns to existing tables (SQLite compatible)."""
     import sqlite3
-    from app.core.config import get_settings
-    # db_path = s.DATABASE_URL.replace("sqlite:///", "")
-    # Use absolute path handling for SQLite
-    if s.DATABASE_URL.startswith("sqlite:///"):
-        db_path = s.DATABASE_URL[10:]
+    
+    if settings.DATABASE_URL.startswith("sqlite:///"):
+        db_path = settings.DATABASE_URL.replace("sqlite:///", "")
     else:
         return # Not a local sqlite DB
-    
-    # Ensure directory exists for migrations
-    os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
     
     migrations = [
         ("user", "timezone", "TEXT DEFAULT 'UTC'"),
