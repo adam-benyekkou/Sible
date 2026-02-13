@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, create_engine
 from app.core.config import get_settings
 import logging
+import os
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -20,8 +21,15 @@ def _run_migrations():
     """Add missing columns to existing tables (SQLite compatible)."""
     import sqlite3
     from app.core.config import get_settings
-    s = get_settings()
-    db_path = s.DATABASE_URL.replace("sqlite:///", "")
+    # db_path = s.DATABASE_URL.replace("sqlite:///", "")
+    # Use absolute path handling for SQLite
+    if s.DATABASE_URL.startswith("sqlite:///"):
+        db_path = s.DATABASE_URL[10:]
+    else:
+        return # Not a local sqlite DB
+    
+    # Ensure directory exists for migrations
+    os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
     
     migrations = [
         ("user", "timezone", "TEXT DEFAULT 'UTC'"),

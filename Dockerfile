@@ -54,7 +54,7 @@ COPY --from=builder /install /usr/local
 COPY --chown=sible:sible . .
 
 # Ensure necessary directories exist with correct permissions
-RUN mkdir -p /app/infrastructure /data && chown -R sible:sible /app/infrastructure /data
+RUN mkdir -p /app/infrastructure /data/sible && chown -R sible:sible /app/infrastructure /data
 
 # Environment Branding
 ENV SIBLE_THEME_LIGHT="Geist Light"
