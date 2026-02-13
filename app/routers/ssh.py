@@ -69,7 +69,8 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
             if host.ssh_key_secret:
                 env_var = db.exec(select(EnvVar).where(EnvVar.key == host.ssh_key_secret)).first()
                 if env_var:
-                    ssh_key_data = env_var.value
+                    from app.core.security import decrypt_secret
+                    ssh_key_data = decrypt_secret(env_var.value) if env_var.is_secret else env_var.value
                     if "\\n" in ssh_key_data:
                         ssh_key_data = ssh_key_data.replace("\\n", "\n")
                     if not ssh_key_data.endswith("\n"):
