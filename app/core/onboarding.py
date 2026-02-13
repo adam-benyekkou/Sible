@@ -27,7 +27,7 @@ WELCOME_PLAYBOOK_CONTENT = """---
 
 ONBOARDING_INVENTORY_NAME = "inventory.ini"
 ONBOARDING_INVENTORY_CONTENT = """[all]
-onboarding-server ansible_host=127.0.0.1 ansible_connection=local
+local_server ansible_host=127.0.0.1 ansible_connection=local
 """
 
 def seed_users(db: Session):
