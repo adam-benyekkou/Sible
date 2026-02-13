@@ -1,0 +1,59 @@
+services:
+  sible-e2e:
+    build: .
+    image: sible:e2e
+    container_name: sible-e2e
+    ports:
+      - "8000:8000"
+    user: "1000:1000"
+    group_add:
+      - "0"
+    volumes:
+      - ./infrastructure-e2e:/app/infrastructure
+      - sible-db-e2e:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - SIBLE_THEME_LIGHT=Geist Light
+      - SIBLE_THEME_DARK=Catppuccin Dark
+      - SIBLE_INFRA_PATH=/app/infrastructure
+      - SIBLE_USE_DOCKER=false
+      - SIBLE_DATABASE_URL=sqlite:////data/sible.db
+      - ANSIBLE_HOST_KEY_CHECKING=False
+    depends_on:
+      - target-node-1
+      - target-node-2
+    networks:
+      - sible-net
+
+  target-node-1:
+    image: linuxserver/openssh-server:latest
+    container_name: target-node-1
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SUDO_ACCESS=true
+      - USER_PASSWORD=password
+      - USER_NAME=sible-user
+    networks:
+      - sible-net
+
+  target-node-2:
+    image: linuxserver/openssh-server:latest
+    container_name: target-node-2
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SUDO_ACCESS=true
+      - USER_PASSWORD=password
+      - USER_NAME=sible-user
+    networks:
+      - sible-net
+
+volumes:
+  sible-db-e2e:
+
+networks:
+  sible-net:
+    driver: bridge
