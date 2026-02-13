@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import List, Optional, Any
 from sqlmodel import Session, select, desc
@@ -9,6 +10,7 @@ from datetime import datetime
 import os
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 class PlaybookService:
     """Manages Ansible playbook files, metadata, and directory structures.
