@@ -16,3 +16,6 @@ The engine provides granular control over the SSH lifecycle for remote targets. 
 
 ## Infrastructure Volume Strategy
 To ensure persistence and portability, Sible utilizes a dedicated Infrastructure Volume strategy. By mounting `/app/infrastructure`, the system enforces a strict separation between application logic and user-defined playbooks, roles, and inventories, facilitating streamlined backups and multi-environment consistency.
+
+## Dependency Management (Ansible Galaxy)
+Sible automatically detects and installs dependencies for your playbooks. If a `requirements.yml` (or `.yaml`) file is found in the directory containing your playbook, Sible will provide an option to install the required roles and collections via Ansible Galaxy directly from the UI.

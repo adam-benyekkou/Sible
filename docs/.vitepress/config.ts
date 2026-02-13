@@ -20,7 +20,7 @@ export default defineConfig({
     sidebar: [
       {
         text: 'Introduction',
-        collapsible: true,
+        collapsed: false,
         items: [
           { text: 'Philosophy', link: '/guide/philosophy' },
           { text: 'Architecture', link: '/guide/architecture' }
@@ -28,7 +28,7 @@ export default defineConfig({
       },
       {
         text: 'Getting Started',
-        collapsible: true,
+        collapsed: false,
         items: [
           { text: 'Installation', link: '/guide/installation' },
           { text: 'Onboarding', link: '/guide/onboarding' }
@@ -36,7 +36,7 @@ export default defineConfig({
       },
       {
         text: 'Core Features',
-        collapsible: true,
+        collapsed: false,
         items: [
           { text: 'Orchestration', link: '/features/orchestration' },
           { text: 'Security & Governance', link: '/features/security' }
@@ -44,7 +44,7 @@ export default defineConfig({
       },
       {
         text: 'Advanced Operations',
-        collapsible: true,
+        collapsed: false,
         items: [
           { text: 'Automation', link: '/features/automation' },
           { text: 'Recipes', link: '/guide/recipes' }
@@ -52,16 +52,17 @@ export default defineConfig({
       },
       {
         text: 'Operations',
-        collapsible: true,
+        collapsed: false,
         items: [
           { text: 'Troubleshooting', link: '/guide/troubleshooting' },
           { text: 'Cheat Sheet', link: '/guide/reference' },
+          { text: 'REST API', link: '/guide/api' },
           { text: 'Access Guide', link: '/access' }
         ]
       }
     ],
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/your-org/sible' }
+      { icon: 'github', link: 'https://github.com/adam-benyekkou/Sible' }
     ],
     footer: {
       message: 'Sovereign Infrastructure Management',
