@@ -116,11 +116,12 @@ def seed_onboarding_data(db: Session, playbook_service: PlaybookService):
         if not hosts:
             logger.info("No hosts found in DB. Seeding onboarding inventory...")
             inv_path = inventory_dir / ONBOARDING_INVENTORY_NAME
-            if not inv_path.exists():
-                inv_path.write_text(ONBOARDING_INVENTORY_CONTENT, encoding="utf-8")
             
-            # Sync to DB
-            InventoryService.import_ini_to_db(db, content=inv_path.read_text(encoding="utf-8"))
+            # Always ensure the local_server is present in the file if DB is empty
+            inv_path.write_text(ONBOARDING_INVENTORY_CONTENT, encoding="utf-8")
+            
+            # Sync to DB (this imports from the file we just wrote)
+            InventoryService.import_ini_to_db(db, content=ONBOARDING_INVENTORY_CONTENT)
 
         # 3. Template Preservation (Implicit by mkdir if not exists, but we can log)
         existing_templates = list(templates_dir.glob("*.j2"))
