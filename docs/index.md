@@ -14,8 +14,10 @@ hero:
       link: https://github.com/adam-benyekkou/Sible
 
 features:
-  - title: Asynchronous Logs
-    details: Real-time execution visibility via WebSockets. No more polling for status.
+  - title: Execute Anywhere
+    details: Run playbooks on your servers via standard SSH. No agents required.
+  - title: Real-Time Logs
+    details: Instant visibility into your automation with WebSocket-streamed execution logs.
   - title: Security First
     details: JIT secret injection and hardened RBAC roles (Admin, Operator, Watcher).
   - title: Zero-Bloat

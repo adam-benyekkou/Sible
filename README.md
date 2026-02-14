@@ -8,6 +8,11 @@
 
 ![Sible Dashboard](docs/public/dashboard.png)
 
+## Core Value
+
+**Execute Ansible playbooks on your servers instantly.**
+Sible connects to your inventory via SSH, runs your automation, and streams the logs directly to your browser in real-time. No complex agents, just standard SSH.
+
 ---
 
 ## Key Features
