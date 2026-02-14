@@ -42,6 +42,8 @@ Sible is designed to bridge the gap between complex enterprise towers (AWX/Tower
 | ![Playbooks](docs/public/playbooks.png) | ![Terminal](docs/public/terminal_connect.png) |
 
 | Inventory | Job History |
+|:---:|:---:|
+| ![Inventory](docs/public/inventory.png) | ![History](docs/public/history.png) |
 
 *(See [Documentation](https://adam-benyekkou.github.io/Sible/) for more views)*
 
@@ -110,9 +112,9 @@ Sible is built on a "Zero-Bloat" philosophy, avoiding heavy frontend frameworks 
 
 ## Contributing
 
-Contributions are welcome! Please check the [Contributing Guide](CONTRIBUTING.md) (coming soon) and the current [Issues](https://github.com/adam-benyekkou/Sible/issues).
+Contributions are welcome! Please check the [Contributing Guide](CONTRIBUTING.md) for details on setting up your environment and our code standards.
 
-### Development Setup
+### Quick Dev Setup
 
 ```bash
 # 1. Clone the repo
