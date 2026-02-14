@@ -2,7 +2,6 @@
 
 [![Documentation](https://img.shields.io/badge/docs-vitepress-blue)](https://adam-benyekkou.github.io/Sible/)
 [![License](https://img.shields.io/github/license/adam-benyekkou/Sible)](LICENSE)
-[![GitHub Release](https://img.shields.io/github/v/release/adam-benyekkou/Sible)](https://github.com/adam-benyekkou/Sible/releases)
 
 > **Sovereign Infrastructure Management for SREs and DevOps.**
 > A modern, reactive, no-bloat UI for Ansible. Built with **FastAPI**, **HTMX**, and **PicoCSS**.
@@ -11,48 +10,43 @@
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 Sible is designed to bridge the gap between complex enterprise towers (AWX/Tower) and raw CLI usage.
 
-### 🖥️ Modern Operator Experience
+### Modern Operator Experience
 *   **Reactive Dashboard**: Instant feedback via HTMX and WebSocket streaming. No page reloads.
 *   **Web Terminal**: Built-in, secure SSH terminal to connect directly to your inventory hosts from the browser.
 *   **Mobile Optimized**: Fully responsive UI for managing infrastructure on the go.
 
-### ⚡ Automation & Orchestration
+### Automation & Orchestration
 *   **Template Library**: Bootstrap new playbooks instantly from a built-in library of best-practice blueprints.
 *   **Cron Scheduling**: Native job scheduler for recurring tasks (backups, patching, monitoring).
 *   **Real-time Logs**: Watch Ansible execution streams live via WebSockets.
 *   **Linting**: Integrated `ansible-lint` checks your code as you type.
 
-### 🔒 Security & Governance
+### Security & Governance
 *   **RBAC**: Three-tier role system (Admin, Operator, Watcher) for granular access control.
 *   **Secret Vault**: AES-256 encrypted storage for SSH keys, API tokens, and sensitive variables.
 *   **JIT Injection**: Secrets are injected into Ansible processes at runtime and never persisted to disk.
 
-### 🔄 GitOps Ready
-*   **Bidirectional Sync**: Sible respects the single source of truth.
-    *   **UI to Disk**: Changes in the dashboard update your local files.
-    *   **Disk to UI**: Edit your `hosts.ini` or playbooks via Git/Vim, and Sible syncs the changes automatically.
-
 ---
 
-## 📸 Screenshots
+## Screenshots
 
-| Playbook Management | Interactive Terminal |
+| Playbook Management | Inventory |
 |:---:|:---:|
-| ![Playbooks](docs/public/playbooks.png) | ![Terminal](docs/public/terminal_connect.png) |
+| ![Playbooks](docs/public/playbooks.png) | ![Inventory](docs/public/inventory.png) |
 
-| Inventory & GitOps | Job History |
+| Job History | Interactive Terminal |
 |:---:|:---:|
-| ![Inventory](docs/public/inventory.png) | ![History](docs/public/history.png) |
+| ![History](docs/public/history.png) | ![Terminal](docs/public/terminal_connect.png) |
 
 *(See [Documentation](https://adam-benyekkou.github.io/Sible/) for more views)*
 
 ---
 
-## 🏁 Quick Start
+## Quick Start
 
 ### Docker Compose (Recommended)
 
@@ -92,7 +86,7 @@ docker-compose up -d
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 Full documentation is available at **[adam-benyekkou.github.io/Sible](https://adam-benyekkou.github.io/Sible/)**.
 
@@ -102,7 +96,7 @@ Full documentation is available at **[adam-benyekkou.github.io/Sible](https://ad
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 Sible is built on a "Zero-Bloat" philosophy, avoiding heavy frontend frameworks in favor of server-side rendering and hypermedia.
 
@@ -113,7 +107,7 @@ Sible is built on a "Zero-Bloat" philosophy, avoiding heavy frontend frameworks 
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please check the [Contributing Guide](CONTRIBUTING.md) (coming soon) and the current [Issues](https://github.com/adam-benyekkou/Sible/issues).
 
@@ -133,6 +127,6 @@ uvicorn app.main:app --reload
 
 ---
 
-## 📄 License
+## License
 
 MIT © [Adam Benyekkou](https://github.com/adam-benyekkou)
