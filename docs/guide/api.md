@@ -21,7 +21,7 @@ Authentication is handled via session cookies. For programmatic access, you must
 
 ## Inventory Management
 
-### List Hosts (HTML)
+### List Servers (HTML)
 `GET /api/inventory/hosts`
 
 Returns a paginated HTML table of hosts.
@@ -30,7 +30,7 @@ Returns a paginated HTML table of hosts.
 * `page`: Integer (default: 1)
 * `search`: String (optional search term)
 
-### Add Host
+### Add Server
 `POST /api/inventory/hosts`
 
 Registers a new host in the database and syncs to `hosts.ini`.
@@ -43,7 +43,7 @@ Registers a new host in the database and syncs to `hosts.ini`.
 * `ssh_key_secret`: String (Key of the secret in Settings)
 * `group_name`: String (Ansible group)
 
-### Update Host
+### Update Server
 `PUT /api/inventory/hosts/{host_id}`
 
 **Body (Form Data):**
@@ -54,7 +54,7 @@ Registers a new host in the database and syncs to `hosts.ini`.
 * `group_name`: String
 * `ssh_key_secret`: String
 
-### Delete Host
+### Delete Server
 `DELETE /api/inventory/hosts/{host_id}`
 
 ## Playbook Management

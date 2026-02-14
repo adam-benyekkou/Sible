@@ -40,11 +40,11 @@ Sible orchestrates tasks over SSH. Establishing trust between the Sible controll
 
 1.  **Define your Credentials**:
     *   Navigate to **Settings > Environments**.
-    *   Click **Add Secret** to store your SSH Private Key. Name it something descriptive (e.g., `prod_vps_key`).
-    *   Paste your private key content (including the `BEGIN` and `END` headers). Sible encrypts this at rest.
+    *   Click **Add Variable** to store your SSH Private Key. Name it something descriptive (e.g., `prod_vps_key`).
+    *   Paste your private key content (including the `BEGIN` and `END` headers). Check **Encrypt Value** (implied for sensitive keys).
 2.  **Add your Host**:
     *   Navigate to the **Inventory** page.
-    *   Select **Add Host** and enter the hostname or IP address of your remote target.
+    *   Select **Add Server** and enter the hostname or IP address of your remote target.
     *   Configure the **SSH Port** (default: 22) and the **Remote User**.
     *   In the **SSH Key Secret** dropdown, select the secret you created in step 1.
 3.  **Establish Trust**:

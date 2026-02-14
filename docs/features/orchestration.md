@@ -30,8 +30,8 @@ Sible features a built-in, WebSocket-based SSH terminal that allows operators to
 ## File-Based Inventory Sync (GitOps)
 Sible supports a bidirectional synchronization workflow for inventory management.
 
-*   **Database First**: Changes made in the UI (adding hosts, updating ports) are automatically written to the physical `hosts.ini` file.
-*   **File First**: If you edit the `hosts.ini` file directly (e.g., via a Git pull), you can sync these changes back to the Sible database using the **Import** function in the Inventory settings. This enables GitOps workflows where infrastructure is defined in code but managed via Sible.
+*   **Database First**: Changes made in the UI (adding servers, updating ports) are automatically written to the physical `hosts.ini` file.
+*   **File First**: If you edit the `hosts.ini` file directly (e.g., via a Git pull), you can sync these changes back to the Sible database using the **Save & Import Raw File** function in the Inventory settings. This enables GitOps workflows where infrastructure is defined in code but managed via Sible.
 
 ## Automated Linting
 To ensure code quality, Sible integrates `ansible-lint`. Every time you save a playbook in the editor, Sible runs a background linting process and highlights potential errors or best-practice violations directly in the UI, helping you write more robust and standard-compliant automation.

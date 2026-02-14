@@ -17,11 +17,11 @@ Sible includes a built-in template system to accelerate playbook development. Te
 ![Template Library](/templates.png)
 
 ### Using Templates
-1.  Navigate to the **Templates** tab in the Playbooks dashboard.
-2.  Browse the library of pre-defined blueprints.
-3.  Click **Use Template** on your desired blueprint.
-4.  Provide a name (and optional folder path) for your new playbook.
-5.  Sible will instantiate the playbook in your library, ready for customization and execution.
+1.  Navigate to the Playbooks dashboard and click **New Playbook**.
+2.  In the creation modal, select a blueprint from the **Template** dropdown menu.
+3.  Provide a name (and optional folder path) for your new playbook.
+4.  Click **Create Playbook**.
+5.  Sible will instantiate the playbook in your library, populated with the template's content.
 
 ## Cron-Based Scheduling
 A native job scheduler enables the automation of recurring maintenance tasks. SREs can define cron-based intervals for playbooks—such as daily database backups, periodic security patching, or infrastructure health checks—ensuring continuous operational compliance.

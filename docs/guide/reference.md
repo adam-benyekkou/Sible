@@ -6,9 +6,9 @@ A concise mapping of tasks to the Sible User Interface.
 | :--- | :--- | :--- |
 | **Trigger Playbook** | Dashboard > Playbooks | Click 'Run' on target card |
 | **Validate Logic** | Dashboard > Playbooks | Select 'Dry Run' in execution modal |
-| **Add Remote Host** | Inventory | Click 'Add Host' |
+| **Add Remote Host** | Inventory | Click 'Add Server' |
 | **Schedule Backups** | Automation > Cron | Click 'New Schedule' |
-| **Rotate Secrets** | Settings > Secrets | Edit existing secret entry |
+| **Rotate Secrets** | Settings > Secrets | Click 'Add Variable' or Edit existing |
 | **View Audit Logs** | History | Click log icon on job row |
 | **Manage RBAC** | Settings > Users | Edit user and assign Role (Admin/Watcher/Operator) |
 | **Set Retention** | Settings > Retention | Configure 'Days to keep' and 'Max logs' |
