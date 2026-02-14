@@ -50,7 +50,7 @@ Standardized playbook patterns for rapid infrastructure management.
     - name: Ensure sible container is running
       docker_container:
         name: sible
-        image: ghcr.io/adam-benyekkou/sible:1.0.0
+        image: ghcr.io/adam-benyekkou/sible:v1.0.0
         state: started
         restart_policy: always
         published_ports:

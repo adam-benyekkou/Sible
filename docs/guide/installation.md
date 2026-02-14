@@ -14,7 +14,7 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   sible:
-    image: ghcr.io/adam-benyekkou/sible:1.0.0
+    image: ghcr.io/adam-benyekkou/sible:v1.0.0
     container_name: sible
     restart: unless-stopped
     ports:
@@ -59,5 +59,5 @@ docker run -d \
   -v /opt/infrastructure/ansible:/opt/infrastructure/ansible \
   -e SIBLE_INFRA_PATH=/opt/infrastructure/ansible \
   -e SIBLE_USE_DOCKER=False \
-  ghcr.io/adam-benyekkou/sible:1.0.0
+  ghcr.io/adam-benyekkou/sible:v1.0.0
 ```
