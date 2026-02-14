@@ -1,104 +1,138 @@
-# Sible
->
-> A modern, reactive UI for Ansible Playbooks. Inspired by Dockge.
+# Sible - Lightweight Ansible Orchestrator
 
-![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![Status](https://img.shields.io/badge/status-wip-orange.svg)
+[![Documentation](https://img.shields.io/badge/docs-vitepress-blue)](https://adam-benyekkou.github.io/Sible/)
+[![License](https://img.shields.io/github/license/adam-benyekkou/Sible)](LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/adam-benyekkou/Sible)](https://github.com/adam-benyekkou/Sible/releases)
 
-**Note: This project is currently a Work in Progress.**
+> **Sovereign Infrastructure Management for SREs and DevOps.**
+> A modern, reactive, no-bloat UI for Ansible. Built with **FastAPI**, **HTMX**, and **PicoCSS**.
 
-**Sible** is a lightweight, self-hosted Web UI to manage, edit, and run Ansible playbooks. It is designed to be a "no-build" alternative to complex tools like AWX/Tower, focusing on simplicity and a great user experience for homelabbers and DevOps engineers.
+![Sible Dashboard](docs/public/dashboard.png)
 
 ---
 
-## Features
+## 🚀 Key Features
 
-- **Reactive UI**: Built with HTMX and Alpine.js for a snappy, app-like feel without the bloat.
-- **Playbook Management**: Create, edit, and delete playbooks directly in the browser.
-- **Advanced Editor**: Integrated Ace Editor with custom theme, line numbers, and syntax highlighting.
-- **Ansible Linting**: Real-time code quality checks and annotations directly in the editor.
-- **Execution & Logs**: Run playbooks manually or headless. View real-time output streams via SSE.
-- **Concurrency Control**: Prevents simultaneous execution of the same playbook.
-- **Dry Run Mode**: "Check" button to simulate playbook runs without making changes.
-- **Job History**: Tracks all manual and scheduled runs with full log retention.
-- **Retention Policy**: Advanced retention settings with support for nested playbooks (folder structure).
-- **Custom Branding**: Upload your own Logo and Favicon via the UI.
-- **Scheduling**: Built-in Cron scheduler with Queue management.
-- **Status Indicators**: Visual feedback (Green/Red dots) in the sidebar for the last run status.
-- **Custom Playbook Path**: Define an absolute path for playbooks, ideal for mounting external repositories into Docker.
-- **Single Container**: Deploys as a single Docker container using SQLite.
+Sible is designed to bridge the gap between complex enterprise towers (AWX/Tower) and raw CLI usage.
 
-## Authentication (Optional)
+### 🖥️ Modern Operator Experience
+*   **Reactive Dashboard**: Instant feedback via HTMX and WebSocket streaming. No page reloads.
+*   **Web Terminal**: Built-in, secure SSH terminal to connect directly to your inventory hosts from the browser.
+*   **Mobile Optimized**: Fully responsive UI for managing infrastructure on the go.
 
-Sible includes an optional authentication system to protect your instance.
+### ⚡ Automation & Orchestration
+*   **Template Library**: Bootstrap new playbooks instantly from a built-in library of best-practice blueprints.
+*   **Cron Scheduling**: Native job scheduler for recurring tasks (backups, patching, monitoring).
+*   **Real-time Logs**: Watch Ansible execution streams live via WebSockets.
+*   **Linting**: Integrated `ansible-lint` checks your code as you type.
 
-- **Toggleable**: Enable or disable login via **Settings > General > Security**.
-- **Secure**: Passwords are stored using secure **BCrypt** hashing.
-- **Session Management**: Secure cookie-based sessions with handled redirects for HTMX interactions.
+### 🔒 Security & Governance
+*   **RBAC**: Three-tier role system (Admin, Operator, Watcher) for granular access control.
+*   **Secret Vault**: AES-256 encrypted storage for SSH keys, API tokens, and sensitive variables.
+*   **JIT Injection**: Secrets are injected into Ansible processes at runtime and never persisted to disk.
 
-## Tech Stack
+### 🔄 GitOps Ready
+*   **Bidirectional Sync**: Sible respects the single source of truth.
+    *   **UI to Disk**: Changes in the dashboard update your local files.
+    *   **Disk to UI**: Edit your `hosts.ini` or playbooks via Git/Vim, and Sible syncs the changes automatically.
 
-- **Backend**: FastAPI (Python), SQLModel (SQLite), APScheduler, Ansible Core
-- **Frontend**: Jinja2, HTMX, Alpine.js, Ace Editor, Pico.css
-- **Infrastructure**: Docker
+---
 
-## Quick Start
+## 📸 Screenshots
 
-### 1. With Docker Compose (Recommended)
+| Playbook Management | Interactive Terminal |
+|:---:|:---:|
+| ![Playbooks](docs/public/playbooks.png) | ![Terminal](docs/public/terminal_connect.png) |
 
-Create a `docker-compose.yml` file:
+| Inventory & GitOps | Job History |
+|:---:|:---:|
+| ![Inventory](docs/public/inventory.png) | ![History](docs/public/history.png) |
+
+*(See [Documentation](https://adam-benyekkou.github.io/Sible/) for more views)*
+
+---
+
+## 🏁 Quick Start
+
+### Docker Compose (Recommended)
+
+The fastest way to get started is via Docker Compose.
+
+1.  Create a `docker-compose.yml`:
 
 ```yaml
 services:
   sible:
-    image: sible:latest
-    build: .
+    image: ghcr.io/adam-benyekkou/sible:latest
+    container_name: sible
     restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
-      - ./playbooks:/playbooks
+      # Persist the database and app settings
       - ./data:/app/data
-      - ~/.ssh:/root/.ssh:ro # Mount SSH keys for Ansible
+      # Mount your Ansible playbooks
+      - ./playbooks:/app/infrastructure/playbooks
+      # Mount your SSH keys (Optional, for pre-existing keys)
+      - ~/.ssh:/root/.ssh:ro
     environment:
-      - SIBLE_SECRET_KEY=change_me
+      - SIBLE_SECRET_KEY=change_me_to_something_secure
+      - SIBLE_Use_DOCKER=true
 ```
 
-Run it:
+2.  Run the container:
 
 ```bash
-docker-compose up -d --build
+docker-compose up -d
 ```
 
-Visit <http://localhost:8000>
+3.  Access the dashboard at `http://localhost:8000`
+    *   **Default User**: `admin`
+    *   **Default Password**: `admin` (Change this immediately!)
 
-### 2. Development
+---
+
+## 📚 Documentation
+
+Full documentation is available at **[adam-benyekkou.github.io/Sible](https://adam-benyekkou.github.io/Sible/)**.
+
+*   [Installation Guide](https://adam-benyekkou.github.io/Sible/guide/installation)
+*   [Feature Overview](https://adam-benyekkou.github.io/Sible/features/orchestration)
+*   [REST API Reference](https://adam-benyekkou.github.io/Sible/guide/api)
+
+---
+
+## 🛠️ Tech Stack
+
+Sible is built on a "Zero-Bloat" philosophy, avoiding heavy frontend frameworks in favor of server-side rendering and hypermedia.
+
+*   **Backend**: Python 3.11, FastAPI, SQLModel (SQLite), Ansible Runner
+*   **Frontend**: Jinja2, HTMX, Alpine.js, PicoCSS
+*   **Real-time**: WebSockets, Server-Sent Events (SSE)
+*   **Security**: BCrypt, Fernet (Symmetric Encryption), JWT
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please check the [Contributing Guide](CONTRIBUTING.md) (coming soon) and the current [Issues](https://github.com/adam-benyekkou/Sible/issues).
+
+### Development Setup
 
 ```bash
-# Install dependencies
+# 1. Clone the repo
+git clone https://github.com/adam-benyekkou/Sible.git
+cd Sible
+
+# 2. Install dependencies
 pip install -r requirements.txt
 
-# Run the server
+# 3. Run the dev server
 uvicorn app.main:app --reload
 ```
 
-### 3. Custom Playbooks Path
+---
 
-If you mount an external directory into the container (e.g., via Docker volumes), you can configure Sible to look for playbooks in that specific path.
+## 📄 License
 
-1. Go to **Settings > General**.
-2. Locate the **Infrastructure Configuration** section.
-3. Enter the absolute path within the container (e.g., `/mnt/infrastructure/playbooks`).
-4. Sible will validate the path in real-time.
-5. Click **Save General Settings**.
-
-## Directory Structure
-
-Mount your existing playbooks folder to `/app/playbooks` (default) or any custom path of your choice.
-
-```text
-/playbooks
-  ├── deploy-web.yaml
-  ├── update-db.yaml
-  └── maintenance.yaml
-```
+MIT © [Adam Benyekkou](https://github.com/adam-benyekkou)
