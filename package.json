@@ -13,6 +13,7 @@
   "author": "Sible Team",
   "license": "MIT",
   "devDependencies": {
+    "medium-zoom": "^1.1.0",
     "vitepress": "^1.0.0",
     "vue": "^3.4.0"
   }

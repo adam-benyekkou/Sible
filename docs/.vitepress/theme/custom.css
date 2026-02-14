@@ -1,0 +1,29 @@
+.medium-zoom-overlay {
+  z-index: 2000 !important; /* Above everything including navbar */
+  background-color: var(--vp-c-bg) !important;
+  opacity: 0.9 !important;
+}
+
+.medium-zoom-image {
+  z-index: 2001 !important; /* Above overlay */
+}
+
+.medium-zoom-image--opened {
+  object-fit: contain; /* Ensure full image is visible */
+}
+
+/* Make images look clickable and ensure they can fill the width */
+.vp-doc img {
+  cursor: zoom-in;
+  transition: transform 0.3s ease-out;
+  max-width: 100%; /* Ensure they fit container */
+  height: auto;
+  display: block;
+  margin: 0 auto; /* Center them */
+}
+
+/* Optional: Add a slight shadow/border to images to make them pop */
+.vp-doc img {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
