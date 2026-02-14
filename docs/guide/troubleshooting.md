@@ -45,3 +45,18 @@ sudo chown -R 1000:1000 /path/to/your/ansible/files
 proxy_set_header Upgrade $http_upgrade;
 proxy_set_header Connection "upgrade";
 ```
+
+## 7. Ansible Galaxy Errors
+**Symptoms**: A playbook fails with `ERROR! the role 'xyz' was not found`.
+**Cause**: The playbook relies on external roles or collections that are not installed in the container.
+**Resolution**:
+*   Ensure a `requirements.yml` file exists in the same directory as your playbook (or parent directory).
+*   In the Sible UI, open the playbook and look for the **Install Requirements** button (visible if `requirements.yml` is detected).
+*   Click it to run `ansible-galaxy install` automatically.
+
+## 8. Linting Warnings
+**Symptoms**: You see yellow/red warning indicators in the playbook editor.
+**Cause**: Sible runs `ansible-lint` on save. These are best-practice suggestions (e.g., "Use shell only when necessary", "Task should have a name").
+**Resolution**:
+*   Review the suggestions to improve your playbook's reliability.
+*   You can ignore them if strict adherence isn't required; they do not prevent execution.

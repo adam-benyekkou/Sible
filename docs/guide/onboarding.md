@@ -15,6 +15,8 @@ The initial deployment of Sible utilizes a default administrative credential set
     *   Select **Edit** and update the password to a high-entropy value.
 3.  **Verify**: Re-authenticate using the new credentials to verify the update.
 
+![User Settings](/settings_users.png)
+
 ## Identity: Personalization and Environment
 
 Sible supports dynamic identity customization to reflect organizational branding and operational preferences.
@@ -24,6 +26,8 @@ Replace the default Sible logo with your organization's identifier:
 1.  Go to **Settings > General**.
 2.  Upload a PNG or SVG asset to the **Application Logo** field.
 3.  Save changes to propagate the asset across the dashboard and email notifications.
+
+![General Settings](/settings_general.png)
 
 ### Theme Selection
 Toggle between the two curated visual modes based on your environment:
@@ -44,6 +48,9 @@ Sible orchestrates tasks over SSH. Establishing trust between the Sible controll
     *   Configure the **SSH Port** (default: 22) and the **Remote User**.
     *   In the **SSH Key Secret** dropdown, select the secret you created in step 1.
 3.  **Establish Trust**:
+
+![Inventory Setup](/inventory.png)
+
     *   Ensure the matching **Public SSH key** is present in the target's `~/.ssh/authorized_keys` file for the remote user.
 4.  **Verify**:
     *   Execute a **Ping Check** from the UI to verify connectivity.

@@ -8,11 +8,15 @@ Access control is enforced through a granular three-tier Role-Based Access Contr
 *   **Operator**: Execution-level access for playbook triggering and inventory management.
 *   **Watcher**: Read-only access for monitoring status and auditing execution logs.
 
+![User Management](/settings_users.png)
+
 ## Just-in-Time (JIT) Secret Injection
 Sible implements ephemeral payload injection for sensitive data. Secrets are securely injected into Ansible templates at runtime and are never persisted in plain text on the local filesystem. This mechanism ensures that credentials exist only within the memory space of the active execution process.
 
 ## Integrated Secret Vaulting
 Sensitive credentials—including SSH private keys, API tokens, and cloud provider secrets—are managed through an internal encrypted vault. This centralized management layer ensures that all operational targets are authenticated securely without exposing credentials to the end user.
+
+![Secrets Management](/settings_secrets.png)
 
 ## Security Audit Gates
 Continuous security validation is integrated via GitHub Actions. Every release is analyzed by a comprehensive suite of audit tools:

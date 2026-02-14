@@ -1,78 +1,136 @@
 # REST API Reference
 
-Sible provides a REST API for programmatic interaction with your infrastructure and automation.
+Sible provides a set of endpoints for programmatic interaction. Note that Sible is primarily an HTMX-driven application, so many endpoints accept `application/x-www-form-urlencoded` (Form Data) and return HTML fragments or HTTP 204 No Content with `HX-Trigger` headers.
 
 ::: info
-Most endpoints require authentication via JWT. For programmatic access, you can obtain a token from `/api/auth/login`.
+Authentication is handled via session cookies. For programmatic access, you must first authenticate against `/api/auth/login` and persist the session cookie.
 :::
 
-## Core Endpoints
+## Authentication
 
-### Health Check
-`GET /health`
+### Login
+`POST /api/auth/login`
 
-Returns the system status and version.
+**Body (Form Data):**
+* `username`: String
+* `password`: String
 
-**Response**:
-```json
-{
-  "status": "ok",
-  "version": "1.0.0"
-}
-```
+**Response:**
+* `200 OK`: Sets `session` cookie.
+* `401 Unauthorized`: Invalid credentials.
 
 ## Inventory Management
 
-### List Hosts
-`GET /api/inventory/list`
+### List Hosts (HTML)
+`GET /api/inventory/hosts`
 
-Retrieves a paginated list of all hosts in the inventory.
+Returns a paginated HTML table of hosts.
+
+**Query Parameters:**
+* `page`: Integer (default: 1)
+* `search`: String (optional search term)
 
 ### Add Host
-`POST /api/inventory/add`
+`POST /api/inventory/hosts`
 
-Registers a new host in Sible.
+Registers a new host in the database and syncs to `hosts.ini`.
 
-**Body (Form Data)**:
-* `alias`: String (e.g. `web-01`)
+**Body (Form Data):**
+* `alias`: String (Human-readable name)
 * `hostname`: String (IP or FQDN)
-* `ssh_user`: String
+* `ssh_user`: String (default: root)
 * `ssh_port`: Integer (default: 22)
-* `ssh_key_secret`: Optional String (Secret name)
+* `ssh_key_secret`: String (Key of the secret in Settings)
+* `group_name`: String (Ansible group)
 
-## Playbook Orchestration
+### Update Host
+`PUT /api/inventory/hosts/{host_id}`
 
-### List Playbooks
+**Body (Form Data):**
+* `alias`: String
+* `hostname`: String
+* `ssh_user`: String
+* `ssh_port`: Integer
+* `group_name`: String
+* `ssh_key_secret`: String
+
+### Delete Host
+`DELETE /api/inventory/hosts/{host_id}`
+
+## Playbook Management
+
+### List Playbooks (HTML)
 `GET /api/playbooks/list`
 
-Returns a list of available playbooks and their metadata.
+Returns a paginated HTML list of playbooks.
 
-### Execute Playbook
-`POST /playbook/{name}/run`
+**Query Parameters:**
+* `page`: Integer
+* `search`: String
 
-Triggers a playbook execution.
+### Create Playbook (JSON)
+`POST /api/playbooks/create`
 
-**Body (JSON)**:
-* `limit`: Optional String (Ansible host limit)
-* `tags`: Optional String (Ansible tags)
-* `extra_vars`: Optional Object (Dynamic variables)
-* `check_mode`: Boolean (Dry run)
+Creates a new playbook, optionally from a template.
 
-## History & Audit
+**Body (JSON):**
+```json
+{
+  "name": "my_new_playbook.yaml",
+  "folder": "web/nginx",
+  "template_id": "system/update.yaml" 
+}
+```
 
-### Job History
-`GET /api/history`
+### Get Playbook Content
+`GET /playbooks/{path}`
 
-Retrieves a paginated list of previous job executions.
+Returns the editor UI with the playbook content.
 
-### Job Logs
-`GET /api/history/{job_id}/logs`
+### Save Playbook Content
+`POST /playbooks/{path}`
 
-Returns the full execution logs for a specific job.
+**Body (Form Data):**
+* `content`: String (The YAML content)
 
-## User Management
+### Lint Playbook
+`POST /lint`
 
-### Current User
-`GET /api/users/me`
+Runs `ansible-lint` on the provided content.
 
-Returns the profile of the currently authenticated user.
+**Body (Form Data):**
+* `content`: String (The YAML content)
+
+**Response (JSON):**
+Returns a list of linting errors.
+
+## Orchestration
+
+### Run Playbook (UI)
+`POST /run/{path}`
+
+Initiates the UI flow for running a playbook (returns the terminal connection fragment).
+
+**Body (Form Data):**
+* `limit`: String (Host pattern)
+* `tags`: String (Comma-separated tags)
+* `verbosity`: Integer (1-4)
+* `extra_vars`: String (JSON string or Key=Value)
+
+## Settings & Secrets
+
+### List Secrets (HTML)
+`GET /partials/settings/secrets/list`
+
+Returns the HTML list of environment variables.
+
+### Create/Update Secret
+`POST /settings/secrets`
+
+**Body (Form Data):**
+* `key`: String (e.g., `MY_API_KEY`)
+* `value`: String
+* `is_secret`: String ("true" to encrypt)
+
+### Delete Secret
+`DELETE /settings/secrets/{env_id}`
