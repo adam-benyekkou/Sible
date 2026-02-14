@@ -37,13 +37,11 @@ Sible is designed to bridge the gap between complex enterprise towers (AWX/Tower
 
 ## Screenshots
 
-| Playbook Management | Inventory |
+| Playbook Management | Interactive Terminal |
 |:---:|:---:|
-| ![Playbooks](docs/public/playbooks.png) | ![Inventory](docs/public/inventory.png) |
+| ![Playbooks](docs/public/playbooks.png) | ![Terminal](docs/public/terminal_connect.png) |
 
-| Job History | Interactive Terminal |
-|:---:|:---:|
-| ![History](docs/public/history.png) | ![Terminal](docs/public/terminal_connect.png) |
+| Inventory | Job History |
 
 *(See [Documentation](https://adam-benyekkou.github.io/Sible/) for more views)*
 
