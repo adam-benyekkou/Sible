@@ -5,9 +5,6 @@ hero:
   name: Sible
   text: Lightweight Ansible Orchestrator
   tagline: Sovereign Infrastructure Management for SREs and DevOps
-  image:
-    src: /logo.png
-    alt: Sible Logo
   actions:
     - theme: brand
       text: Get Started

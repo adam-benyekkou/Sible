@@ -20,6 +20,12 @@ The engine provides granular control over the SSH lifecycle for remote targets. 
 
 ![Edit Server Modal](/edit_server_modal.png)
 
+### Favoriting Servers
+Critical infrastructure can be marked as a favorite for quick monitoring.
+1.  In the Inventory table, locate the target server.
+2.  Click the **Star icon** in the actions column.
+3.  Favorited servers are highlighted and may appear in dashboard widgets for quicker status visibility.
+
 ## Interactive Web Terminal
 Sible features a built-in, WebSocket-based SSH terminal that allows operators to connect directly to any inventory host from the browser. 
 

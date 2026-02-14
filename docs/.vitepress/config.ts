@@ -5,7 +5,7 @@ export default defineConfig({
   description: "Lightweight Ansible Orchestrator",
   base: '/Sible/',
   head: [
-    ['link', { rel: 'icon', href: '/Sible/favicon.ico' }],
+    ['link', { rel: 'icon', href: '/Sible/logo.png' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Sible | Lightweight Ansible Orchestrator' }],
     ['meta', { property: 'og:description', content: 'Sovereign Infrastructure Management for SREs and DevOps.' }],

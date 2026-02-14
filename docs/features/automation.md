@@ -23,6 +23,12 @@ Sible includes a built-in template system to accelerate playbook development. Te
 4.  Click **Create Playbook**.
 5.  Sible will instantiate the playbook in your library, populated with the template's content.
 
+## Favorites & Quick Access
+Frequently used playbooks can be pinned for rapid access.
+1.  Locate the playbook card in the dashboard.
+2.  Click the **Heart icon** in the top-right corner.
+3.  The playbook will now appear in the **Favorites** section of the sidebar, available from any page in the application.
+
 ## Cron-Based Scheduling
 A native job scheduler enables the automation of recurring maintenance tasks. SREs can define cron-based intervals for playbooks—such as daily database backups, periodic security patching, or infrastructure health checks—ensuring continuous operational compliance.
 
