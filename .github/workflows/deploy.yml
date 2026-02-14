@@ -2,6 +2,10 @@ name: Deploy Sible to GHCR
 
 on:
   push:
+    branches:
+      - 'main'
+      - 'v1.0.0'
+      - 'dev'
     tags:
       - 'v*' # Trigger on version tags (e.g., v1.0.0)
 
@@ -32,12 +36,23 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/sible
-          # Task 3: Handle semver tagging automatically
+          # Task 3: Handle semver tagging automatically and branch rules
           tags: |
+            # Semver tags (v1.0.0 -> 1.0.0, 1.0, 1)
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha,prefix=sha-
+            
+            # Main branch -> latest
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            
+            # Dev branch -> dev
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            
+            # v1.0.0 branch -> v1.0.0
+            type=raw,value=v1.0.0,enable=${{ github.ref == 'refs/heads/v1.0.0' }}
+            
+            # Fallback: Branch name as tag (e.g. feature/foo -> foo) - optional but useful
+            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/v1.0.0' }}
 
       - name: Build and push Docker image
         id: push
