@@ -6,8 +6,6 @@
 > **Sovereign Infrastructure Management for SREs and DevOps.**
 > A modern, reactive, no-bloat UI for Ansible. Built with **FastAPI**, **HTMX**, and **PicoCSS**.
 
-![Sible Dashboard](docs/public/dashboard.png)
-
 ## Core Value
 
 **Execute Ansible playbooks on your servers instantly.**
