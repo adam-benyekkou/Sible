@@ -30,11 +30,19 @@ Toggle between the two curated visual modes based on your environment:
 
 Sible orchestrates tasks over SSH. Establishing trust between the Sible controller and your target nodes is essential.
 
-1.  Navigate to the **Inventory** page.
-2.  Select **Add Host** and enter the hostname or IP address of your remote target.
-3.  Configure the **SSH Port** (default: 22) and the **Remote User**.
-4.  Ensure the Sible controller's public SSH key is present in the target's `authorized_keys` file.
-5.  Execute a **Ping Check** from the UI to verify connectivity.
+1.  **Define your Credentials**:
+    *   Navigate to **Settings > Environments**.
+    *   Click **Add Secret** to store your SSH Private Key. Name it something descriptive (e.g., `prod_vps_key`).
+    *   Paste your private key content (including the `BEGIN` and `END` headers). Sible encrypts this at rest.
+2.  **Add your Host**:
+    *   Navigate to the **Inventory** page.
+    *   Select **Add Host** and enter the hostname or IP address of your remote target.
+    *   Configure the **SSH Port** (default: 22) and the **Remote User**.
+    *   In the **SSH Key Secret** dropdown, select the secret you created in step 1.
+3.  **Establish Trust**:
+    *   Ensure the matching **Public SSH key** is present in the target's `~/.ssh/authorized_keys` file for the remote user.
+4.  **Verify**:
+    *   Execute a **Ping Check** from the UI to verify connectivity.
 
 ## The First Run: Infrastructure Verification
 
