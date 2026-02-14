@@ -4,12 +4,16 @@ Upon successful deployment, Sible enters the operational readiness phase. This g
 
 ## Security First: Administrative Hardening
 
-The initial deployment of Sible utilizes a default administrative credential set. Immediate rotation of these credentials is the highest priority operational task.
+The initial deployment of Sible utilizes a default administrative credential set. 
 
-1.  Navigate to the **Settings > Users** section of the dashboard.
-2.  Locate the default `admin` user.
-3.  Select **Edit** and update the password to a high-entropy value.
-4.  Re-authenticate using the new credentials to verify the update.
+1.  **Initial Login**: Authenticate with the default credentials:
+    *   **Username**: `admin`
+    *   **Password**: `admin`
+2.  **Rotate Credentials**: Immediate rotation is the highest priority operational task.
+    *   Navigate to the **Settings > Users** section of the dashboard.
+    *   Locate the default `admin` user.
+    *   Select **Edit** and update the password to a high-entropy value.
+3.  **Verify**: Re-authenticate using the new credentials to verify the update.
 
 ## Identity: Personalization and Environment
 
