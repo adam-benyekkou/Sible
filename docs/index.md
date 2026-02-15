@@ -23,8 +23,3 @@ features:
   - title: Zero-Bloat
     details: Built with FastAPI, HTMX, and PicoCSS for ultra-fast performance.
 ---
-
-## Dashboard Preview
-
-![Sible Dashboard](/dashboard.png)
-
