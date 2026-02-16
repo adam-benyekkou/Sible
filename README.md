@@ -19,7 +19,7 @@
 - [Key Features](#key-features)
 - [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
-- [Roadmap](#roadmap)
+
 - [Tech Stack](#tech-stack)
 - [Contributing](#contributing)
 
@@ -123,16 +123,6 @@ docker-compose up -d
 
 ---
 
-## 🗺️ Roadmap
-
-- [x] Core Orchestration Engine
-- [x] Real-time Log Streaming
-- [ ] LDAP / OIDC Integration
-- [ ] Git Integration for Playbooks
-- [ ] Dark Mode Support
-- [ ] Multi-node Clustering
-
----
 
 ## 📚 Documentation
 
