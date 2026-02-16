@@ -27,6 +27,8 @@ jobs:
 
       - name: Start Test Lab
         run: |
+          mkdir -p infrastructure-e2e/playbooks
+          chmod -R 777 infrastructure-e2e
           docker compose -f docker-compose.e2e.yml up -d
           # Wait for Sible to be healthy (using the mapped port 8000)
           timeout 60s bash -c 'until curl -sf http://localhost:8000/health; do echo "Waiting for Sible..."; sleep 5; done'
