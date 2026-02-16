@@ -1,19 +1,49 @@
-# Sible - Lightweight Ansible Orchestrator
+<div align="center">
+  <img src="docs/public/logo.png" alt="Sible Logo" width="150">
+  <h1>Sible - Lightweight Ansible Orchestrator</h1>
 
-[![Documentation](https://img.shields.io/badge/docs-vitepress-blue)](https://adam-benyekkou.github.io/Sible/)
-[![License](https://img.shields.io/github/license/adam-benyekkou/Sible)](LICENSE)
+  [![Documentation](https://img.shields.io/badge/docs-vitepress-blue)](https://adam-benyekkou.github.io/Sible/)
+  [![License](https://img.shields.io/github/license/adam-benyekkou/Sible)](LICENSE)
+  [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+  [![Docker](https://img.shields.io/docker/image-size/adam-benyekkou/sible/latest)](https://hub.docker.com/r/adam-benyekkou/sible)
+</div>
 
 > **Sovereign Infrastructure Management for SREs and DevOps.**
 > A modern, reactive, no-bloat UI for Ansible. Built with **FastAPI**, **HTMX**, and **PicoCSS**.
 
-## Core Value
+---
+
+## 📋 Table of Contents
+- [Core Value](#core-value)
+- [Why Sible?](#why-sible)
+- [Key Features](#key-features)
+- [Screenshots](#screenshots)
+- [Quick Start](#quick-start)
+- [Roadmap](#roadmap)
+- [Tech Stack](#tech-stack)
+- [Contributing](#contributing)
+
+---
+
+## 💎 Core Value
 
 **Execute Ansible playbooks on your servers instantly.**
 Sible connects to your inventory via SSH, runs your automation, and streams the logs directly to your browser in real-time. No complex agents, just standard SSH.
 
 ---
 
-## Key Features
+## ⚖️ Why Sible?
+
+| Feature | Ansible CLI | AWX / Tower | Sible |
+| :--- | :---: | :---: | :---: |
+| **Setup Time** | Instant | Hours | **Minutes** |
+| **UI** | None | Complex | **Minimalist** |
+| **Resources** | Low | High (2GB+) | **Low (<100MB)** |
+| **Feedback** | Text Logs | Delayed | **Real-time Streaming** |
+
+---
+
+## ✨ Key Features
 
 Sible is designed to bridge the gap between complex enterprise towers (AWX/Tower) and raw CLI usage.
 
@@ -35,7 +65,7 @@ Sible is designed to bridge the gap between complex enterprise towers (AWX/Tower
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
 | Playbook Management | Interactive Terminal |
 |:---:|:---:|
@@ -49,11 +79,14 @@ Sible is designed to bridge the gap between complex enterprise towers (AWX/Tower
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
 ### Docker Compose (Recommended)
 
 The fastest way to get started is via Docker Compose.
+
+<details>
+<summary><strong>Click to expand docker-compose.yml</strong></summary>
 
 1.  Create a `docker-compose.yml`:
 
@@ -76,6 +109,7 @@ services:
       - SIBLE_SECRET_KEY=change_me_to_something_secure
       - SIBLE_Use_DOCKER=true
 ```
+</details>
 
 2.  Run the container:
 
@@ -89,7 +123,18 @@ docker-compose up -d
 
 ---
 
-## Documentation
+## 🗺️ Roadmap
+
+- [x] Core Orchestration Engine
+- [x] Real-time Log Streaming
+- [ ] LDAP / OIDC Integration
+- [ ] Git Integration for Playbooks
+- [ ] Dark Mode Support
+- [ ] Multi-node Clustering
+
+---
+
+## 📚 Documentation
 
 Full documentation is available at **[adam-benyekkou.github.io/Sible](https://adam-benyekkou.github.io/Sible/)**.
 
@@ -99,7 +144,7 @@ Full documentation is available at **[adam-benyekkou.github.io/Sible](https://ad
 
 ---
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 Sible is built on a "Zero-Bloat" philosophy, avoiding heavy frontend frameworks in favor of server-side rendering and hypermedia.
 
@@ -110,7 +155,7 @@ Sible is built on a "Zero-Bloat" philosophy, avoiding heavy frontend frameworks 
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please check the [Contributing Guide](CONTRIBUTING.md) for details on setting up your environment and our code standards.
 
@@ -130,6 +175,6 @@ uvicorn app.main:app --reload
 
 ---
 
-## License
+## 📄 License
 
 MIT © [Adam Benyekkou](https://github.com/adam-benyekkou)
