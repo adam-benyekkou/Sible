@@ -14,14 +14,14 @@
 ---
 
 ## 📋 Table of Contents
-- [Core Value](#core-value)
-- [Why Sible?](#why-sible)
-- [Key Features](#key-features)
-- [Screenshots](#screenshots)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Contributing](#contributing)
+- [Core Value](#-core-value)
+- [Why Sible?](#-why-sible)
+- [Key Features](#-key-features)
+- [Screenshots](#-screenshots)
+- [Quick Start](#-quick-start)
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Contributing](#-contributing)
 
 ---
 
@@ -146,7 +146,7 @@ graph TD
     subgraph Execution Engine
         Runner[Ansible Runner Service]
         Queue[Async Job Queue]
-        Secrets[Secret Vault (AES-256)]
+        Secrets["Secret Vault (AES-256)"]
         
         Runner -->|Fetch| Secrets
         Runner -->|Stream Logs| WebSockets
