@@ -15,3 +15,5 @@ pydantic-settings
 watchfiles
 asyncssh
 websockets
+httpx
+
