@@ -32,6 +32,8 @@ jobs:
           timeout 60s bash -c 'until curl -sf http://localhost:8000/health; do echo "Waiting for Sible..."; sleep 5; done'
 
       - name: Run E2E Tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest tests/e2e/test_admin_flow.py --browser chromium
 
