@@ -19,7 +19,7 @@
 - [Key Features](#key-features)
 - [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
-
+- [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Contributing](#contributing)
 
@@ -123,6 +123,43 @@ docker-compose up -d
 
 ---
 
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    User([User]) -->|HTTP/HTTPS| FastAPI[FastAPI Backend]
+    
+    subgraph Sible Core
+        FastAPI -->|Auth| Security[JWT + RBAC]
+        FastAPI -->|Persist| SQLite[(SQLite DB)]
+        FastAPI -->|Render| Jinja[Jinja2 Templates]
+        
+        subgraph Real-Time Layer
+            WebSockets[WebSocket Manager]
+            SSE[SSE Broadcaster]
+        end
+        
+        FastAPI <--> WebSockets
+    end
+    
+    subgraph Execution Engine
+        Runner[Ansible Runner Service]
+        Queue[Async Job Queue]
+        Secrets[Secret Vault (AES-256)]
+        
+        Runner -->|Fetch| Secrets
+        Runner -->|Stream Logs| WebSockets
+        Runner -->|Execute| Docker{Docker Container}
+    end
+    
+    FastAPI -->|Trigger| Runner
+    Docker -->|SSH| TargetServer1[Target Server 1]
+    Docker -->|SSH| TargetServer2[Target Server 2]
+    
+    Jinja -->|Serve| HTMX[HTMX Frontend]
+    User <-->|Interact| HTMX
+```
 
 ## 📚 Documentation
 
