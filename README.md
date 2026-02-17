@@ -93,7 +93,7 @@ The fastest way to get started is via Docker Compose.
 ```yaml
 services:
   sible:
-    image: ghcr.io/adam-benyekkou/sible:v1.0.0
+    image: ghcr.io/adam-benyekkou/sible:latest
     container_name: sible
     restart: unless-stopped
     ports:

@@ -14,7 +14,7 @@ Create a `docker-compose.yml` file:
 ```yaml
 services:
   sible:
-    image: ghcr.io/adam-benyekkou/sible:v1.0.0
+    image: ghcr.io/adam-benyekkou/sible:latest
     container_name: sible
     restart: unless-stopped
     ports:
