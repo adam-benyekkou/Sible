@@ -16,4 +16,5 @@ watchfiles
 asyncssh
 websockets
 httpx
+numpy
 

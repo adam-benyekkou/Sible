@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     DOCKER_WORKSPACE_PATH: str = os.getenv("SIBLE_DOCKER_WORKSPACE_PATH", str(INFRASTRUCTURE_DIR))
     HOST_WORKSPACE_PATH: Optional[str] = os.getenv("SIBLE_HOST_INFRA_PATH")
     
+    # Demo Mode Settings
+    DEMO_MODE: bool = os.getenv("SIBLE_DEMO_MODE", "false").lower() in ("true", "1", "yes")
+    DEMO_PLAYBOOKS_DIR: Path = BASE_DIR / "demo_playbooks"
+    
     class Config:
         env_file = ".env"
         env_prefix = "SIBLE_"

@@ -1,0 +1,33 @@
+---
+# Description: Update all system packages to their latest versions
+- name: Update System Packages
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+      changed_when: false
+
+    - name: Update yum cache (RHEL/CentOS)
+      yum:
+        update_cache: yes
+      when: ansible_os_family == "RedHat"
+      changed_when: false
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: Display update summary
+      debug:
+        msg: "System packages updated successfully on {{ inventory_hostname }}"

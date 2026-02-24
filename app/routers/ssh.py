@@ -22,6 +22,14 @@ async def ssh_websocket_endpoint(websocket: WebSocket, host_id: int) -> None:
         websocket: The inbound WebSocket connection.
         host_id: The ID of the host to connect to.
     """
+    # DEMO MODE: Disable SSH access
+    from app.core.config import get_settings
+    if get_settings().DEMO_MODE:
+        await websocket.accept()
+        await websocket.send_text("\r\n\x1b[31mSSH access is disabled in Demo Mode.\x1b[0m\r\n")
+        await websocket.close(code=4001)
+        return
+    
     logger.info(f"DEBUG: SSH WebSocket endpoint hit for host_id: {host_id}")
     # 1. Accept the WebSocket handshake immediately
     await websocket.accept()

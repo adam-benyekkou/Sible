@@ -35,17 +35,25 @@ class PlaybookService:
         ensures all filesystem operations are relative to the user's
         workspace setting.
 
+        In Demo Mode: Returns the demo_playbooks directory.
+
         Returns:
             Path object pointing to the playbooks root.
         """
         from app.models import AppSettings
         from app.core.config import get_settings as get_app_settings
+        app_settings = get_app_settings()
+        
+        # DEMO MODE: Use demo playbooks directory
+        if app_settings.DEMO_MODE:
+            return app_settings.DEMO_PLAYBOOKS_DIR
+        
         db_settings = self.db.get(AppSettings, 1)
         if db_settings and db_settings.playbooks_path:
             return Path(db_settings.playbooks_path)
         
         # Fallback to dynamic config
-        return get_app_settings().PLAYBOOKS_DIR
+        return app_settings.PLAYBOOKS_DIR
 
     def _validate_path(self, name: str) -> Optional[Path]:
         """Validates a playbook path to prevent directory traversal attacks.

@@ -1,0 +1,31 @@
+---
+# Description: Run system health checks on all servers
+- name: System Health Check
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check disk usage
+      shell: df -h | grep -v tmpfs
+      register: disk_usage
+      changed_when: false
+
+    - name: Check memory usage
+      shell: free -m
+      register: memory_usage
+      changed_when: false
+
+    - name: Check CPU load
+      shell: uptime
+      register: cpu_load
+      changed_when: false
+
+    - name: Display health report
+      debug:
+        msg: |
+          ===================
+          System Health Report
+          ===================
+          Host: {{ inventory_hostname }}
+          CPU Load: {{ cpu_load.stdout }}
+          Memory: {{ memory_usage.stdout_lines[1] }}
+          Disk: {{ disk_usage.stdout }}

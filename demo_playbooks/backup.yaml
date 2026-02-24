@@ -1,0 +1,38 @@
+---
+# Description: Backup critical directories to a backup location
+- name: Backup Directories
+  hosts: all
+  gather_facts: false
+  vars:
+    backup_source:
+      - /etc
+      - /home
+    backup_destination: /backup
+    backup_name: "backup-{{ ansible_date_time.epoch }}"
+  tasks:
+    - name: Create backup directory
+      file:
+        path: "{{ backup_destination }}/{{ backup_name }}"
+        state: directory
+        mode: '0700'
+
+    - name: Archive each source directory
+      archive:
+        path: "{{ item }}"
+        dest: "{{ backup_destination }}/{{ backup_name }}/{{ item | basename }}.tar.gz"
+        format: gz
+        remove: false
+      loop: "{{ backup_source }}"
+
+    - name: Create backup manifest
+      copy:
+        dest: "{{ backup_destination }}/{{ backup_name }}/manifest.txt"
+        content: |
+          Backup created: {{ ansible_date_time.iso8601 }}
+          Host: {{ inventory_hostname }}
+          Sources: {{ backup_source | join(', ') }}
+        mode: '0644'
+
+    - name: Display backup summary
+      debug:
+        msg: "Backup completed: {{ backup_name }}"

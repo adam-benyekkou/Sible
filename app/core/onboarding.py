@@ -7,6 +7,7 @@ from app.core.config import get_settings
 import logging
 import os
 from pathlib import Path
+from datetime import datetime, timedelta
 
 settings = get_settings()
 logger = logging.getLogger("uvicorn.info")
@@ -28,6 +29,24 @@ WELCOME_PLAYBOOK_CONTENT = """---
 ONBOARDING_INVENTORY_NAME = "inventory.ini"
 ONBOARDING_INVENTORY_CONTENT = """[all]
 local_server ansible_host=127.0.0.1 ansible_connection=local
+"""
+
+# Demo inventory content
+DEMO_INVENTORY_CONTENT = """[webservers]
+web-01 ansible_host=192.168.1.10 ansible_user=ubuntu
+web-02 ansible_host=192.168.1.11 ansible_user=ubuntu
+web-03 ansible_host=192.168.1.12 ansible_user=ubuntu
+
+[dbservers]
+db-01 ansible_host=192.168.2.10 ansible_user=admin
+db-02 ansible_host=192.168.2.11 ansible_user=admin
+
+[production]
+web-01
+web-02
+web-03
+db-01
+db-02
 """
 
 def seed_users(db: Session):
@@ -132,3 +151,80 @@ def seed_onboarding_data(db: Session, playbook_service: PlaybookService):
 
     except Exception as e:
         logger.error(f"Onboarding seeding failed: {e}")
+
+
+def seed_demo_data(db: Session):
+    """
+    Seeds demo data for demonstration purposes.
+    This includes fake hosts, inventory, and job history.
+    Only runs when DEMO_MODE is enabled.
+    """
+    if not settings.DEMO_MODE:
+        return
+    
+    logger.info("Seeding demo data...")
+    
+    # 1. Create demo user if not exists
+    auth_service = AuthService(db)
+    demo_user = db.exec(select(User).where(User.username == "demo")).first()
+    if not demo_user:
+        logger.info("Creating demo user...")
+        auth_service.create_user("demo", "demo", UserRole.ADMIN)
+        demo_user = db.exec(select(User).where(User.username == "demo")).first()
+    
+    # 2. Seed demo inventory if no hosts exist
+    hosts = db.exec(select(Host)).all()
+    if not hosts:
+        logger.info("Seeding demo inventory...")
+        # Import demo inventory to DB
+        InventoryService.import_ini_to_db(db, content=DEMO_INVENTORY_CONTENT)
+        
+        # Update host statuses to simulate online servers
+        demo_hosts = db.exec(select(Host)).all()
+        for host in demo_hosts:
+            host.status = "online"
+            host.latency = float(np.random.randint(5, 50))
+        db.add_all(demo_hosts)
+        db.commit()
+    
+    # 3. Seed demo job history
+    from app.models import JobRun
+    existing_jobs = db.exec(select(JobRun)).all()
+    if not existing_jobs:
+        logger.info("Seeding demo job history...")
+        demo_playbooks = [
+            "deploy_webapp.yaml",
+            "system_health.yaml",
+            "backup.yaml",
+            "update_packages.yaml"
+        ]
+        
+        # Create fake job runs
+        now = datetime.utcnow()
+        statuses = ["success", "success", "success", "failed"]
+        
+        for i, playbook in enumerate(demo_playbooks):
+            for j in range(3):  # 3 runs per playbook
+                start_time = now - timedelta(days=j*2, hours=i*2)
+                end_time = start_time + timedelta(minutes=np.random.randint(1, 10))
+                
+                job = JobRun(
+                    playbook=playbook,
+                    username="demo",
+                    status=statuses[i % len(statuses)],
+                    start_time=start_time,
+                    end_time=end_time,
+                    extra_vars="{}",
+                    tags="",
+                    limit="",
+                    stdout=f"PLAYBOOK EXECUTION: {playbook}\n" + "TASK [Gathering Facts] ok: [1]\n"*3 + "TASK [Complete] changed: [1]\n"*2 + "PLAY RECAP \nlocalhost : ok=3    changed=2    unreachable=0    failed=0\n"
+                )
+                db.add(job)
+        
+        db.commit()
+    
+    logger.info("Demo data seeding complete.")
+
+
+# Import numpy for random numbers (needed for demo data)
+import numpy as np

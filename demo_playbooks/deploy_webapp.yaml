@@ -1,0 +1,24 @@
+---
+# Description: Deploy a sample web application to target servers
+- name: Deploy Web Application
+  hosts: all
+  gather_facts: false
+  vars:
+    app_version: "1.0.0"
+    deploy_path: "/var/www/myapp"
+  tasks:
+    - name: Ensure deploy directory exists
+      file:
+        path: "{{ deploy_path }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create application version file
+      copy:
+        dest: "{{ deploy_path }}/version.txt"
+        content: "App version: {{ app_version }}\nDeployed at: {{ ansible_date_time.iso8601 }}"
+        mode: '0644'
+
+    - name: Display deployment success message
+      debug:
+        msg: "Web application deployed successfully to {{ deploy_path }}"

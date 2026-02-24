@@ -18,7 +18,7 @@ from app.core.database import create_db_and_tables
 from app.core.security import check_auth, get_user_from_token
 from app.services import RunnerService, SchedulerService, AuthService, PlaybookService
 from app.models import User
-from app.core.onboarding import seed_onboarding_data, seed_users, seed_app_settings
+from app.core.onboarding import seed_onboarding_data, seed_users, seed_app_settings, seed_demo_data
 from app.core.database import engine
 from sqlmodel import Session, select
 
@@ -73,6 +73,9 @@ async def lifespan(app: FastAPI):
         
         # Seed Onboarding Data
         seed_onboarding_data(session, PlaybookService(session))
+        
+        # Seed Demo Data (if DEMO_MODE is enabled)
+        seed_demo_data(session)
 
     SchedulerService.start()
     logger.info("Sible started successfully.")
@@ -119,6 +122,8 @@ async def auth_middleware(request: Request, call_next) -> Response:
     are handled with special headers to trigger client-side redirects
     without reloading the entire page.
 
+    In Demo Mode: Bypasses authentication and injects a demo user.
+
     Args:
         request: FastAPI request.
         call_next: Next handler in chain.
@@ -132,6 +137,22 @@ async def auth_middleware(request: Request, call_next) -> Response:
         request.url.path.startswith("/ws/") or 
         request.url.path in ["/login", "/logout", "/api/auth/login"]):
         return await call_next(request)
+    
+    # DEMO MODE: Skip authentication, auto-inject demo user
+    if settings_conf.DEMO_MODE:
+        # Inject demo user into state
+        with Session(engine) as session:
+            demo_user = session.exec(select(User).where(User.username == "demo")).first()
+            if not demo_user:
+                # Create demo user if not exists
+                from app.services.auth import AuthService
+                auth_service = AuthService(session)
+                auth_service.create_user("demo", "demo", "admin")
+                demo_user = session.exec(select(User).where(User.username == "demo")).first()
+            request.state.user = demo_user
+        
+        response = await call_next(request)
+        return response
 
     if not check_auth(request):
         # HTMX requests should probably be redirected to login or show 401
