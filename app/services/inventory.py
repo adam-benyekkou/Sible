@@ -351,6 +351,14 @@ class InventoryService:
             db: Database session.
         """
         hosts = db.exec(select(Host)).all()
+
+        # DEMO MODE: Hosts are fake IPs — mark all online, skip real TCP checks
+        if settings.DEMO_MODE:
+            for h in hosts:
+                h.status = "online"
+                db.add(h)
+            db.commit()
+            return
         
         async def check_host(h):
             is_online, latency = await check_ssh(h.hostname, h.ssh_port)

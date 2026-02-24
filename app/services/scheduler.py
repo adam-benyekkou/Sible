@@ -28,6 +28,10 @@ async def periodic_status_refresh() -> None:
     Why: Ensures that the host reachability status (ping) in the Dashboard
     stays accurate over time without requiring user-initiated pings.
     """
+    # DEMO MODE: All hosts are fake — skip real TCP checks so they stay online
+    if settings.DEMO_MODE:
+        return
+
     from app.services.inventory import InventoryService
     from app.core.database import engine
     logger.info("Scheduler: Running periodic inventory status refresh")
