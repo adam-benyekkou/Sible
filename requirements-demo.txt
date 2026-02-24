@@ -2,10 +2,8 @@ fastapi
 uvicorn
 jinja2
 python-multipart
-ansible-core
 sqlmodel
 apscheduler
-ansible-lint
 apprise
 itsdangerous
 bcrypt
@@ -13,7 +11,5 @@ python-jose[cryptography]
 cryptography
 pydantic-settings
 watchfiles
-asyncssh
 websockets
 httpx
-

@@ -6,6 +6,7 @@ from app.models import Host, User, UserRole, AppSettings
 from app.core.config import get_settings
 import logging
 import os
+import random
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -183,7 +184,7 @@ def seed_demo_data(db: Session):
         demo_hosts = db.exec(select(Host)).all()
         for host in demo_hosts:
             host.status = "online"
-            host.latency = float(np.random.randint(5, 50))
+            host.latency = float(random.randint(5, 50))
         db.add_all(demo_hosts)
         db.commit()
     
@@ -206,7 +207,7 @@ def seed_demo_data(db: Session):
         for i, playbook in enumerate(demo_playbooks):
             for j in range(3):  # 3 runs per playbook
                 start_time = now - timedelta(days=j*2, hours=i*2)
-                end_time = start_time + timedelta(minutes=np.random.randint(1, 10))
+                end_time = start_time + timedelta(minutes=random.randint(1, 10))
                 
                 job = JobRun(
                     playbook=playbook,
@@ -226,5 +227,4 @@ def seed_demo_data(db: Session):
     logger.info("Demo data seeding complete.")
 
 
-# Import numpy for random numbers (needed for demo data)
-import numpy as np
+
