@@ -16,7 +16,7 @@ LABEL org.opencontainers.image.source="https://github.com/adam-benyekkou/Sible" 
       org.opencontainers.image.authors="cavy.protocol.dev@proton.me" \
       org.opencontainers.image.title="Sible Demo" \
       org.opencontainers.image.vendor="Cavy Protocol" \
-      org.opencontainers.image.version="demo"
+      org.opencontainers.image.version="demo-latest"
 
 # Minimal runtime deps — only curl for healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends \
