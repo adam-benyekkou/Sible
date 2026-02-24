@@ -3,7 +3,10 @@ from sqlmodel import Session, select
 from app.core.database import engine
 from app.models import Host
 from app.core.security import get_current_user_ws
-import asyncssh
+try:
+    import asyncssh
+except ImportError:
+    asyncssh = None  # Not available in demo mode
 import asyncio
 import logging
 

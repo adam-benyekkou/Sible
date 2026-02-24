@@ -1,4 +1,4 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, select, text
 from app.services.playbook import PlaybookService
 from app.services.inventory import InventoryService
 from app.services.auth import AuthService
@@ -33,21 +33,29 @@ local_server ansible_host=127.0.0.1 ansible_connection=local
 """
 
 # Demo inventory content
-DEMO_INVENTORY_CONTENT = """[webservers]
-web-01 ansible_host=192.168.1.10 ansible_user=ubuntu
-web-02 ansible_host=192.168.1.11 ansible_user=ubuntu
-web-03 ansible_host=192.168.1.12 ansible_user=ubuntu
+DEMO_INVENTORY_CONTENT = """[the-front-lines]
+spider-web            ansible_host=10.0.1.10  ansible_user=ubuntu
+no-internet-explorer  ansible_host=10.0.1.11  ansible_user=ubuntu
+captain-404           ansible_host=10.0.1.12  ansible_user=ubuntu
+www-are-you           ansible_host=10.0.1.13  ansible_user=ubuntu
+error-500-lives-here  ansible_host=10.0.1.14  ansible_user=ubuntu
 
-[dbservers]
-db-01 ansible_host=192.168.2.10 ansible_user=admin
-db-02 ansible_host=192.168.2.11 ansible_user=admin
+[the-brain-trust]
+data-vader        ansible_host=10.0.2.10  ansible_user=postgres
+sir-sql-a-lot     ansible_host=10.0.2.11  ansible_user=postgres
+the-big-ledger    ansible_host=10.0.2.12  ansible_user=postgres
+lord-of-the-joins ansible_host=10.0.2.13  ansible_user=postgres
 
-[production]
-web-01
-web-02
-web-03
-db-01
-db-02
+[gate-keepers]
+steady-eddie      ansible_host=10.0.3.10  ansible_user=admin
+wobble-free       ansible_host=10.0.3.11  ansible_user=admin
+the-bouncer       ansible_host=10.0.3.12  ansible_user=admin
+port-80-and-chill ansible_host=10.0.3.13  ansible_user=admin
+
+[the-watchers]
+sauron-sees-all   ansible_host=10.0.4.10  ansible_user=monitor
+metric-avengers   ansible_host=10.0.4.11  ansible_user=monitor
+alert-fatigue     ansible_host=10.0.4.12  ansible_user=monitor
 """
 
 def seed_users(db: Session):
@@ -165,6 +173,14 @@ def seed_demo_data(db: Session):
     
     logger.info("Seeding demo data...")
     
+    # 0. Force wipe existing data to prevent duplicates across restarts
+    from app.models import Host, JobRun, FavoriteServer
+    db.exec(select(Host)).all() # Ensure metadata is loaded
+    db.execute(text("DELETE FROM host"))
+    db.execute(text("DELETE FROM jobrun"))
+    db.execute(text("DELETE FROM favoriteserver"))
+    db.commit()
+    
     # 1. Create demo user if not exists
     auth_service = AuthService(db)
     demo_user = db.exec(select(User).where(User.username == "demo")).first()
@@ -173,20 +189,20 @@ def seed_demo_data(db: Session):
         auth_service.create_user("demo", "demo", UserRole.ADMIN)
         demo_user = db.exec(select(User).where(User.username == "demo")).first()
     
-    # 2. Seed demo inventory if no hosts exist
-    hosts = db.exec(select(Host)).all()
-    if not hosts:
-        logger.info("Seeding demo inventory...")
-        # Import demo inventory to DB
-        InventoryService.import_ini_to_db(db, content=DEMO_INVENTORY_CONTENT)
-        
-        # Update host statuses to simulate online servers
-        demo_hosts = db.exec(select(Host)).all()
-        for host in demo_hosts:
+    # 2. Seed demo inventory
+    # In demo mode, we force re-seed to ensure all servers are present
+    logger.info("Syncing demo inventory...")
+    # Import demo inventory to DB
+    InventoryService.import_ini_to_db(db, content=DEMO_INVENTORY_CONTENT)
+    
+    # Update host statuses to simulate online servers
+    demo_hosts = db.exec(select(Host)).all()
+    for host in demo_hosts:
+        if host.status == "unknown" or not host.latency:
             host.status = "online"
             host.latency = float(random.randint(5, 50))
-        db.add_all(demo_hosts)
-        db.commit()
+    db.add_all(demo_hosts)
+    db.commit()
     
     # 3. Seed demo job history
     from app.models import JobRun

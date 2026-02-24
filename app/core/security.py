@@ -69,7 +69,12 @@ def decrypt_secret(cipher_text: str) -> str:
 async def get_current_user(request: Request) -> str:
     """Dependency that checks if the user is authenticated via JWT cookie.
     Returns username if valid, raises 401 otherwise.
+    In demo mode, returns the demo user unconditionally.
     """
+    # DEMO MODE: bypass JWT auth entirely
+    if get_settings().DEMO_MODE:
+        return "demo"
+
     token = request.cookies.get("access_token")
     if not token:
         auth_header = request.headers.get("Authorization")
@@ -150,6 +155,10 @@ def is_using_default_password(user_obj) -> bool:
     Checks if the user is using their username as their password.
     This is used during onboarding to warn users.
     """
+    # DEMO MODE: Never show password warning
+    if get_settings().DEMO_MODE:
+        return False
+
     from app.core.hashing import verify_password
     # During seeding, we set password = username
     return verify_password(user_obj.username, user_obj.hashed_password)
@@ -168,6 +177,10 @@ class RoleChecker:
             db_user = session.exec(statement).first()
             if not db_user:
                 raise HTTPException(status_code=401, detail="User not found")
+
+            # DEMO MODE: admin user always passes all role checks
+            if get_settings().DEMO_MODE:
+                return db_user
 
             # Check if user's role string value is in allowed roles
             user_role_val = db_user.role.value if hasattr(db_user.role, 'value') else str(db_user.role)

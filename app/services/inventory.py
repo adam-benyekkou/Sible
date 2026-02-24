@@ -268,10 +268,9 @@ class InventoryService:
             # Simple INI Parser tailored for Ansible format
             current_group = "all"
             
-            # Remove all existing hosts? YES, to ensure sync.
-            db.exec(Host.__table__.delete())
-            
             lines = content.split('\n')
+            imported_hostnames = set()
+            
             for line in lines:
                 line = line.strip()
                 if not line or line.startswith(';') or (line.startswith('#') and 'Sible:' not in line):
@@ -285,6 +284,11 @@ class InventoryService:
                 if not parts: continue
                 
                 alias = InventoryService.sanitize_ansible_name(parts[0])
+                # Check if we've already imported this specific alias/host in this run
+                # This prevents duplicates when a host is in multiple groups
+                if alias in imported_hostnames:
+                    continue
+                
                 hostname = alias # Default
                 ssh_user = "root"
                 ssh_port = 22
@@ -326,6 +330,7 @@ class InventoryService:
                     group_name=current_group
                 )
                 db.add(host)
+                imported_hostnames.add(alias)
             
             db.commit()
             return True

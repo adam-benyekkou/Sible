@@ -56,4 +56,5 @@ EXPOSE 8000
 # Switch to non-root user
 USER sible
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# In Demo Mode, wipe the DB on every container start to guarantee a clean slate
+CMD ["sh", "-c", "rm -f /data/sible.db && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
